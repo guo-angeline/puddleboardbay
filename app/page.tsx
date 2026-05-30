@@ -1,65 +1,116 @@
-import Image from "next/image";
+"use client";
+
+import dynamic from "next/dynamic";
+import { useState, useMemo } from "react";
+import type { Spot } from "@/lib/types";
+import spotsData from "@/data/spots.json";
+import FilterBar, { type Filters } from "@/components/FilterBar";
+import SpotList from "@/components/SpotList";
+import SpotDrawer from "@/components/SpotDrawer";
+
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+
+const ALL_SPOTS = spotsData as Spot[];
+
+function applyFilters(spots: Spot[], filters: Filters): Spot[] {
+  return spots.filter((s) => {
+    if (filters.region && s.region !== filters.region) return false;
+    if (filters.difficulty && s.difficulty !== filters.difficulty) return false;
+    if (filters.freeOnly && s.has_fee !== false) return false;
+    return true;
+  });
+}
 
 export default function Home() {
+  const [filters, setFilters] = useState<Filters>({ region: "", difficulty: "", freeOnly: false });
+  const [selected, setSelected] = useState<Spot | null>(null);
+  const [activeTab, setActiveTab] = useState<"map" | "list">("map");
+
+  const filtered = useMemo(() => applyFilters(ALL_SPOTS, filters), [filters]);
+
+  function handleSelect(spot: Spot) {
+    setSelected(spot);
+    // On mobile: stay on current tab so drawer overlays whatever is visible.
+    // On desktop the drawer renders as a sidebar regardless of tab.
+  }
+
+  function handleFilterChange(f: Filters) {
+    setFilters(f);
+    setSelected(null);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <header className="shrink-0 px-4 py-3 border-b border-gray-200 bg-[--bg] flex items-center justify-between">
+        <h1 className="font-['Libre_Baskerville'] text-xl font-bold text-[--dark]">
+          PuddleboardBay
+        </h1>
+        <span className="text-xs text-[--muted]">SF Bay Area paddleboard spots</span>
+      </header>
+
+      {/* Filter bar */}
+      <FilterBar
+        filters={filters}
+        onChange={handleFilterChange}
+        total={ALL_SPOTS.length}
+        filtered={filtered.length}
+      />
+
+      {/* Mobile tab bar */}
+      <div className="md:hidden flex shrink-0 border-b border-gray-200 bg-white">
+        {(["map", "list"] as const).map((tab) => (
+          <button
+            key={tab}
+            className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors ${
+              activeTab === tab
+                ? "text-[--accent] border-b-2 border-[--accent]"
+                : "text-[--muted]"
+            }`}
+            onClick={() => setActiveTab(tab)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {tab === "map" ? `Map (${filtered.length})` : `List`}
+          </button>
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* List panel — full on desktop, tab-driven on mobile */}
+        <div
+          className={`flex flex-col w-full md:w-80 md:shrink-0 bg-[--bg] border-r border-gray-200 border-l-4 border-l-[--accent] md:flex
+            ${activeTab === "list" ? "flex" : "hidden md:flex"}`}
+        >
+          <SpotList spots={filtered} selected={selected} onSelect={handleSelect} />
         </div>
-      </main>
+
+        {/* Map panel */}
+        <div
+          className={`flex-1 relative min-h-0
+            ${activeTab === "map" ? "flex" : "hidden md:flex"}`}
+        >
+          <MapView spots={filtered} selected={selected} onSelect={setSelected} />
+
+          {/* Legend */}
+          <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow text-xs space-y-1">
+            {[
+              { color: "#4E6639", label: "Flatwater" },
+              { color: "#2D6A8F", label: "Bay / Estuary" },
+              { color: "#B45309", label: "River / Creek" },
+            ].map(({ color, label }) => (
+              <div key={label} className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: color }} />
+                <span className="text-gray-600">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Detail drawer — overlays on mobile, sidebar on desktop */}
+        {selected && (
+          <SpotDrawer spot={selected} onClose={() => setSelected(null)} />
+        )}
+      </div>
     </div>
   );
 }
