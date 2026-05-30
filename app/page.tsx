@@ -7,6 +7,7 @@ import spotsData from "@/data/spots.json";
 import FilterBar, { type Filters } from "@/components/FilterBar";
 import SpotList from "@/components/SpotList";
 import SpotDrawer from "@/components/SpotDrawer";
+import FeedbackModal from "@/components/FeedbackModal";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -25,6 +26,7 @@ export default function Home() {
   const [filters, setFilters] = useState<Filters>({ region: "", difficulty: "", freeOnly: false });
   const [selected, setSelected] = useState<Spot | null>(null);
   const [activeTab, setActiveTab] = useState<"map" | "list">("map");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const filtered = useMemo(() => applyFilters(ALL_SPOTS, filters), [filters]);
 
@@ -46,7 +48,15 @@ export default function Home() {
         <h1 className="font-['Libre_Baskerville'] text-xl font-bold text-[--dark]">
           PuddleboardBay
         </h1>
-        <span className="text-xs text-[--muted]">SF Bay Area paddleboard spots</span>
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline text-xs text-[--muted]">SF Bay Area paddleboard spots</span>
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-[--accent] text-[--accent] hover:bg-[--accent] hover:text-white transition-colors"
+          >
+            Feedback
+          </button>
+        </div>
       </header>
 
       {/* Filter bar */}
@@ -111,6 +121,8 @@ export default function Home() {
           <SpotDrawer spot={selected} onClose={() => setSelected(null)} />
         )}
       </div>
+
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   );
 }
