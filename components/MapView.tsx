@@ -16,6 +16,20 @@ function FlyTo({ spot }: { spot: Spot | null }) {
   return null;
 }
 
+function FitBounds({ spots }: { spots: Spot[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (spots.length === 0) return;
+    if (spots.length === 1) {
+      map.flyTo([spots[0].lat, spots[0].lng], 13, { duration: 0.4 });
+      return;
+    }
+    const bounds = spots.map((s) => [s.lat, s.lng] as [number, number]);
+    map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 13, duration: 0.5 });
+  }, [spots, map]);
+  return null;
+}
+
 interface Props {
   spots: Spot[];
   selected: Spot | null;
@@ -37,6 +51,7 @@ export default function MapView({ spots, selected, onSelect }: Props) {
       />
 
       <FlyTo spot={selected} />
+      <FitBounds spots={spots} />
 
       {spots.map((spot) => {
         const isSelected = selected?.id === spot.id;
