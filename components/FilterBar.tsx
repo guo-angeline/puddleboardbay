@@ -21,11 +21,12 @@ function hasActiveFilters(f: Filters) {
   return f.region !== "" || f.difficulty !== "" || f.freeOnly;
 }
 
+const ACTIVE_STYLE = { background: "var(--accent)", color: "#fff", border: "none" };
+const INACTIVE_STYLE = { background: "#fff", color: "var(--dark)", border: "1px solid #e5e7eb" };
+
 export default function FilterBar({ filters, onChange, total, filtered }: Props) {
   const pill =
     "px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap";
-  const active = "text-white";
-  const inactive = "bg-white text-[--dark] border border-gray-200 hover:border-[--accent]";
 
   return (
     <div className="sticky top-0 z-10 bg-[--bg] border-b border-gray-200 px-4 py-3 space-y-2">
@@ -36,7 +37,8 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
           return (
             <button
               key={r}
-              className={`${pill} ${isActive ? `${active} bg-[--accent]` : inactive}`}
+              className={pill}
+              style={isActive ? ACTIVE_STYLE : INACTIVE_STYLE}
               onClick={() => onChange({ ...filters, region: r === "All" ? "" : r })}
             >
               {r}
@@ -58,8 +60,8 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
           return (
             <button
               key={d}
-              className={`${pill} ${inactive}`}
-              style={isActive ? { backgroundColor: colors[d], color: "#fff", border: "none" } : {}}
+              className={pill}
+              style={isActive ? { backgroundColor: colors[d], color: "#fff", border: "none" } : INACTIVE_STYLE}
               onClick={() => onChange({ ...filters, difficulty: isActive ? "" : d })}
             >
               {DIFFICULTY_LABEL[d]}
@@ -68,7 +70,8 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
         })}
 
         <button
-          className={`${pill} ${filters.freeOnly ? `${active} bg-[--accent]` : inactive}`}
+          className={pill}
+          style={filters.freeOnly ? ACTIVE_STYLE : INACTIVE_STYLE}
           onClick={() => onChange({ ...filters, freeOnly: !filters.freeOnly })}
         >
           Free only
