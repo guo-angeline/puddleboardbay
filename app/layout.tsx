@@ -4,7 +4,7 @@ import "./globals.css";
 const SITE_URL = "https://sup-spots.vercel.app";
 const TITLE = "PuddleboardBay: Paddleboard Spots in the SF Bay Area";
 const DESCRIPTION =
-  "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 73 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
+  "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 113 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
 
 export const metadata: Metadata = {
   title: TITLE,

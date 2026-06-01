@@ -22,7 +22,7 @@ This is a fully static Next.js 16 app (App Router). All spot data is bundled at 
 ```
 raw-data/sup.xlsx
     └── raw-data/phase0_geocode.py   (one-time Python script)
-            └── data/spots.json      (73 geocoded + enriched spots, committed)
+            └── data/spots.json      (113 geocoded + enriched spots, committed)
                     └── app/page.tsx (imported directly as a module)
 ```
 
@@ -33,7 +33,7 @@ raw-data/sup.xlsx
 Defined in `lib/types.ts`. Each `Spot` has:
 - `difficulty`: `"flatwater" | "bay" | "river" | "unknown"` — drives map pin color and filter
 - `has_fee`: `true` (confirmed fee) | `false` (confirmed free) | `null` (unknown) — tri-state, not boolean
-- `lat` / `lng`: required for map rendering; all 73 spots are geocoded
+- `lat` / `lng`: required for map rendering; all 113 spots are geocoded
 
 ### Layout
 
