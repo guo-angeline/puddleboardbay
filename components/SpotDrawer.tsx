@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Spot } from "@/lib/types";
-import { DIFFICULTY_LABEL } from "@/lib/types";
+import { DIFFICULTY_LABEL, DIFFICULTY_COLOR } from "@/lib/types";
+import { nearbySpots } from "@/lib/distance";
+import FeedbackModal from "@/components/FeedbackModal";
 
 interface Props {
   spot: Spot | null;
   onClose: () => void;
+  onSelect: (spot: Spot) => void;
+  allSpots: Spot[];
 }
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
@@ -24,7 +28,10 @@ function Tag({ label }: { label: string }) {
   );
 }
 
-export default function SpotDrawer({ spot, onClose }: Props) {
+export default function SpotDrawer({ spot, onClose, onSelect, allSpots }: Props) {
+  const [copied, setCopied] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -47,9 +54,28 @@ export default function SpotDrawer({ spot, onClose }: Props) {
   if (spot.power_boats === true)  tags.push("Power boats OK");
   if (spot.power_boats === false) tags.push("No power boats");
 
+  const nearby = nearbySpots(spot, allSpots, 3);
+
+  async function handleShare() {
+    const url = `${window.location.origin}/spot/${spot!.id}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: spot!.water,
+          text: spot!.notes?.slice(0, 100),
+          url,
+        });
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   return (
     <>
-      {/* Backdrop (mobile) — must be above Leaflet's z-index 1000 */}
+      {/* Backdrop (mobile) */}
       <div
         className="fixed inset-0 bg-black/20 md:hidden"
         style={{ zIndex: 1100 }}
@@ -66,7 +92,10 @@ export default function SpotDrawer({ spot, onClose }: Props) {
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        <div className="p-5">
+        <div
+          className="p-5"
+          style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+        >
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
@@ -84,7 +113,7 @@ export default function SpotDrawer({ spot, onClose }: Props) {
             </button>
           </div>
 
-          {/* Badges row */}
+          {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
             <span
               className="px-2.5 py-1 rounded-full text-xs font-medium"
@@ -92,7 +121,6 @@ export default function SpotDrawer({ spot, onClose }: Props) {
             >
               {DIFFICULTY_LABEL[spot.difficulty]}
             </span>
-
             {spot.has_fee === true && spot.fee_amount && (
               <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700">
                 ${spot.fee_amount} launch fee
@@ -124,8 +152,42 @@ export default function SpotDrawer({ spot, onClose }: Props) {
             </p>
           )}
 
+          {/* Nearby spots */}
+          {nearby.length > 0 && (
+            <div className="mb-5">
+              <p className="text-xs font-semibold text-[--muted] uppercase tracking-wide mb-2">Nearby</p>
+              <div className="space-y-0.5">
+                {nearby.map(({ spot: s, miles }) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { onClose(); onSelect(s); }}
+                    className="flex items-center gap-2.5 w-full text-left py-2 px-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ background: DIFFICULTY_COLOR[s.difficulty] }}
+                    />
+                    <span className="flex-1 text-sm text-[--dark] truncate">{s.water}</span>
+                    <span className="text-xs text-[--muted] shrink-0">
+                      {miles < 1
+                        ? `${Math.round(miles * 5280)} ft`
+                        : `${miles.toFixed(1)} mi`}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex flex-col gap-2">
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
+              style={{ borderColor: "#e5e7eb", color: "var(--dark)" }}
+            >
+              {copied ? "Link copied!" : "Share Spot"}
+            </button>
             <a
               href={photosUrl}
               target="_blank"
@@ -145,8 +207,25 @@ export default function SpotDrawer({ spot, onClose }: Props) {
               Get Directions
             </a>
           </div>
+
+          {/* Report link */}
+          <button
+            onClick={() => setReportOpen(true)}
+            className="mt-3 text-xs text-[--muted] hover:text-[--dark] transition-colors w-full text-center"
+          >
+            Report an issue with this spot
+          </button>
         </div>
       </div>
+
+      {/* Report modal — rendered here so it sits above the drawer */}
+      {reportOpen && (
+        <FeedbackModal
+          onClose={() => setReportOpen(false)}
+          defaultType="issue"
+          defaultMessage={`Issue with: ${spot.water}\n\n`}
+        />
+      )}
     </>
   );
 }

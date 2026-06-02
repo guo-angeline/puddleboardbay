@@ -60,12 +60,12 @@ export default function MapView({ spots, selected, onSelect }: Props) {
           <CircleMarker
             key={spot.id}
             center={[spot.lat, spot.lng]}
-            radius={isSelected ? 10 : 7}
+            radius={isSelected ? 13 : 10}
             pathOptions={{
               color: isSelected ? "#1B2A16" : color,
               fillColor: color,
               fillOpacity: isSelected ? 1 : 0.75,
-              weight: isSelected ? 2.5 : 1.5,
+              weight: isSelected ? 3 : 2,
             }}
             eventHandlers={{ click: () => onSelect(spot) }}
           />

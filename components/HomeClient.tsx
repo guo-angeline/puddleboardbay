@@ -143,7 +143,12 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
         {/* Detail drawer */}
         {selected && (
-          <SpotDrawer spot={selected} onClose={() => setSelected(null)} />
+          <SpotDrawer
+            spot={selected}
+            onClose={() => setSelected(null)}
+            onSelect={handleSelect}
+            allSpots={ALL_SPOTS}
+          />
         )}
       </div>
 

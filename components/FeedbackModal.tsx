@@ -6,9 +6,15 @@ const FORMSPREE_ID = "xdajvagj";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-export default function FeedbackModal({ onClose }: { onClose: () => void }) {
-  const [type, setType] = useState("feedback");
-  const [message, setMessage] = useState("");
+interface Props {
+  onClose: () => void;
+  defaultType?: string;
+  defaultMessage?: string;
+}
+
+export default function FeedbackModal({ onClose, defaultType, defaultMessage }: Props) {
+  const [type, setType] = useState(defaultType ?? "feedback");
+  const [message, setMessage] = useState(defaultMessage ?? "");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const overlayRef = useRef<HTMLDivElement>(null);
