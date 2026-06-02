@@ -9,9 +9,10 @@ interface Props {
   selected: Spot | null;
   onSelect: (spot: Spot) => void;
   onClearFilters: () => void;
+  distanceMap?: Record<number, number>;
 }
 
-export default function SpotList({ spots, selected, onSelect, onClearFilters }: Props) {
+export default function SpotList({ spots, selected, onSelect, onClearFilters, distanceMap }: Props) {
   const selectedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function SpotList({ spots, selected, onSelect, onClearFilters }: 
             spot={spot}
             selected={selected?.id === spot.id}
             onClick={() => onSelect(spot)}
+            distance={distanceMap?.[spot.id]}
           />
         </div>
       ))}

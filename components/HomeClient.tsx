@@ -9,6 +9,7 @@ import FilterBar, { type Filters } from "@/components/FilterBar";
 import SpotList from "@/components/SpotList";
 import SpotDrawer from "@/components/SpotDrawer";
 import FeedbackModal from "@/components/FeedbackModal";
+import { distanceMiles } from "@/lib/distance";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -32,6 +33,9 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   const [selected, setSelected] = useState<Spot | null>(null);
   const [activeTab, setActiveTab] = useState<"map" | "list">("map");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState(false);
 
   // Pre-select from prop (spot pages) or ?spot= URL param (home page)
   useEffect(() => {
@@ -56,12 +60,58 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   const filtered = useMemo(() => applyFilters(ALL_SPOTS, filters), [filters]);
 
+  const sortedFiltered = useMemo(() => {
+    if (!userLocation) return filtered;
+    return [...filtered].sort(
+      (a, b) => distanceMiles(userLocation, a) - distanceMiles(userLocation, b)
+    );
+  }, [filtered, userLocation]);
+
+  const distanceMap = useMemo<Record<number, number> | undefined>(() => {
+    if (!userLocation) return undefined;
+    return Object.fromEntries(
+      ALL_SPOTS.map((s) => [s.id, distanceMiles(userLocation, s)])
+    );
+  }, [userLocation]);
+
+  function handleNearMe() {
+    if (userLocation) {
+      setUserLocation(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      setGeoError(true);
+      setTimeout(() => setGeoError(false), 2500);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        setActiveTab("list");
+      },
+      () => {
+        setLocating(false);
+        setGeoError(true);
+        setTimeout(() => setGeoError(false), 2500);
+      },
+      { timeout: 8000 }
+    );
+  }
+
   function handleSelect(spot: Spot) {
     setSelected(spot);
   }
 
   function handleFilterChange(f: Filters) {
     setFilters(f);
+    setSelected(null);
+  }
+
+  function handleClearAll() {
+    setFilters({ region: "", difficulty: "", freeOnly: false });
+    setUserLocation(null);
     setSelected(null);
   }
 
@@ -88,7 +138,12 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         filters={filters}
         onChange={handleFilterChange}
         total={ALL_SPOTS.length}
-        filtered={filtered.length}
+        filtered={sortedFiltered.length}
+        nearMe={!!userLocation}
+        locating={locating}
+        geoError={geoError}
+        onToggleNearMe={handleNearMe}
+        onClearAll={handleClearAll}
       />
 
       {/* Mobile tab bar */}
@@ -103,7 +158,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             }`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab === "map" ? `Map (${filtered.length})` : `List`}
+            {tab === "map" ? `Map (${sortedFiltered.length})` : `List`}
           </button>
         ))}
       </div>
@@ -116,10 +171,11 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             ${activeTab === "list" ? "flex" : "hidden md:flex"}`}
         >
           <SpotList
-            spots={filtered}
+            spots={sortedFiltered}
             selected={selected}
             onSelect={handleSelect}
-            onClearFilters={() => handleFilterChange({ region: "", difficulty: "", freeOnly: false })}
+            distanceMap={distanceMap}
+            onClearFilters={handleClearAll}
           />
         </div>
 
@@ -128,7 +184,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           className={`flex-1 relative min-h-0
             ${activeTab === "map" ? "flex" : "hidden md:flex"}`}
         >
-          <MapView spots={filtered} selected={selected} onSelect={setSelected} />
+          <MapView spots={sortedFiltered} selected={selected} onSelect={setSelected} />
 
           {/* Legend */}
           <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow text-xs space-y-1">

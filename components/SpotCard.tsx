@@ -7,6 +7,7 @@ interface Props {
   spot: Spot;
   selected: boolean;
   onClick: () => void;
+  distance?: number;
 }
 
 const DIFF_STYLES: Record<string, string> = {
@@ -32,7 +33,13 @@ function Icons({ spot }: { spot: Spot }) {
   );
 }
 
-export default function SpotCard({ spot, selected, onClick }: Props) {
+function formatDistance(miles: number): string {
+  return miles < 0.2
+    ? `${Math.round(miles * 5280)} ft`
+    : `${miles.toFixed(1)} mi`;
+}
+
+export default function SpotCard({ spot, selected, onClick, distance }: Props) {
   return (
     <button
       onClick={onClick}
@@ -43,7 +50,12 @@ export default function SpotCard({ spot, selected, onClick }: Props) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-[--dark] text-sm leading-snug truncate">{spot.water}</p>
-          <p className="text-xs text-[--muted] mt-0.5">{spot.city} &middot; {spot.region}</p>
+          <p className="text-xs text-[--muted] mt-0.5">
+            {spot.city}
+            {distance !== undefined
+              ? <> &middot; <span className="font-medium text-[--accent]">{formatDistance(distance)}</span></>
+              : <> &middot; {spot.region}</>}
+          </p>
         </div>
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${DIFF_STYLES[spot.difficulty]}`}>
           {DIFFICULTY_LABEL[spot.difficulty]}

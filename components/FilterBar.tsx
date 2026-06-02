@@ -13,12 +13,17 @@ interface Props {
   onChange: (f: Filters) => void;
   total: number;
   filtered: number;
+  nearMe?: boolean;
+  locating?: boolean;
+  geoError?: boolean;
+  onToggleNearMe?: () => void;
+  onClearAll?: () => void;
 }
 
 const EMPTY_FILTERS: Filters = { region: "", difficulty: "", freeOnly: false };
 
-function hasActiveFilters(f: Filters) {
-  return f.region !== "" || f.difficulty !== "" || f.freeOnly;
+function hasActiveFilters(f: Filters, nearMe?: boolean) {
+  return f.region !== "" || f.difficulty !== "" || f.freeOnly || !!nearMe;
 }
 
 // Row 1 — region pills: outlined/neutral inactive, solid accent active
@@ -35,17 +40,33 @@ const DIFF_PALETTE: Record<Difficulty, { bg: string; lightBg: string; color: str
 const FREE_ACTIVE:   React.CSSProperties = { background: "#16a34a", color: "#fff" };
 const FREE_INACTIVE: React.CSSProperties = { background: "#f0fdf4", color: "#166534" };
 
-export default function FilterBar({ filters, onChange, total, filtered }: Props) {
-  // Row 1: larger pills
+const NEAR_ACTIVE:   React.CSSProperties = { background: "var(--accent)", color: "#fff" };
+const NEAR_INACTIVE: React.CSSProperties = { background: "#e8f3fa", color: "#1e4d6b" };
+const NEAR_ERROR:    React.CSSProperties = { background: "#fef2f2", color: "#991b1b" };
+
+export default function FilterBar({
+  filters, onChange, total, filtered,
+  nearMe, locating, geoError, onToggleNearMe, onClearAll,
+}: Props) {
   const pillLg = "px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap";
-  // Row 2: smaller pills — size alone signals secondary/attribute role
   const pillSm = "px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer whitespace-nowrap";
+
+  function nearMeStyle(): React.CSSProperties {
+    if (geoError) return NEAR_ERROR;
+    if (nearMe)   return NEAR_ACTIVE;
+    return NEAR_INACTIVE;
+  }
+
+  function nearMeLabel() {
+    if (geoError)  return "Location unavailable";
+    if (locating)  return "Locating…";
+    if (nearMe)    return "Near me ✓";
+    return "Near me";
+  }
 
   return (
     <div className="sticky top-0 z-10 bg-[--bg] border-b border-gray-200 px-4 py-3 space-y-2">
       {/* Row 1 — region (outlined, larger) */}
-      {/* -mr-4 cancels parent px-4 on mobile, pushing clip boundary to screen edge.
-          Any pill that starts near the edge gets cut there — peek hint for scrollability. */}
       <div className="-mr-4 overflow-hidden md:mr-0 md:overflow-visible">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none pr-4 md:pr-0">
           {["All", ...REGIONS].map((r) => {
@@ -64,7 +85,7 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
         </div>
       </div>
 
-      {/* Row 2 — type + fee (always-tinted, smaller) */}
+      {/* Row 2 — type + fee + near me (always-tinted, smaller) */}
       <div className="flex gap-2 items-center flex-wrap">
         {DIFFICULTIES.map((d) => {
           const { bg, lightBg, color } = DIFF_PALETTE[d];
@@ -91,10 +112,24 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
           Free only
         </button>
 
+        {onToggleNearMe && (
+          <button
+            className={pillSm}
+            style={nearMeStyle()}
+            onClick={onToggleNearMe}
+            disabled={locating}
+          >
+            {nearMeLabel()}
+          </button>
+        )}
+
         <div className="ml-auto flex items-center gap-2">
-          {hasActiveFilters(filters) && (
+          {hasActiveFilters(filters, nearMe) && (
             <button
-              onClick={() => onChange(EMPTY_FILTERS)}
+              onClick={() => {
+                onChange(EMPTY_FILTERS);
+                onClearAll?.();
+              }}
               className="text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors whitespace-nowrap"
             >
               Clear all
