@@ -85,18 +85,16 @@ export default function FilterBar({
         </div>
       </div>
 
-      {/* Row 2 — type + fee + near me (always-tinted, smaller) */}
-      <div className="flex gap-2 items-center flex-wrap">
+      {/* Row 2 — all 5 filters in one row */}
+      <div className="grid grid-cols-5 gap-1">
         {DIFFICULTIES.map((d) => {
           const { bg, lightBg, color } = DIFF_PALETTE[d];
           const isActive = filters.difficulty === d;
           return (
             <button
               key={d}
-              className={pillSm}
-              style={isActive
-                ? { background: bg, color: "#fff" }
-                : { background: lightBg, color }}
+              className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
+              style={isActive ? { background: bg, color: "#fff" } : { background: lightBg, color }}
               onClick={() => onChange({ ...filters, difficulty: isActive ? "" : d })}
             >
               {DIFFICULTY_LABEL[d]}
@@ -105,7 +103,7 @@ export default function FilterBar({
         })}
 
         <button
-          className={pillSm}
+          className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
           style={filters.freeOnly ? FREE_ACTIVE : FREE_INACTIVE}
           onClick={() => onChange({ ...filters, freeOnly: !filters.freeOnly })}
         >
@@ -114,7 +112,7 @@ export default function FilterBar({
 
         {onToggleNearMe && (
           <button
-            className={pillSm}
+            className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
             style={nearMeStyle()}
             onClick={onToggleNearMe}
             disabled={locating}
@@ -123,20 +121,21 @@ export default function FilterBar({
             {nearMeLabel()}
           </button>
         )}
+      </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          {hasActiveFilters(filters, nearMe) && (
-            <button
-              onClick={() => onClearAll ? onClearAll() : onChange(EMPTY_FILTERS)}
-              className="text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors whitespace-nowrap"
-            >
-              Clear all
-            </button>
-          )}
-          <span className="text-xs text-[--muted] whitespace-nowrap">
-            {filtered === total ? `${total} spots` : `${filtered} of ${total}`}
-          </span>
-        </div>
+      {/* Count + clear */}
+      <div className="flex items-center gap-2">
+        {hasActiveFilters(filters, nearMe) && (
+          <button
+            onClick={() => onClearAll ? onClearAll() : onChange(EMPTY_FILTERS)}
+            className="text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors"
+          >
+            Clear all
+          </button>
+        )}
+        <span className="ml-auto text-xs text-[--muted]">
+          {filtered === total ? `${total} spots` : `${filtered} of ${total}`}
+        </span>
       </div>
     </div>
   );

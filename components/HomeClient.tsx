@@ -36,6 +36,13 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState(false);
+  const [favorites, setFavorites] = useState<Set<number>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = localStorage.getItem("ptw-favorites");
+      return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+    } catch { return new Set(); }
+  });
 
   // Pre-select from prop (spot pages) or ?spot= URL param (home page)
   useEffect(() => {
@@ -58,6 +65,19 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
+  useEffect(() => {
+    try { localStorage.setItem("ptw-favorites", JSON.stringify([...favorites])); }
+    catch { /* storage full / private mode */ }
+  }, [favorites]);
+
+  function toggleFavorite(id: number) {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   const filtered = useMemo(() => applyFilters(ALL_SPOTS, filters), [filters]);
 
   const sortedFiltered = useMemo(() => {
@@ -66,6 +86,11 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       (a, b) => distanceMiles(userLocation, a) - distanceMiles(userLocation, b)
     );
   }, [filtered, userLocation]);
+
+  const savedSpots = useMemo(
+    () => ALL_SPOTS.filter((s) => favorites.has(s.id)),
+    [favorites]
+  );
 
   const distanceMap = useMemo<Record<number, number> | undefined>(() => {
     if (!userLocation) return undefined;
@@ -176,6 +201,9 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             onSelect={handleSelect}
             distanceMap={distanceMap}
             onClearFilters={handleClearAll}
+            savedSpots={savedSpots}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
           />
         </div>
 
@@ -184,7 +212,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           className={`flex-1 relative min-h-0
             ${activeTab === "map" ? "flex" : "hidden md:flex"}`}
         >
-          <MapView spots={sortedFiltered} selected={selected} onSelect={setSelected} />
+          <MapView spots={sortedFiltered} selected={selected} onSelect={setSelected} userLocation={userLocation} />
 
           {/* Legend */}
           <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow text-xs space-y-1">
@@ -209,6 +237,8 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             onClose={() => setSelected(null)}
             onSelect={handleSelect}
             allSpots={ALL_SPOTS}
+            isFavorite={selected ? favorites.has(selected.id) : false}
+            onToggleFavorite={toggleFavorite}
           />
         )}
       </div>

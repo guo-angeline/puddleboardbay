@@ -16,9 +16,11 @@ function FlyTo({ spot }: { spot: Spot | null }) {
   return null;
 }
 
-function FitBounds({ spots }: { spots: Spot[] }) {
+function FitBounds({ spots, hasSelection }: { spots: Spot[]; hasSelection: boolean }) {
   const map = useMap();
   useEffect(() => {
+    // Don't fight FlyTo when a spot is selected (e.g. landing on a /spot URL).
+    if (hasSelection) return;
     if (spots.length === 0) return;
     if (spots.length === 1) {
       map.flyTo([spots[0].lat, spots[0].lng], 13, { duration: 0.4 });
@@ -26,7 +28,17 @@ function FitBounds({ spots }: { spots: Spot[] }) {
     }
     const bounds = spots.map((s) => [s.lat, s.lng] as [number, number]);
     map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 13, duration: 0.5 });
-  }, [spots, map]);
+  }, [spots, map, hasSelection]);
+  return null;
+}
+
+type UserLocation = { lat: number; lng: number };
+
+function FlyToUser({ location }: { location: UserLocation | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (location) map.flyTo([location.lat, location.lng], 11, { duration: 0.6 });
+  }, [location, map]);
   return null;
 }
 
@@ -34,9 +46,10 @@ interface Props {
   spots: Spot[];
   selected: Spot | null;
   onSelect: (spot: Spot) => void;
+  userLocation?: UserLocation | null;
 }
 
-export default function MapView({ spots, selected, onSelect }: Props) {
+export default function MapView({ spots, selected, onSelect, userLocation }: Props) {
   return (
     <MapContainer
       center={BAY_CENTER}
@@ -51,7 +64,24 @@ export default function MapView({ spots, selected, onSelect }: Props) {
       />
 
       <FlyTo spot={selected} />
-      <FitBounds spots={spots} />
+      <FitBounds spots={spots} hasSelection={!!selected} />
+      <FlyToUser location={userLocation ?? null} />
+
+      {/* User location — halo + dot */}
+      {userLocation && (
+        <>
+          <CircleMarker
+            center={[userLocation.lat, userLocation.lng]}
+            radius={18}
+            pathOptions={{ color: "transparent", fillColor: "#1A73E8", fillOpacity: 0.18, weight: 0 }}
+          />
+          <CircleMarker
+            center={[userLocation.lat, userLocation.lng]}
+            radius={7}
+            pathOptions={{ color: "#fff", fillColor: "#1A73E8", fillOpacity: 1, weight: 3 }}
+          />
+        </>
+      )}
 
       {spots.map((spot) => {
         const isSelected = selected?.id === spot.id;

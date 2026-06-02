@@ -22,7 +22,7 @@ This is a fully static Next.js 16 app (App Router). All spot data is bundled at 
 ```
 raw-data/sup.xlsx
     └── raw-data/phase0_geocode.py   (one-time Python script)
-            └── data/spots.json      (113 geocoded + enriched spots, committed)
+            └── data/spots.json      (114 geocoded + enriched spots, committed)
                     └── app/page.tsx (imported directly as a module)
 ```
 
@@ -33,7 +33,7 @@ raw-data/sup.xlsx
 Defined in `lib/types.ts`. Each `Spot` has:
 - `difficulty`: `"flatwater" | "bay" | "river" | "unknown"` — drives map pin color and filter
 - `has_fee`: `true` (confirmed fee) | `false` (confirmed free) | `null` (unknown) — tri-state, not boolean
-- `lat` / `lng`: required for map rendering; all 113 spots are geocoded
+- `lat` / `lng`: required for map rendering; all 114 spots are geocoded
 
 ### Layout
 
@@ -63,6 +63,12 @@ Loaded via Google Fonts `@import` in `globals.css`. The `@import url(...)` must 
 Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. The app builds as fully static (`○` in the build output) — no server functions.
 
 `og:image` is not yet set. Add it in `app/layout.tsx` under `openGraph.images` when a hosted photo URL is available.
+
+## Editing spot data
+
+When updating any spot in `data/spots.json`, be careful not to alter the `lat`/`lng` fields unless you are explicitly correcting coordinates. Coordinates are easy to accidentally overwrite during text edits, and a wrong pin location is hard to notice until someone checks the map. Always verify `lat`/`lng` are unchanged (or intentionally corrected with a verified source) before deploying.
+
+When user feedback comes in as a question or personal comment (e.g. "I didn't know SUPs were allowed, where do you put in?"), extract the underlying facts and fold them into the spot's `notes` as general, evergreen description. Never phrase notes as a reply to that person ("Yes, SUPs are allowed", "You put in at..."). The notes are read by every visitor, not the one who sent the feedback. Write what's true about the spot, not an answer to whoever asked.
 
 ## Planned next phases
 

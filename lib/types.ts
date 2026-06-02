@@ -22,8 +22,8 @@ export interface Spot {
 export const REGIONS = [
   "South Bay",
   "Peninsula",
-  "San Francisco",
   "East Bay",
+  "San Francisco",
   "North Bay",
   "Sacramento",
   "Sierra Nevada",
@@ -35,8 +35,8 @@ export const DIFFICULTIES: Difficulty[] = ["flatwater", "bay", "river"];
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   flatwater: "Flatwater",
-  bay: "Bay / Estuary",
-  river: "River / Creek",
+  bay: "Ocean",
+  river: "River",
   unknown: "Unknown",
 };
 

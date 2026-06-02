@@ -10,9 +10,15 @@ interface Props {
   onSelect: (spot: Spot) => void;
   onClearFilters: () => void;
   distanceMap?: Record<number, number>;
+  savedSpots?: Spot[];
+  favorites?: Set<number>;
+  onToggleFavorite?: (id: number) => void;
 }
 
-export default function SpotList({ spots, selected, onSelect, onClearFilters, distanceMap }: Props) {
+export default function SpotList({
+  spots, selected, onSelect, onClearFilters, distanceMap,
+  savedSpots = [], favorites = new Set(), onToggleFavorite,
+}: Props) {
   const selectedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,7 +27,10 @@ export default function SpotList({ spots, selected, onSelect, onClearFilters, di
     }
   }, [selected]);
 
-  if (spots.length === 0) {
+  // Remove saved spots from the main list to avoid duplicates
+  const mainSpots = spots.filter((s) => !favorites.has(s.id));
+
+  if (mainSpots.length === 0 && savedSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
         <p className="text-3xl mb-3">🏄</p>
@@ -38,16 +47,43 @@ export default function SpotList({ spots, selected, onSelect, onClearFilters, di
 
   return (
     <div className="overflow-y-auto flex-1">
-      {spots.map((spot) => (
+      {/* Saved spots section — pinned at top regardless of filters */}
+      {savedSpots.length > 0 && (
+        <div>
+          <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-[--muted] uppercase tracking-wider">Your saved spots</span>
+            <span className="text-[11px] text-[--muted] opacity-60">({savedSpots.length})</span>
+          </div>
+          {savedSpots.map((spot) => (
+            <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
+              <SpotCard
+                spot={spot}
+                selected={selected?.id === spot.id}
+                onClick={() => onSelect(spot)}
+                distance={distanceMap?.[spot.id]}
+                isFavorite={true}
+                onToggleFavorite={onToggleFavorite}
+              />
+            </div>
+          ))}
+          <div className="mx-4 my-1.5 border-t border-gray-200" />
+        </div>
+      )}
+
+      {/* Main list */}
+      {mainSpots.map((spot) => (
         <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
           <SpotCard
             spot={spot}
             selected={selected?.id === spot.id}
             onClick={() => onSelect(spot)}
             distance={distanceMap?.[spot.id]}
+            isFavorite={favorites.has(spot.id)}
+            onToggleFavorite={onToggleFavorite}
           />
         </div>
       ))}
+
       <div className="px-4 py-4 text-center border-t border-gray-100">
         <a href="/disclaimer" className="text-xs text-[--muted]/60 hover:text-[--muted] transition-colors">
           Disclaimer

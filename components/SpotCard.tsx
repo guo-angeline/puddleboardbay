@@ -8,6 +8,8 @@ interface Props {
   selected: boolean;
   onClick: () => void;
   distance?: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: number) => void;
 }
 
 const DIFF_STYLES: Record<string, string> = {
@@ -39,7 +41,7 @@ function formatDistance(miles: number): string {
     : `${miles.toFixed(1)} mi`;
 }
 
-export default function SpotCard({ spot, selected, onClick, distance }: Props) {
+export default function SpotCard({ spot, selected, onClick, distance, isFavorite, onToggleFavorite }: Props) {
   return (
     <button
       onClick={onClick}
@@ -57,9 +59,21 @@ export default function SpotCard({ spot, selected, onClick, distance }: Props) {
               : <> &middot; {spot.region}</>}
           </p>
         </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${DIFF_STYLES[spot.difficulty]}`}>
-          {DIFFICULTY_LABEL[spot.difficulty]}
-        </span>
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFF_STYLES[spot.difficulty]}`}>
+            {DIFFICULTY_LABEL[spot.difficulty]}
+          </span>
+          {onToggleFavorite && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(spot.id); }}
+              aria-label={isFavorite ? "Remove from saved" : "Save spot"}
+              className="text-base leading-none transition-opacity hover:opacity-70"
+              style={{ color: isFavorite ? "#e11d48" : "var(--muted)", opacity: isFavorite ? 1 : 0.4 }}
+            >
+              {isFavorite ? "♥" : "♡"}
+            </button>
+          )}
+        </div>
       </div>
       <Icons spot={spot} />
     </button>

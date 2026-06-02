@@ -11,6 +11,8 @@ interface Props {
   onClose: () => void;
   onSelect: (spot: Spot) => void;
   allSpots: Spot[];
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: number) => void;
 }
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
@@ -30,7 +32,7 @@ function Tag({ label }: { label: string }) {
 
 const NOTES_TRUNCATE = 150;
 
-export default function SpotDrawer({ spot, onClose, onSelect, allSpots }: Props) {
+export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavorite, onToggleFavorite }: Props) {
   const [copied, setCopied] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -65,7 +67,6 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots }: Props)
       try {
         await navigator.share({
           title: spot!.water,
-          text: spot!.notes?.slice(0, 100),
           url,
         });
       } catch { /* user cancelled */ }
@@ -209,6 +210,20 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots }: Props)
               >
                 {copied ? "Copied!" : "Share"}
               </button>
+              {onToggleFavorite && (
+                <button
+                  onClick={() => onToggleFavorite(spot!.id)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
+                  style={isFavorite
+                    ? { borderColor: "#fecdd3", color: "#e11d48", background: "#fff1f2" }
+                    : { borderColor: "#e5e7eb", color: "var(--muted)" }
+                  }
+                  aria-label={isFavorite ? "Remove from saved spots" : "Save this spot"}
+                >
+                  <span className="text-base leading-none">{isFavorite ? "♥" : "♡"}</span>
+                  <span>{isFavorite ? "Saved" : "Save"}</span>
+                </button>
+              )}
               <a
                 href={photosUrl}
                 target="_blank"

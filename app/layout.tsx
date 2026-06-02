@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import InstallPrompt from "@/components/InstallPrompt";
 import "./globals.css";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#2D6A8F",
 };
 
 const SITE_URL = "https://sup-spots.vercel.app";
 const TITLE = "Paddle to Water: Paddleboard & Kayak Spots in the Bay Area";
 const DESCRIPTION =
-  "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 113 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
+  "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 114 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://paddletowater.com"),
@@ -82,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="h-full">
         {children}
+        <InstallPrompt />
         <Analytics />
       </body>
     </html>
