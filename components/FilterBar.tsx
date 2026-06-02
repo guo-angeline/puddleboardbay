@@ -126,10 +126,7 @@ export default function FilterBar({
         <div className="ml-auto flex items-center gap-2">
           {hasActiveFilters(filters, nearMe) && (
             <button
-              onClick={() => {
-                onChange(EMPTY_FILTERS);
-                onClearAll?.();
-              }}
+              onClick={() => onClearAll ? onClearAll() : onChange(EMPTY_FILTERS)}
               className="text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors whitespace-nowrap"
             >
               Clear all
