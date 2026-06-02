@@ -46,6 +46,11 @@ export default function SpotList({ spots, selected, onSelect, onClearFilters }: 
           />
         </div>
       ))}
+      <div className="px-4 py-4 text-center border-t border-gray-100">
+        <a href="/disclaimer" className="text-xs text-[--muted]/60 hover:text-[--muted] transition-colors">
+          Disclaimer
+        </a>
+      </div>
     </div>
   );
 }
