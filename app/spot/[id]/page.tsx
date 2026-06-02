@@ -18,7 +18,7 @@ export async function generateMetadata(
   const spot = ALL_SPOTS.find((s) => s.id === Number(id));
   if (!spot) return {};
 
-  const title = `${spot.water} Paddleboard Spot | PuddleboardBay`;
+  const title = `${spot.water} Paddleboard Spot | Paddle to Water`;
   const description = spot.notes
     ? spot.notes.slice(0, 155) + (spot.notes.length > 155 ? "…" : "")
     : `Launch info, fees, and conditions for ${spot.water} in ${spot.city ?? spot.region}, CA.`;
@@ -28,7 +28,7 @@ export async function generateMetadata(
     title,
     description,
     alternates: { canonical: url },
-    openGraph: { title, description, url, siteName: "PuddleboardBay", type: "website" },
+    openGraph: { title, description, url, siteName: "Paddle to Water", type: "website" },
     twitter: { card: "summary", title, description },
   };
 }

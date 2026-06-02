@@ -9,7 +9,7 @@ export const viewport: Viewport = {
 };
 
 const SITE_URL = "https://sup-spots.vercel.app";
-const TITLE = "PuddleboardBay: Paddleboard Spots in the SF Bay Area";
+const TITLE = "Paddle to Water: Paddleboard & Kayak Spots in the Bay Area";
 const DESCRIPTION =
   "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 113 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
 
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    siteName: "PuddleboardBay",
+    siteName: "Paddle to Water",
     type: "website",
     locale: "en_US",
   },
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "PuddleboardBay",
+  name: "Paddle to Water",
   url: SITE_URL,
   description: DESCRIPTION,
   potentialAction: {

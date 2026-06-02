@@ -70,10 +70,10 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       {/* Header */}
       <header className="shrink-0 px-4 py-3 border-b border-gray-200 bg-[--bg] flex items-center justify-between">
         <h1 className="font-['Libre_Baskerville'] text-xl font-bold text-[--dark]">
-          PuddleboardBay
+          Paddle to Water
         </h1>
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline text-xs text-[--muted]">SF Bay Area paddleboard spots</span>
+          <span className="hidden sm:inline text-xs text-[--muted]">Paddleboard &amp; kayak spots across the Bay Area</span>
           <button
             onClick={() => setFeedbackOpen(true)}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-[--accent] text-[--accent] hover:bg-[--accent] hover:text-white transition-colors"
