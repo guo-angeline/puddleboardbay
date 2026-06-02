@@ -44,20 +44,24 @@ export default function FilterBar({ filters, onChange, total, filtered }: Props)
   return (
     <div className="sticky top-0 z-10 bg-[--bg] border-b border-gray-200 px-4 py-3 space-y-2">
       {/* Row 1 — region (outlined, larger) */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {["All", ...REGIONS].map((r) => {
-          const isActive = filters.region === r || (r === "All" && filters.region === "");
-          return (
-            <button
-              key={r}
-              className={pillLg}
-              style={isActive ? R_ACTIVE : R_INACTIVE}
-              onClick={() => onChange({ ...filters, region: (r === "All" || filters.region === r) ? "" : r })}
-            >
-              {r}
-            </button>
-          );
-        })}
+      {/* -mr-4 cancels parent px-4 on mobile, pushing clip boundary to screen edge.
+          Any pill that starts near the edge gets cut there — peek hint for scrollability. */}
+      <div className="-mr-4 overflow-hidden md:mr-0 md:overflow-visible">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none pr-4 md:pr-0">
+          {["All", ...REGIONS].map((r) => {
+            const isActive = filters.region === r || (r === "All" && filters.region === "");
+            return (
+              <button
+                key={r}
+                className={pillLg}
+                style={isActive ? R_ACTIVE : R_INACTIVE}
+                onClick={() => onChange({ ...filters, region: (r === "All" || filters.region === r) ? "" : r })}
+              >
+                {r}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Row 2 — type + fee (always-tinted, smaller) */}
