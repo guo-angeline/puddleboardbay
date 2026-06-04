@@ -18,6 +18,11 @@ function FlyTo({ spot }: { spot: Spot | null }) {
 
 function FitBounds({ spots, hasSelection }: { spots: Spot[]; hasSelection: boolean }) {
   const map = useMap();
+  // Intentionally depend only on [spots, map], NOT hasSelection. Closing a spot
+  // (hasSelection true -> false) must not refit all pins and wipe the zoom the
+  // user set while exploring nearby spots. We only refit when the spots set
+  // itself changes (filters), and filter changes already clear the selection
+  // upstream, so the latest closure's hasSelection is current on that re-run.
   useEffect(() => {
     // Don't fight FlyTo when a spot is selected (e.g. landing on a /spot URL).
     if (hasSelection) return;
@@ -28,7 +33,8 @@ function FitBounds({ spots, hasSelection }: { spots: Spot[]; hasSelection: boole
     }
     const bounds = spots.map((s) => [s.lat, s.lng] as [number, number]);
     map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 13, duration: 0.5 });
-  }, [spots, map, hasSelection]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spots, map]);
   return null;
 }
 
