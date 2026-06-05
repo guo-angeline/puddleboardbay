@@ -6,6 +6,7 @@ export interface Filters {
   region: string;
   difficulty: string;
   freeOnly: boolean;
+  search: string;
 }
 
 interface Props {
@@ -20,10 +21,10 @@ interface Props {
   onClearAll?: () => void;
 }
 
-const EMPTY_FILTERS: Filters = { region: "", difficulty: "", freeOnly: false };
+const EMPTY_FILTERS: Filters = { region: "", difficulty: "", freeOnly: false, search: "" };
 
 function hasActiveFilters(f: Filters, nearMe?: boolean) {
-  return f.region !== "" || f.difficulty !== "" || f.freeOnly || !!nearMe;
+  return f.region !== "" || f.difficulty !== "" || f.freeOnly || f.search.trim() !== "" || !!nearMe;
 }
 
 // Row 1 — region pills: outlined/neutral inactive, solid accent active

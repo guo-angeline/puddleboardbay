@@ -10,6 +10,7 @@ import SpotList from "@/components/SpotList";
 import SpotDrawer from "@/components/SpotDrawer";
 import FeedbackModal from "@/components/FeedbackModal";
 import { distanceMiles } from "@/lib/distance";
+import { searchSpots } from "@/lib/search";
 import { track, setPersona } from "@/lib/analytics";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -17,12 +18,15 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 const ALL_SPOTS = spotsData as Spot[];
 
 function applyFilters(spots: Spot[], filters: Filters): Spot[] {
-  return spots.filter((s) => {
+  const structured = spots.filter((s) => {
     if (filters.region && s.region !== filters.region) return false;
     if (filters.difficulty && s.difficulty !== filters.difficulty) return false;
     if (filters.freeOnly && s.has_fee !== false) return false;
     return true;
   });
+  // Free-text search is relevance-ranked (see lib/search.ts), applied after the
+  // structured filters so it only ranks within the already-narrowed set.
+  return filters.search.trim() ? searchSpots(structured, filters.search) : structured;
 }
 
 interface Props {
@@ -30,10 +34,11 @@ interface Props {
 }
 
 export default function HomeClient({ initialSpotId }: Props = {}) {
-  const [filters, setFilters] = useState<Filters>({ region: "", difficulty: "", freeOnly: false });
+  const [filters, setFilters] = useState<Filters>({ region: "", difficulty: "", freeOnly: false, search: "" });
   const [selected, setSelected] = useState<Spot | null>(null);
   const [activeTab, setActiveTab] = useState<"map" | "list">("map");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState(false);
@@ -106,11 +111,23 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   const filtered = useMemo(() => applyFilters(ALL_SPOTS, filters), [filters]);
 
   const sortedFiltered = useMemo(() => {
-    if (!userLocation) return filtered;
+    // When searching, keep relevance order; otherwise sort by distance if located.
+    if (!userLocation || filters.search.trim()) return filtered;
     return [...filtered].sort(
       (a, b) => distanceMiles(userLocation, a) - distanceMiles(userLocation, b)
     );
-  }, [filtered, userLocation]);
+  }, [filtered, userLocation, filters.search]);
+
+  // Debounced search analytics: fire once after typing settles, not per keystroke.
+  useEffect(() => {
+    const q = filters.search.trim();
+    if (!q) return;
+    const t = setTimeout(() => {
+      track("spot_search", { query: q, results: sortedFiltered.length });
+    }, 500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search]);
 
   const savedSpots = useMemo(
     () => ALL_SPOTS.filter((s) => favorites.has(s.id)),
@@ -184,10 +201,16 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   }
 
   function handleClearAll() {
-    setFilters({ region: "", difficulty: "", freeOnly: false });
+    setFilters({ region: "", difficulty: "", freeOnly: false, search: "" });
     setUserLocation(null);
     setSelected(null);
+    setSearchOpen(false);
     track("filter_changed", { cleared: true });
+  }
+
+  function setSearch(value: string) {
+    setFilters((f) => ({ ...f, search: value }));
+    setSelected(null);
   }
 
   return (
@@ -197,8 +220,41 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         <h1 className="font-['Fraunces'] text-xl font-bold text-[--dark]">
           Paddle to Water
         </h1>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:inline text-xs text-[--muted]">Paddleboard &amp; kayak spots across the Bay Area</span>
+        <div className="flex items-center gap-2 md:gap-3">
+          <span className="hidden lg:inline text-xs text-[--muted]">Paddleboard &amp; kayak spots across the Bay Area</span>
+
+          {/* Desktop inline search */}
+          <div className="relative hidden md:block">
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search spots, towns…"
+              aria-label="Search spots"
+              className="w-52 rounded-lg border border-gray-200 bg-white pl-8 pr-7 py-1.5 text-xs text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+            />
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+            {filters.search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[--dark] text-sm leading-none"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Mobile search toggle */}
+          <button
+            onClick={() => setSearchOpen((o) => !o)}
+            aria-label={searchOpen ? "Close search" : "Open search"}
+            aria-expanded={searchOpen}
+            className="md:hidden text-base px-2 py-1.5 rounded-lg border border-gray-200 text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors"
+          >
+            🔍
+          </button>
+
           <button
             onClick={() => { setFeedbackOpen(true); track("feedback_opened"); }}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border border-[--accent] text-[--accent] hover:bg-[--accent] hover:text-white transition-colors"
@@ -207,6 +263,39 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           </button>
         </div>
       </header>
+
+      {/* Mobile expanded search bar */}
+      {searchOpen && (
+        <div className="md:hidden shrink-0 px-4 py-2 border-b border-gray-200 bg-[--bg] flex items-center gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              autoFocus
+              value={filters.search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search spots, towns, wildlife…"
+              aria-label="Search spots"
+              className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-7 py-2 text-base text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+            />
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            {filters.search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[--dark]"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setSearchOpen(false)}
+            className="shrink-0 text-xs font-medium text-[--muted] hover:text-[--dark] transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      )}
 
       {/* Filter bar */}
       <FilterBar

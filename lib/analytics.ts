@@ -14,6 +14,7 @@ import posthog from "posthog-js";
 type EventName =
   | "spot_viewed"
   | "filter_changed"
+  | "spot_search"
   | "near_me_toggled"
   | "favorite_toggled"
   | "feedback_opened"
