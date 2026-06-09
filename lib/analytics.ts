@@ -13,6 +13,9 @@ import posthog from "posthog-js";
 
 type EventName =
   | "spot_viewed"
+  // Bottom-of-funnel intent: clicking Get Directions / Share / Photos in the
+  // spot drawer (the real "I'm going here" signals, distinguished by `action`).
+  | "spot_action"
   | "filter_changed"
   | "spot_search"
   | "near_me_toggled"
@@ -20,7 +23,11 @@ type EventName =
   | "feedback_opened"
   | "view_switched"
   | "pwa_prompt_shown"
-  | "pwa_installed";
+  | "pwa_installed"
+  // Mobile bottom-sheet drag: did people discover expand-to-full, and how do
+  // they close the sheet (drag vs button)?
+  | "spot_sheet_resized"
+  | "spot_sheet_dismissed";
 
 function ready(): boolean {
   return typeof window !== "undefined" && posthog.__loaded === true;

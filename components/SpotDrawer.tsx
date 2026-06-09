@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL, DIFFICULTY_COLOR } from "@/lib/types";
 import { nearbySpots } from "@/lib/distance";
+import { track } from "@/lib/analytics";
 import FeedbackModal from "@/components/FeedbackModal";
 
 interface Props {
@@ -50,6 +51,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
   const [sheetH, setSheetH] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ startY: number; startH: number } | null>(null);
+  const snapState = useRef<"peek" | "full">("peek");
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -82,9 +84,20 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
     const peek = window.innerHeight * PEEK;
     const full = window.innerHeight * FULL;
     const h = sheetH ?? peek;
+    const info = spot ? { spot_id: spot.id, spot_name: spot.water, region: spot.region } : {};
     // Dragged well below the peek height -> dismiss; else snap to nearer point.
-    if (h < peek * 0.6) { onClose(); return; }
-    setSheetH(h > (peek + full) / 2 ? full : peek);
+    if (h < peek * 0.6) {
+      track("spot_sheet_dismissed", { ...info, method: "drag" });
+      onClose();
+      return;
+    }
+    const next = h > (peek + full) / 2 ? "full" : "peek";
+    setSheetH(next === "full" ? full : peek);
+    // Only log real state changes, so a drag that resettles at peek isn't noise.
+    if (next !== snapState.current) {
+      snapState.current = next;
+      track("spot_sheet_resized", { ...info, to: next });
+    }
   }
 
   useEffect(() => {
@@ -111,7 +124,16 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
 
   const nearby = nearbySpots(spot, allSpots, 3);
 
+  // Shared identity for the bottom-of-funnel action events.
+  const spotEventProps = {
+    spot_id: spot.id,
+    spot_name: spot.water,
+    region: spot.region,
+    has_fee: spot.has_fee,
+  };
+
   async function handleShare() {
+    track("spot_action", { ...spotEventProps, action: "share" });
     const url = `${window.location.origin}/spot/${spot!.id}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
@@ -300,6 +322,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
                 href={photosUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("spot_action", { ...spotEventProps, action: "photos" })}
                 className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
                 style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
               >
@@ -310,6 +333,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track("spot_action", { ...spotEventProps, action: "directions" })}
               className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "#fff" }}
             >
