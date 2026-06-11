@@ -5,6 +5,7 @@ import { DIFFICULTY_LABEL } from "@/lib/types";
 
 const ALL_SPOTS = spotsData as Spot[];
 
+export const alt = "Paddleboard and kayak launch spot details on Paddle to Water";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

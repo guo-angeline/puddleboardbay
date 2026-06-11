@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL, DIFFICULTY_COLOR } from "@/lib/types";
 import { nearbySpots } from "@/lib/distance";
+import { track } from "@/lib/analytics";
 import FeedbackModal from "@/components/FeedbackModal";
+import ConditionsPanel from "@/components/ConditionsPanel";
 
 interface Props {
   spot: Spot | null;
@@ -35,10 +37,69 @@ function Tag({ label }: { label: string }) {
 // fits the key access info before the fold.
 const NOTES_TRUNCATE = 220;
 
+// Mobile bottom-sheet snap points, as a fraction of viewport height.
+const PEEK = 0.58; // default resting height
+const FULL = 0.92; // dragged-up / expanded height
+
 export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavorite, onToggleFavorite }: Props) {
   const [copied, setCopied] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
+
+  // Draggable mobile sheet. The handle (not the content) is the drag surface, so
+  // dragging the grabber moves the sheet while the body still scrolls on its own.
+  const [isMobile, setIsMobile] = useState(false);
+  const [sheetH, setSheetH] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<{ startY: number; startH: number } | null>(null);
+  const snapState = useRef<"peek" | "full">("peek");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => {
+      setIsMobile(mq.matches);
+      if (mq.matches) setSheetH((h) => h ?? Math.round(window.innerHeight * PEEK));
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  function onHandleStart(e: ReactTouchEvent) {
+    drag.current = {
+      startY: e.touches[0].clientY,
+      startH: sheetH ?? window.innerHeight * PEEK,
+    };
+    setDragging(true);
+  }
+  function onHandleMove(e: ReactTouchEvent) {
+    if (!drag.current) return;
+    const dh = drag.current.startY - e.touches[0].clientY; // up = taller
+    const max = window.innerHeight * FULL;
+    setSheetH(Math.min(max, Math.max(120, drag.current.startH + dh)));
+  }
+  function onHandleEnd() {
+    if (!drag.current) return;
+    drag.current = null;
+    setDragging(false);
+    const peek = window.innerHeight * PEEK;
+    const full = window.innerHeight * FULL;
+    const h = sheetH ?? peek;
+    const info = spot ? { spot_id: spot.id, spot_name: spot.water, region: spot.region } : {};
+    // Dragged well below the peek height -> dismiss; else snap to nearer point.
+    if (h < peek * 0.6) {
+      track("spot_sheet_dismissed", { ...info, method: "drag" });
+      onClose();
+      return;
+    }
+    const next = h > (peek + full) / 2 ? "full" : "peek";
+    setSheetH(next === "full" ? full : peek);
+    // Only log real state changes, so a drag that resettles at peek isn't noise.
+    if (next !== snapState.current) {
+      snapState.current = next;
+      track("spot_sheet_resized", { ...info, to: next });
+    }
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -64,7 +125,16 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
 
   const nearby = nearbySpots(spot, allSpots, 3);
 
+  // Shared identity for the bottom-of-funnel action events.
+  const spotEventProps = {
+    spot_id: spot.id,
+    spot_name: spot.water,
+    region: spot.region,
+    has_fee: spot.has_fee,
+  };
+
   async function handleShare() {
+    track("spot_action", { ...spotEventProps, action: "share" });
     const url = `${window.location.origin}/spot/${spot!.id}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
@@ -92,11 +162,33 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
       {/* Drawer panel */}
       <div
         className="fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 rounded-t-2xl md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full shadow-2xl md:shadow-none"
-        style={{ zIndex: 1200 }}
+        style={{
+          zIndex: 1200,
+          ...(isMobile && sheetH != null
+            ? {
+                height: sheetH,
+                maxHeight: "none",
+                transition: dragging ? "none" : "height 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
+              }
+            : {}),
+        }}
       >
-        {/* Handle (mobile) */}
-        <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        {/* Handle (mobile) — drag to expand to full screen, down to peek/dismiss.
+            Sticky so it stays grabbable when the body scrolls; touch-action none so
+            the gesture drags the sheet instead of scrolling. */}
+        <div
+          className="sticky top-0 z-10 bg-white flex justify-center pt-3 pb-2.5 cursor-grab active:cursor-grabbing md:hidden"
+          style={{ touchAction: "none" }}
+          onTouchStart={onHandleStart}
+          onTouchMove={onHandleMove}
+          onTouchEnd={onHandleEnd}
+          role="slider"
+          aria-label="Resize panel: drag up to expand, down to dismiss"
+          aria-valuenow={sheetH != null && typeof window !== "undefined" ? Math.round((sheetH / window.innerHeight) * 100) : 58}
+          aria-valuemin={0}
+          aria-valuemax={92}
+        >
+          <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
         <div
@@ -176,6 +268,9 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
             </div>
           )}
 
+          {/* Live tide + wind — the reason to come back. */}
+          <ConditionsPanel spot={spot} />
+
           {/* Nearby spots — desktop sidebar only; map handles discovery on mobile */}
           {nearby.length > 0 && (
             <div className="hidden md:block mb-5">
@@ -231,6 +326,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
                 href={photosUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("spot_action", { ...spotEventProps, action: "photos" })}
                 className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
                 style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
               >
@@ -241,6 +337,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track("spot_action", { ...spotEventProps, action: "directions" })}
               className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "#fff" }}
             >

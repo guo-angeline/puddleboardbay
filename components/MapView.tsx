@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
+import L from "leaflet";
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_COLOR } from "@/lib/types";
 import "leaflet/dist/leaflet.css";
@@ -67,17 +68,28 @@ interface Props {
 }
 
 export default function MapView({ spots, selected, onSelect, userLocation, fitToSpots = false }: Props) {
+  // One shared Canvas renderer for all pins. Canvas repaints the whole spot layer
+  // in a single draw call on pan/zoom, vs. SVG mutating one DOM node per marker
+  // (the slow path that made moving the map stutter). `tolerance` adds a click
+  // buffer around each circle, so a small visible pin still has a finger-sized hit
+  // area without needing a second invisible marker. `padding` pre-renders a margin
+  // beyond the viewport so edge pins don't pop in mid-pan.
+  const renderer = useMemo(() => L.canvas({ tolerance: 12, padding: 0.5 }), []);
+
   return (
     <MapContainer
       center={BAY_CENTER}
       zoom={9}
       className="h-full w-full"
       zoomControl={true}
+      preferCanvas={true}
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         maxZoom={19}
+        keepBuffer={4}
+        updateWhenZooming={false}
       />
 
       <FlyTo spot={selected} />
@@ -104,28 +116,19 @@ export default function MapView({ spots, selected, onSelect, userLocation, fitTo
         const isSelected = selected?.id === spot.id;
         const color = DIFFICULTY_COLOR[spot.difficulty] ?? "#6B7280";
         return (
-          <Fragment key={spot.id}>
-            {/* Invisible larger hit target so a finger can land on the pin. The
-                visible 10px circle is far below a 44px touch target; this 20px
-                transparent circle catches the tap. */}
-            <CircleMarker
-              center={[spot.lat, spot.lng]}
-              radius={20}
-              pathOptions={{ color: "transparent", fillColor: "transparent", fillOpacity: 0, weight: 0 }}
-              eventHandlers={{ click: () => onSelect(spot) }}
-            />
-            <CircleMarker
-              center={[spot.lat, spot.lng]}
-              radius={isSelected ? 13 : 10}
-              interactive={false}
-              pathOptions={{
-                color: isSelected ? "#1B2A16" : color,
-                fillColor: color,
-                fillOpacity: isSelected ? 1 : 0.75,
-                weight: isSelected ? 3 : 2,
-              }}
-            />
-          </Fragment>
+          <CircleMarker
+            key={spot.id}
+            center={[spot.lat, spot.lng]}
+            radius={isSelected ? 13 : 10}
+            renderer={renderer}
+            pathOptions={{
+              color: isSelected ? "#1B2A16" : color,
+              fillColor: color,
+              fillOpacity: isSelected ? 1 : 0.75,
+              weight: isSelected ? 3 : 2,
+            }}
+            eventHandlers={{ click: () => onSelect(spot) }}
+          />
         );
       })}
     </MapContainer>

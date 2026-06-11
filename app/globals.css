@@ -15,7 +15,16 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
-html, body { height: 100%; }
+/* Lock the app shell to the viewport. Without this, iOS Safari's collapsing
+   toolbar resizes a height:100% shell on every swipe (the "wobble"), and the
+   page rubber-bands. Fixed body + overflow hidden + overscroll:none means the
+   shell never moves; only the intended panels (map, list, sheet) scroll. */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body { position: fixed; inset: 0; width: 100%; }
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -25,8 +34,9 @@ body {
   margin: 0;
 }
 
-/* Momentum scrolling on iOS for all scrollable containers */
-.overflow-y-auto { -webkit-overflow-scrolling: touch; }
+/* Momentum scrolling on iOS; `contain` stops a scroller's bounce from chaining
+   to the locked shell. */
+.overflow-y-auto { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
 /* Push header below notch / Dynamic Island on iPhones */
 header {

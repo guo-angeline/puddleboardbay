@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import spotsData from "@/data/spots.json";
 
+export const alt = "Paddle to Water: paddleboard and kayak launch spots across the Bay Area";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
