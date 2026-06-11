@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 import spotsData from "@/data/spots.json";
 import type { Spot } from "@/lib/types";
+import { SITE_URL } from "@/lib/structured-data";
 
 const ALL_SPOTS = spotsData as Spot[];
-const SITE_URL = "https://sup-spots.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

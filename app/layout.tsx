@@ -2,7 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import InstallPrompt from "@/components/InstallPrompt";
 import PostHogProvider from "@/components/PostHogProvider";
+import { SITE_URL, SITE_NAME, directoryJsonLd } from "@/lib/structured-data";
+import spotsData from "@/data/spots.json";
+import type { Spot } from "@/lib/types";
 import "./globals.css";
+
+const ALL_SPOTS = spotsData as Spot[];
+const SPOT_COUNT = ALL_SPOTS.length;
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -11,13 +17,12 @@ export const viewport: Viewport = {
   themeColor: "#2D6A8F",
 };
 
-const SITE_URL = "https://sup-spots.vercel.app";
 const TITLE = "Paddle to Water: Paddleboard & Kayak Spots in the Bay Area";
 const DESCRIPTION =
-  "Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area. 114 spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, and Northern California, with maps, launch fees, and conditions.";
+  `Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area and Northern California. ${SPOT_COUNT} spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, Sacramento, the Sierra, the Central Valley, and the Central Coast, with maps, launch fees, and conditions.`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://paddletowater.com"),
+  metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
   keywords: [
@@ -40,7 +45,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    siteName: "Paddle to Water",
+    siteName: SITE_NAME,
     type: "website",
     locale: "en_US",
   },
@@ -63,15 +68,15 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Paddle to Water",
-  url: SITE_URL,
-  description: DESCRIPTION,
-  potentialAction: {
-    "@type": "SearchAction",
-    target: `${SITE_URL}/?q={search_term_string}`,
-    "query-input": "required name=search_term_string",
-  },
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: DESCRIPTION,
+    },
+    directoryJsonLd(ALL_SPOTS),
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

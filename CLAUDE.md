@@ -22,7 +22,7 @@ This is a fully static Next.js 16 app (App Router). All spot data is bundled at 
 ```
 raw-data/sup.xlsx
     └── raw-data/phase0_geocode.py   (one-time Python script)
-            └── data/spots.json      (114 geocoded + enriched spots, committed)
+            └── data/spots.json      (140 geocoded + enriched spots, committed)
                     └── app/page.tsx (imported directly as a module)
 ```
 
@@ -33,7 +33,7 @@ raw-data/sup.xlsx
 Defined in `lib/types.ts`. Each `Spot` has:
 - `difficulty`: `"flatwater" | "bay" | "river" | "unknown"` — drives map pin color and filter
 - `has_fee`: `true` (confirmed fee) | `false` (confirmed free) | `null` (unknown) — tri-state, not boolean
-- `lat` / `lng`: required for map rendering; all 114 spots are geocoded
+- `lat` / `lng`: required for map rendering; all 140 spots are geocoded
 
 ### Layout
 
@@ -58,11 +58,26 @@ Loaded via Google Fonts `@import` in `globals.css`. The `@import url(...)` must 
 - Headings (`h1`, drawer titles): `font-['Libre_Baskerville']`
 - Body: `Nunito` set on `body` in globals
 
+## Analytics
+
+PostHog is wired up in `components/PostHogProvider.tsx` (US cloud, gated on `NEXT_PUBLIC_POSTHOG_KEY`) behind a thin typed wrapper in `lib/analytics.ts`. Autocapture and pageviews are on; everything else is explicit.
+
+**Always add simple logging for material UX changes.** Whenever you ship a new interaction or meaningfully change an existing one (a new control, gesture, filter, navigation path, or conversion action), add a lightweight event in the same change. The data is how we tell whether the change worked, shipping UX without it is a miss.
+
+How to do it:
+- Add the event name to the `EventName` union in `lib/analytics.ts`, then call `track("name", props)` at the interaction. The union is the allowlist, unknown names won't compile.
+- Include `spot_id` / `spot_name` / `region` whenever a spot is involved, so events segment consistently with `spot_viewed`.
+- Group variants of one action under a single event with an `action` prop (e.g. `spot_action` with `action: "directions" | "share" | "photos"`) instead of many near-duplicate names.
+- Use `setPersona(...)` (person properties) for durable traits that define a segment (saver, budget, local), not for one-off events.
+- Keep it cheap and signal-rich: one event per real interaction. Don't log high-frequency noise (map pan/zoom, per-keystroke), debounce or skip it.
+
+`track()` and `setPersona()` no-op when PostHog isn't initialized, so they're safe to call unconditionally. Confirm a new event by checking its string lands in the built bundle: `grep -rho "<event>" .next/static`.
+
 ## Deployment
 
 Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. The app builds as fully static (`○` in the build output) — no server functions.
 
-`og:image` is not yet set. Add it in `app/layout.tsx` under `openGraph.images` when a hosted photo URL is available.
+`og:image` is set via the Next.js file convention: `app/opengraph-image.tsx` (site-wide) and `app/spot/[id]/opengraph-image.tsx` (per-spot, 1200x630). No `openGraph.images` array is needed in `app/layout.tsx`. Absolute URLs (canonical, OG, sitemap, robots, per-spot JSON-LD) all resolve from a single `SITE_URL` constant in `lib/structured-data.ts` (`https://paddletowater.com`), so update that one place if the production domain ever changes.
 
 ## Editing spot data
 
