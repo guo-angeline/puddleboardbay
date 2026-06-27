@@ -35,7 +35,13 @@ type EventName =
   // Live tide/wind conditions loaded for a spot. The return hook: fires once per
   // spot open after the fetch settles, with the paddle-ability read attached so
   // we can tell if people check before going out.
-  | "conditions_viewed";
+  | "conditions_viewed"
+  // Stage B push opt-in: the alert prompt was shown (after first save), and the
+  // result of attempting to enable notifications. `result` distinguishes
+  // granted / denied / unsupported / install_needed so we can see where the
+  // funnel leaks.
+  | "alert_optin_shown"
+  | "alert_optin_result";
 
 function ready(): boolean {
   return typeof window !== "undefined" && posthog.__loaded === true;
