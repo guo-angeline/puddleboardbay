@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import InstallPrompt from "@/components/InstallPrompt";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import PostHogProvider from "@/components/PostHogProvider";
 import { SITE_URL, SITE_NAME, directoryJsonLd } from "@/lib/structured-data";
 import spotsData from "@/data/spots.json";
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="h-full">
         {children}
+        <ServiceWorkerRegister />
         <InstallPrompt />
         <Analytics />
         <PostHogProvider />
