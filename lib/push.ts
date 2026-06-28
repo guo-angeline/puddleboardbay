@@ -5,6 +5,7 @@
  */
 
 const STASH_KEY = "ptw-push-subscription";
+const ANON_KEY = "ptw-anon-id";
 
 export function isPushSupported(): boolean {
   return (
@@ -91,5 +92,45 @@ export async function enablePushAlerts(watchedSpotIds: number[]): Promise<OptInR
     }));
 
   stashSubscription(sub, watchedSpotIds);
+  await postSubscription(sub, watchedSpotIds);
   return "granted";
+}
+
+/** Stable anonymous device id, generated once and persisted. */
+export function getAnonId(): string {
+  try {
+    const existing = localStorage.getItem(ANON_KEY);
+    if (existing) return existing;
+    const id = crypto.randomUUID();
+    localStorage.setItem(ANON_KEY, id);
+    return id;
+  } catch {
+    // Storage unavailable: a fresh id each call is acceptable degradation.
+    return crypto.randomUUID();
+  }
+}
+
+/** POST the subscription + watched ids to the backend. Best-effort; returns success. */
+export async function postSubscription(
+  sub: PushSubscription | PushSubscriptionJSON,
+  watchedSpotIds: number[]
+): Promise<boolean> {
+  const subscription = "toJSON" in sub ? sub.toJSON() : sub;
+  try {
+    const res = await fetch("/api/alerts/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ anonId: getAnonId(), subscription, watchedSpotIds }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Re-sync watched ids if this device already has a stashed subscription. */
+export async function syncWatchedSpots(watchedSpotIds: number[]): Promise<void> {
+  const stashed = readStashedSubscription();
+  if (!stashed) return;
+  await postSubscription(stashed.subscription, watchedSpotIds);
 }

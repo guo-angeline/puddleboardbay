@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { urlBase64ToUint8Array, stashSubscription, readStashedSubscription } from "@/lib/push";
+import { urlBase64ToUint8Array, stashSubscription, readStashedSubscription, getAnonId } from "@/lib/push";
 
 describe("urlBase64ToUint8Array", () => {
   it("decodes a base64url VAPID key to the right byte length", () => {
@@ -39,5 +39,24 @@ describe("subscription stash", () => {
 
   it("returns null when nothing is stashed", () => {
     expect(readStashedSubscription()).toBeNull();
+  });
+});
+
+describe("getAnonId", () => {
+  beforeEach(() => {
+    const store: Record<string, string> = {};
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => (k in store ? store[k] : null),
+      setItem: (k: string, v: string) => { store[k] = v; },
+      removeItem: (k: string) => { delete store[k]; },
+    });
+    vi.stubGlobal("crypto", { randomUUID: () => "uuid-fixed-1234" });
+  });
+
+  it("generates and persists a stable anon id", () => {
+    const first = getAnonId();
+    expect(first).toBe("uuid-fixed-1234");
+    const second = getAnonId();
+    expect(second).toBe(first); // persisted, not regenerated
   });
 });

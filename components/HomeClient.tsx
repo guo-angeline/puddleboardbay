@@ -13,6 +13,7 @@ import { distanceMiles } from "@/lib/distance";
 import { searchSpots } from "@/lib/search";
 import { track, setPersona } from "@/lib/analytics";
 import { useSavedConditions } from "@/components/useSavedConditions";
+import { syncWatchedSpots } from "@/lib/push";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -163,6 +164,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     () => ALL_SPOTS.filter((s) => favorites.has(s.id)),
     [favorites]
   );
+
+  const savedIdsKey = savedSpots.map((s) => s.id).sort((a, b) => a - b).join(",");
+  useEffect(() => {
+    if (savedSpots.length === 0) return;
+    void syncWatchedSpots(savedSpots.map((s) => s.id));
+  // savedIdsKey is the stable trigger; syncWatchedSpots no-ops without a subscription.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedIdsKey]);
 
   const { condBySpot, loading: conditionsLoading } = useSavedConditions(savedSpots);
 
