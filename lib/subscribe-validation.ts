@@ -1,3 +1,5 @@
+const MAX_WATCHED = 200;
+
 export interface SubscribePayload {
   anonId?: string;
   subscription: { endpoint: string; keys: { p256dh: string; auth: string } };
@@ -27,8 +29,11 @@ export function validateSubscribePayload(body: unknown): ValidationResult {
 
   let watchedSpotIds: number[] = [];
   if (body.watchedSpotIds !== undefined) {
-    if (!Array.isArray(body.watchedSpotIds) || body.watchedSpotIds.some((n) => typeof n !== "number")) {
+    if (!Array.isArray(body.watchedSpotIds) || body.watchedSpotIds.some((n) => !Number.isInteger(n) || n <= 0)) {
       return { ok: false, error: "watchedSpotIds must be an array of numbers" };
+    }
+    if (body.watchedSpotIds.length > MAX_WATCHED) {
+      return { ok: false, error: "watchedSpotIds exceeds maximum length" };
     }
     watchedSpotIds = body.watchedSpotIds as number[];
   }

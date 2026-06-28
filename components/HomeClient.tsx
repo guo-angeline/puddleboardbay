@@ -167,11 +167,12 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   const savedIdsKey = savedSpots.map((s) => s.id).sort((a, b) => a - b).join(",");
   useEffect(() => {
-    if (savedSpots.length === 0) return;
+    if (!favoritesLoaded) return;
     void syncWatchedSpots(savedSpots.map((s) => s.id));
-  // savedIdsKey is the stable trigger; syncWatchedSpots no-ops without a subscription.
+  // savedIdsKey is the stable trigger; favoritesLoaded gates post-hydration only.
+  // syncWatchedSpots no-ops without a subscription, so non-subscribed users never POST.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedIdsKey]);
+  }, [savedIdsKey, favoritesLoaded]);
 
   const { condBySpot, loading: conditionsLoading } = useSavedConditions(savedSpots);
 

@@ -46,4 +46,40 @@ describe("validateSubscribePayload", () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value.watchedSpotIds).toEqual([]);
   });
+
+  it("rejects an array longer than MAX_WATCHED (201 elements)", () => {
+    const tooMany = { ...good, watchedSpotIds: Array.from({ length: 201 }, (_, i) => i + 1) };
+    const r = validateSubscribePayload(tooMany);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("watchedSpotIds exceeds maximum length");
+  });
+
+  it("accepts exactly MAX_WATCHED (200) elements", () => {
+    const exactly = { ...good, watchedSpotIds: Array.from({ length: 200 }, (_, i) => i + 1) };
+    expect(validateSubscribePayload(exactly).ok).toBe(true);
+  });
+
+  it("rejects [2, 0] (zero is not a positive integer)", () => {
+    const r = validateSubscribePayload({ ...good, watchedSpotIds: [2, 0] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("watchedSpotIds must be an array of numbers");
+  });
+
+  it("rejects [2, -1] (negative)", () => {
+    const r = validateSubscribePayload({ ...good, watchedSpotIds: [2, -1] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("watchedSpotIds must be an array of numbers");
+  });
+
+  it("rejects [2, 1.5] (float)", () => {
+    const r = validateSubscribePayload({ ...good, watchedSpotIds: [2, 1.5] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("watchedSpotIds must be an array of numbers");
+  });
+
+  it("rejects [2, NaN]", () => {
+    const r = validateSubscribePayload({ ...good, watchedSpotIds: [2, NaN] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("watchedSpotIds must be an array of numbers");
+  });
 });
