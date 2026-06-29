@@ -28,8 +28,10 @@ export async function GET(req: Request) {
     .eq("enabled", true);
   if (subErr) return NextResponse.json({ error: "db" }, { status: 500 });
 
-  const { data: watched } = await db.from("watched_spots").select("subscription_id, spot_id");
-  const { data: sends } = await db.from("alert_sends").select("subscription_id, spot_id, window_key, sent_at");
+  const { data: watched, error: watchedErr } = await db.from("watched_spots").select("subscription_id, spot_id");
+  if (watchedErr) return NextResponse.json({ error: "db" }, { status: 500 });
+  const { data: sends, error: sendsErr } = await db.from("alert_sends").select("subscription_id, spot_id, window_key, sent_at");
+  if (sendsErr) return NextResponse.json({ error: "db" }, { status: 500 });
 
   const watchedBySub = new Map<string, number[]>();
   for (const w of watched ?? []) {
@@ -80,11 +82,13 @@ export async function GET(req: Request) {
     );
     if (result.ok) {
       pushesSent += 1;
-      await db.from("alert_sends").insert(
-        picks.map((p) => ({ subscription_id: sub.id, spot_id: p.spotId, window_key: p.windowKey }))
+      const { error: insertErr } = await db.from("alert_sends").insert(
+        picks.map((p) => ({ subscription_id: sub.id, spot_id: p.spotId, window_key: p.windowKey, sent_at: new Date().toISOString() }))
       );
+      if (insertErr) console.error("alert_sends insert failed for", sub.id, insertErr.message);
     } else if (result.gone) {
-      await db.from("push_subscriptions").update({ enabled: false }).eq("id", sub.id);
+      const { error: disableErr } = await db.from("push_subscriptions").update({ enabled: false }).eq("id", sub.id);
+      if (disableErr) console.error("failed to disable subscription", sub.id, disableErr.message);
       disabled += 1;
     }
   }
