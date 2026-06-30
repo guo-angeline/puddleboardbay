@@ -11,7 +11,7 @@ import SpotDrawer from "@/components/SpotDrawer";
 import FeedbackModal from "@/components/FeedbackModal";
 import { distanceMiles } from "@/lib/distance";
 import { searchSpots } from "@/lib/search";
-import { track, setPersona } from "@/lib/analytics";
+import { track, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots } from "@/lib/push";
 
@@ -19,7 +19,6 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 const ALL_SPOTS = spotsData as Spot[];
 
-type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related";
 
 function applyFilters(spots: Spot[], filters: Filters): Spot[] {
   const structured = spots.filter((s) => {

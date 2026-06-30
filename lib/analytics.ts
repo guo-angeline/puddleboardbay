@@ -11,6 +11,9 @@ import posthog from "posthog-js";
  * - persona comes from person properties set via `setPersona`
  */
 
+/** Where a spot_viewed open originated, for funnel segmentation. */
+export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related";
+
 type EventName =
   | "spot_viewed"
   // Bottom-of-funnel intent: clicking Get Directions / Share / Photos in the

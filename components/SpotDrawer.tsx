@@ -4,14 +4,14 @@ import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL, DIFFICULTY_COLOR } from "@/lib/types";
 import { nearbySpots } from "@/lib/distance";
-import { track } from "@/lib/analytics";
+import { track, type SpotViewedSource } from "@/lib/analytics";
 import FeedbackModal from "@/components/FeedbackModal";
 import ConditionsPanel from "@/components/ConditionsPanel";
 
 interface Props {
   spot: Spot | null;
   onClose: () => void;
-  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
+  onSelect: (spot: Spot, source?: SpotViewedSource) => void;
   allSpots: Spot[];
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;

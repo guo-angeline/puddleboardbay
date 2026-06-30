@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_COLOR } from "@/lib/types";
+import type { SpotViewedSource } from "@/lib/analytics";
 import "leaflet/dist/leaflet.css";
 
 const BAY_CENTER: [number, number] = [37.55, -122.25];
@@ -62,7 +63,7 @@ function FlyToUser({ location }: { location: UserLocation | null }) {
 interface Props {
   spots: Spot[];
   selected: Spot | null;
-  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
+  onSelect: (spot: Spot, source?: SpotViewedSource) => void;
   userLocation?: UserLocation | null;
   fitToSpots?: boolean;
 }

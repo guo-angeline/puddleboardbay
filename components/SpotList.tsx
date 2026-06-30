@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import type { Spot } from "@/lib/types";
+import type { SpotViewedSource } from "@/lib/analytics";
 import SpotCard from "./SpotCard";
 import { rankSavedSpotsByConditions, type SavedConditionState } from "@/lib/savedConditions";
 import ConditionsBadge from "./ConditionsBadge";
@@ -9,7 +10,7 @@ import ConditionsBadge from "./ConditionsBadge";
 interface Props {
   spots: Spot[];
   selected: Spot | null;
-  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
+  onSelect: (spot: Spot, source?: SpotViewedSource) => void;
   onClearFilters: () => void;
   distanceMap?: Record<number, number>;
   savedSpots?: Spot[];
