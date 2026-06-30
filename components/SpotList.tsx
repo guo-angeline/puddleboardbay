@@ -9,7 +9,7 @@ import ConditionsBadge from "./ConditionsBadge";
 interface Props {
   spots: Spot[];
   selected: Spot | null;
-  onSelect: (spot: Spot) => void;
+  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
   onClearFilters: () => void;
   distanceMap?: Record<number, number>;
   savedSpots?: Spot[];
@@ -70,7 +70,7 @@ export default function SpotList({
               <SpotCard
                 spot={spot}
                 selected={selected?.id === spot.id}
-                onClick={() => onSelect(spot)}
+                onClick={() => onSelect(spot, "list")}
                 distance={distanceMap?.[spot.id]}
                 isFavorite={true}
                 onToggleFavorite={onToggleFavorite}
@@ -88,7 +88,7 @@ export default function SpotList({
           <SpotCard
             spot={spot}
             selected={selected?.id === spot.id}
-            onClick={() => onSelect(spot)}
+            onClick={() => onSelect(spot, "list")}
             distance={distanceMap?.[spot.id]}
             isFavorite={favorites.has(spot.id)}
             onToggleFavorite={onToggleFavorite}

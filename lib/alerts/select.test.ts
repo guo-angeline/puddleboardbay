@@ -31,7 +31,7 @@ describe("composeAlert", () => {
   it("names the spot for a single good window", () => {
     const { body, url } = composeAlert([sw(2, "Foster City Lagoons", "2026-07-04", "Saturday")]);
     expect(body).toBe("Saturday looks calm at Foster City Lagoons.");
-    expect(url).toBe("/?spot=2");
+    expect(url).toBe("/?spot=2&from=alert");
   });
 
   it("summarizes extras with a +N more", () => {

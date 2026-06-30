@@ -11,7 +11,7 @@ import ConditionsPanel from "@/components/ConditionsPanel";
 interface Props {
   spot: Spot | null;
   onClose: () => void;
-  onSelect: (spot: Spot) => void;
+  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
   allSpots: Spot[];
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
@@ -279,7 +279,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
                 {nearby.map(({ spot: s, miles }) => (
                   <button
                     key={s.id}
-                    onClick={() => { onClose(); onSelect(s); }}
+                    onClick={() => { onClose(); onSelect(s, "related"); }}
                     className="flex items-center gap-2.5 w-full text-left py-2 px-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <span

@@ -40,6 +40,6 @@ export function composeAlert(spots: SpotWindow[]): { title: string; body: string
   return {
     title: "Good paddling ahead",
     body: `${first.label} looks calm at ${first.spotName}${tail}.`,
-    url: `/?spot=${first.spotId}`,
+    url: `/?spot=${first.spotId}&from=alert`,
   };
 }

@@ -62,7 +62,7 @@ function FlyToUser({ location }: { location: UserLocation | null }) {
 interface Props {
   spots: Spot[];
   selected: Spot | null;
-  onSelect: (spot: Spot) => void;
+  onSelect: (spot: Spot, source?: "list" | "map" | "deeplink" | "alert" | "related") => void;
   userLocation?: UserLocation | null;
   fitToSpots?: boolean;
 }
@@ -127,7 +127,7 @@ export default function MapView({ spots, selected, onSelect, userLocation, fitTo
               fillOpacity: isSelected ? 1 : 0.75,
               weight: isSelected ? 3 : 2,
             }}
-            eventHandlers={{ click: () => onSelect(spot) }}
+            eventHandlers={{ click: () => onSelect(spot, "map") }}
           />
         );
       })}

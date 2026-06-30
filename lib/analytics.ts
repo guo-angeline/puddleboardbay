@@ -41,7 +41,9 @@ type EventName =
   // granted / denied / unsupported / install_needed so we can see where the
   // funnel leaks.
   | "alert_optin_shown"
-  | "alert_optin_result";
+  | "alert_optin_result"
+  // Fired when the app is opened from a push notification (URL contains from=alert).
+  | "alert_clicked";
 
 function ready(): boolean {
   return typeof window !== "undefined" && posthog.__loaded === true;

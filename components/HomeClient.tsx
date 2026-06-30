@@ -19,6 +19,8 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 const ALL_SPOTS = spotsData as Spot[];
 
+type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related";
+
 function applyFilters(spots: Spot[], filters: Filters): Spot[] {
   const structured = spots.filter((s) => {
     if (filters.region && s.region !== filters.region) return false;
@@ -64,7 +66,8 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   // Pre-select from prop (spot pages) or ?spot= URL param (home page)
   useEffect(() => {
-    const id = initialSpotId ?? Number(new URLSearchParams(window.location.search).get("spot") || 0);
+    const params = new URLSearchParams(window.location.search);
+    const id = initialSpotId ?? Number(params.get("spot") || 0);
     if (id) {
       const found = ALL_SPOTS.find((s) => s.id === id);
       if (found) {
@@ -72,13 +75,22 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         // the URL, so resolving it during render would break SSR hydration.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelected(found);
+        const from = params.get("from");
+        const source: SpotViewedSource = from === "alert" ? "alert" : "deeplink";
+        if (from === "alert") {
+          track("alert_clicked", {
+            spot_id: found.id,
+            spot_name: found.water,
+            region: found.region,
+          });
+        }
         track("spot_viewed", {
           spot_id: found.id,
           spot_name: found.water,
           region: found.region,
           difficulty: found.difficulty,
           has_fee: found.has_fee,
-          source: "deeplink",
+          source,
         });
       }
     }
@@ -225,7 +237,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     );
   }
 
-  function handleSelect(spot: Spot) {
+  function handleSelect(spot: Spot, source: SpotViewedSource = "list") {
     setSelected(spot);
     track("spot_viewed", {
       spot_id: spot.id,
@@ -233,6 +245,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       region: spot.region,
       difficulty: spot.difficulty,
       has_fee: spot.has_fee,
+      source,
     });
   }
 
