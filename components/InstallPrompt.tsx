@@ -18,6 +18,20 @@ declare global {
 }
 
 const STORAGE_KEY = "ptw-install-dismissed";
+// One pwa_installed per device, however the install happened (in-app button,
+// browser menu, or iOS Add to Home Screen detected on first standalone launch).
+const INSTALL_LOGGED_KEY = "ptw-install-logged";
+
+function logInstallOnce(outcome: "appinstalled" | "detected_standalone") {
+  try {
+    if (localStorage.getItem(INSTALL_LOGGED_KEY) === "1") return;
+    localStorage.setItem(INSTALL_LOGGED_KEY, "1");
+  } catch {
+    /* private mode: still log, at worst once per session */
+  }
+  track("pwa_installed", { platform: isIOS() ? "ios" : "android", outcome });
+  setPersona({ installed_pwa: true });
+}
 
 function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -63,13 +77,21 @@ export default function InstallPrompt() {
   useEffect(() => {
     if (isInStandaloneMode()) {
       setPersona({ installed_pwa: true });
+      // iOS installs happen outside the page (Share > Add to Home Screen), so
+      // the first standalone launch is the only place we can observe them.
+      logInstallOnce("detected_standalone");
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlatform("standalone");
       return;
     }
+    // Fires for ANY Chromium install (our button or the browser's own menu/icon).
+    function handleInstalled() {
+      logInstallOnce("appinstalled");
+    }
+    window.addEventListener("appinstalled", handleInstalled);
     if (isIOS()) {
       setPlatform("ios");
-      return;
+      return () => window.removeEventListener("appinstalled", handleInstalled);
     }
     function handleBeforeInstall(e: BeforeInstallPromptEvent) {
       e.preventDefault();
@@ -77,7 +99,10 @@ export default function InstallPrompt() {
       setPlatform("android");
     }
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => {
+      window.removeEventListener("appinstalled", handleInstalled);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+    };
   }, []);
 
   // Show after the first save, framed around alerts for that spot.
@@ -110,7 +135,11 @@ export default function InstallPrompt() {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    track("pwa_installed", { platform, outcome });
+    // Accepted installs are logged by the appinstalled listener; only the
+    // declined native dialog is worth an event of its own here.
+    if (outcome === "dismissed") {
+      track("pwa_installed", { platform, outcome });
+    }
     if (outcome === "accepted") {
       setPersona({ installed_pwa: true });
       setPlatform("standalone"); // now show the enable-alerts step
