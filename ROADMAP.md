@@ -1,8 +1,23 @@
 # Roadmap
 
-Deferred features, kept implementation-ready. When picking one up, build it, then delete its entry from this file.
+**The single home for vision, strategy, and the backlog.** Do not create separate plan/roadmap/strategy docs; fold new product thinking into this file. (IMPROVEMENT-PLAN.md, ux-mobile-findings.md, and docs/strategy/ were consolidated here 2026-07-02 and deleted; full text in git history.) Implementation specs under `docs/superpowers/` are historical execution artifacts for shipped work, not roadmaps. This file is also the studio backlog.
+<!-- studio:v1  statuses: proposed | ready | in-progress | blocked(D<n>) | parked | done -->
+<!-- The studio loop works the top-most [ready] item. Steer by editing statuses: promote [proposed] to [ready], demote to [parked], reorder. Shipped items move to the Shipped section with date + commit + deploy refs. -->
+<!-- Pause everything by changing the marker above to studio:paused -->
+
 
 ---
+
+## Vision: the Paddle-Morning Oracle
+
+*(Consolidated 2026-07-02 from the retired competitive-strategy doc of 2026-06-29.)*
+
+The thing a Bay Area paddler opens at 7am to answer "where's good today?" Not a directory: forecast data plus local microclimate judgment, later hardened by crowd ground-truth reports ("paddled Richardson Bay, glassy til 11").
+
+- **The gap:** nobody owns "should I paddle this spot today?" AllTrails is land-biased and structurally can't do conditions-as-habit. Windy/Windguru is raw meteorology for experts, no per-spot judgment or discovery. Surfline proved people pay (~$96/yr) for exactly this answer, but only for surfers. We are Surfline for the paddlers who aren't surfers.
+- **The moat:** local depth and habit, not scale. A national app gives a wind number; we give the answer ("Crissy is blown out by 10am, go to Richardson Bay instead"). Per-spot microclimate/tide/fog knowledge for 140 Bay Area put-ins is the one moat a solo founder can build that AllTrails/Windy/Surfline won't bother to.
+- **Alternatives considered and sequenced, not rejected:** safety-co-pilot framing folds in as a trust layer on the conditions judgment; community ("the local paddle tribe") is deferred until there are retained users to seed it. Habit first; community is a consequence of habit.
+- **Business-model bet:** PaddlePass subscription is real but thin alone (~3,000 engaged locals x 7% x $35 ≈ $7k/yr). Local commerce/lead-gen (board rentals, lessons, clubs near a put-in) monetizes free users too and may out-earn the subscription. Revisit once retention is proven.
 
 ## Strategy: what the data says
 
@@ -25,33 +40,46 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
   - **Evaluator redesigned 2026-07-02:** the original day-period evaluator required the whole 6am to 6pm forecast max wind <= 8 mph, which never happens in SF Bay summer, so alerts could never fire. It now uses the NWS hourly forecast and alerts on >= 2 consecutive calm daytime hours (calm mornings count).
   - **Real-device test, remaining piece:** install + opt-in verified on a real iOS device 2026-06-30; subscription row confirmed in Supabase 2026-07-02 (re-sync POST succeeded with failure logging live). Still owed: confirm the push actually lands and deep-links. Cron moved 2026-07-02 from 13:00 UTC (6am PDT, woke sleeping users with a same-morning alert) to 02:00 UTC (7pm PDT / 6pm PST): with the hourly evaluator an evening send advertises tomorrow's window, which gives lead time to plan. Dry-run check: `curl -H "Authorization: Bearer $CRON_SECRET" "https://paddletowater.com/api/cron/check-conditions?dry=1"`.
 - **Instrumentation pass, shipped + live 2026-06-29.** `spot_viewed` now carries `source: "list" | "map" | "deeplink" | "alert" | "related"` (canonical `SpotViewedSource` in `lib/analytics.ts`), and `alert_clicked` fires when the app opens from a push (the service worker tags the deep link `from=alert`). Outbound on Get Directions / Share was deferred (the `spot_action` click already captures intent; true "the link left" detection is fuzzy and low value).
+- **Mobile UX conversion pass, shipped 2026-06 (branch `mobile-ux-fixes`, PRs #1 and #2).** Fixed the blockers from the 4-agent mobile audit: install banner no longer covers the drawer and dismissal persists in localStorage, Bay-default map with non-destructive pin selection, 44px save heart with first-run nudge, favorites hydration fix, map-tab empty state, place-name-first short search, partial-height draggable sheet, region-pill peek hint. Source docs (ux-mobile-findings.md, IMPROVEMENT-PLAN.md) retired 2026-07-02; still-open leftovers are backlog item 5.
 
 ---
 
-## 1. Fix the 58% landing bounce
+## 1. [in-progress] 2026-07-02T16:02:37Z Fix the 58% landing bounce
 
 142 of 247 visitors never open a single spot. On mobile (77% of users), surface value on load instead of a bare map: auto-open or prompt the nearest spot, or a "good to paddle near you today" view. Near-me works when asked, but nobody asks (10 users). Pairs naturally with the conditions data Stage A already fetches.
 
-## 2. Make "Get Directions" convert
-
-The true conversion, clicked by 5 users in 20 days. Either the button is buried in the drawer or wind is deterring trips. Test placement, and cross-tab directions clicks against calm-vs-breezy conditions to learn whether wind suppresses intent.
-
-## 3. SEO: monitor, do not build yet
+## 2. [parked] SEO: monitor, do not build yet (recheck organic traffic ~2026-07-20; if still flat, promote to ready as an indexing investigation)
 
 Organic is 10 users; expected this soon after the 140 spot pages went live. Recheck organic traffic in 4 to 6 weeks. If still flat, the spot pages are not indexing and that becomes a real work item. No build now.
 
 ---
 
-## Tech follow-ups (from building the retention engine)
+## 3. [ready] Tech follow-ups (from building the retention engine)
+
+Small items, one ship each, in this order:
 
 - **Bounded-concurrency NWS fetch** in the cron (`app/api/cron/check-conditions`): it does 2 serial NWS calls per unique watched spot, which approaches the 60s function limit as the watched set grows. Batch with bounded concurrency + cache the `/points -> forecast URL` resolution. Do before many spots are watched.
 - **`npm audit fix`**: 4 moderate prod advisories (dompurify, postcss) pulled in transitively; the critical/high are dev-only.
-- **UNIQUE `alert_sends` dedupe index + `ON CONFLICT`** for DB-level dedup (currently app-enforced via `sentKeys`).
-- Restrict the cron's unique-spot fetch to spots reachable from an enabled subscription; sort the alert headline by soonest window.
+- **UNIQUE `alert_sends` dedupe index + `ON CONFLICT`** for DB-level dedup (currently app-enforced via `sentKeys`). Note: schema change touching alert infrastructure, expect this to escalate per studio policy.
+- Restrict the cron's unique-spot fetch to spots reachable from an enabled subscription; sort the alert headline by soonest window. Note: cron behavior change, expect escalation.
+
+## 4. [parked] Confirm push lands and deep-links on a real device
+
+Owner action: needs a physical iOS device (install + opt-in already verified 2026-06-30; subscription row confirmed 2026-07-02). Dry-run: `curl -H "Authorization: Bearer $CRON_SECRET" "https://paddletowater.com/api/cron/check-conditions?dry=1"`.
+
+## 5. [proposed] Mobile polish leftovers (deferred from the Jun 2026 mobile UX pass)
+
+Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces before working it.
+
+- Marker clustering for dense areas (needs `leaflet.markercluster`; the audit measured 67 markers within a 24px radius at statewide zoom).
+- `npm run dev` fast-refresh reload loop (~1/sec, Leaflet never mounts, `Invalid LatLng (NaN,NaN)`; dev-only, blocks local QA).
+- Geolocation-denied recovery: guidance lives in a `title` tooltip invisible on touch; show an inline toast.
+- Map zoom controls are 30px (HIG minimum 44) and far from the thumb.
+- Empty-state copy says "filters" when search caused it, and "Clear filters" silently also clears search.
 
 ---
 
-## Later (after retention is proven)
+## Later (after retention is proven) — all [proposed], do not promote before the ~2026-07-15 funnel re-check
 
 - **UGC content flywheel:** ratings, photos, trip logs, user conditions reports. The long-term moat and SEO-acquisition engine, but it needs retained users to generate content first.
 - **Optional Google sign-in** to sync push subscriptions and saved spots across devices (the engine ships anonymous; this is the upgrade path).

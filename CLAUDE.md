@@ -77,7 +77,7 @@ How to do it:
 - Keep it cheap and signal-rich: one event per real interaction. Don't log high-frequency noise (map pan/zoom, per-keystroke), debounce or skip it.
 - **Any logging change MUST get an entry in `analytics/INSTRUMENTATION_CHANGELOG.md`** (event, change type, why, and a Comparability note). A PostToolUse hook (`scripts/check-instrumentation-changelog.py`) reminds you. This is what stops a later analyst from reading a logging change as a behavior change.
 
-Experiments: read flags via `lib/experiments.ts` (`useExperiment` / `getVariant`); exposure is logged only when the treatment renders. Never call `posthog.identify()` / `reset()` (no login; it reshuffles buckets). Declare every experiment in `docs/experiments/` from `TEMPLATE.md` before shipping.
+Experiments: read flags via `lib/experiments.ts` (`useExperiment` / `getVariant`); exposure is logged only when the treatment renders. Never call `posthog.identify()` / `reset()` (no login; it reshuffles buckets). Declare every experiment in `docs/experiments/` from `TEMPLATE.md` before shipping. **Every major product update (a new user-facing surface or a changed core flow) ships behind an A/B experiment flag, never straight to 100%** (owner directive, 2026-07-02). Low traffic means a longer read window, not a reason to skip the flag; small fixes and copy tweaks are exempt.
 
 `track()`, `trackSystem()`, `trackIntent()` and `setPersona()` no-op when PostHog isn't initialized, so they're safe to call unconditionally. Confirm a new event by checking its string lands in the built bundle: `grep -rho "<event>" .next/static`.
 
@@ -99,6 +99,8 @@ When updating any spot in `data/spots.json`, be careful not to alter the `lat`/`
 
 When user feedback comes in as a question or personal comment (e.g. "I didn't know SUPs were allowed, where do you put in?"), extract the underlying facts and fold them into the spot's `notes` as general, evergreen description. Never phrase notes as a reply to that person ("Yes, SUPs are allowed", "You put in at..."). The notes are read by every visitor, not the one who sent the feedback. Write what's true about the spot, not an answer to whoever asked.
 
-## Planned next phases
+## Vision & roadmap
 
-See `ROADMAP.md` for the current, data-driven priority order (source of truth). In short: the Jun 2026 analytics showed retention is the bottleneck (78% one-and-done) and conditions is the differentiator (loads reliably for ~91% of opens; genuine engagement now being measured, not the old fetch-settle count), so the roadmap now leads with the **conditions-alert retention loop** (save -> install -> anonymous web push when a spot is good; Stage A shipped) ahead of ratings/trip-reports/photos. The UGC content flywheel and a PaddlePass premium tier come after retention is proven.
+`ROADMAP.md` is the **only** place for vision, strategy, and the roadmap (it is also the studio backlog). Never create a separate plan, roadmap, or strategy doc; fold new product thinking into `ROADMAP.md` directly. The old standalone docs (IMPROVEMENT-PLAN.md, ux-mobile-findings.md, docs/strategy/) were consolidated into it and deleted on 2026-07-02 (full text in git history). Implementation specs/plans under `docs/superpowers/` are historical execution artifacts for already-shipped work, not roadmaps; analytics reports live in `reports/`.
+
+In short: the Jun 2026 analytics showed retention is the bottleneck (78% one-and-done) and conditions is the differentiator (loads reliably for ~91% of opens; genuine engagement now being measured, not the old fetch-settle count), so the roadmap now leads with the **conditions-alert retention loop** (save -> install -> anonymous web push when a spot is good; Stage A shipped) ahead of ratings/trip-reports/photos. The UGC content flywheel and a PaddlePass premium tier come after retention is proven.
