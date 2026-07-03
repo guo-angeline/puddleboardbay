@@ -2,7 +2,8 @@
 
 import { useRef, useEffect } from "react";
 import type { Spot } from "@/lib/types";
-import type { SpotViewedSource } from "@/lib/analytics";
+import { trackIntent, type SpotViewedSource } from "@/lib/analytics";
+import { useGenuineView } from "@/lib/useGenuineView";
 import SpotCard from "./SpotCard";
 import { rankSavedSpotsByConditions, type SavedConditionState } from "@/lib/savedConditions";
 import ConditionsBadge from "./ConditionsBadge";
@@ -30,6 +31,19 @@ export default function SpotList({
       selectedRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [selected]);
+
+  // INTENT: the "Your saved spots" section was genuinely scrolled into view, the
+  // real "I came back to check my spots" signal. Re-arms when the saved set
+  // changes. Distinct from `saved_conditions_loaded` (data merely resolved).
+  const savedIdsKey = savedSpots.map((s) => s.id).sort((a, b) => a - b).join(",");
+  const savedSectionRef = useGenuineView({
+    key: savedIdsKey,
+    enabled: savedSpots.length > 0,
+    onView: () => {
+      const calm = savedSpots.filter((s) => condBySpot[s.id] === "calm").length;
+      trackIntent("saved_conditions_viewed", { count: savedSpots.length, calm_count: calm });
+    },
+  });
 
   // Remove saved spots from the main list to avoid duplicates
   const mainSpots = spots.filter((s) => !favorites.has(s.id));
@@ -61,7 +75,7 @@ export default function SpotList({
 
       {/* Saved spots section — pinned at top regardless of filters */}
       {savedSpots.length > 0 && (
-        <div>
+        <div ref={savedSectionRef}>
           <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5">
             <span className="text-[11px] font-semibold text-[--muted] uppercase tracking-wider">Your saved spots</span>
             <span className="text-[11px] text-[--muted] opacity-60">({savedSpots.length})</span>

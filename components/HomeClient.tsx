@@ -11,7 +11,7 @@ import SpotDrawer from "@/components/SpotDrawer";
 import FeedbackModal from "@/components/FeedbackModal";
 import { distanceMiles } from "@/lib/distance";
 import { searchSpots } from "@/lib/search";
-import { track, setPersona, type SpotViewedSource } from "@/lib/analytics";
+import { track, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots } from "@/lib/push";
 
@@ -185,17 +185,24 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedIdsKey, favoritesLoaded]);
 
-  const { condBySpot, loading: conditionsLoading } = useSavedConditions(savedSpots);
+  const { condBySpot, loading: conditionsLoading, latencyMs: savedCondLatency } = useSavedConditions(savedSpots);
 
-  // Fire once per session, after the first saved-conditions batch resolves.
+  // SYSTEM event: fire once per session after the first saved-conditions batch
+  // resolves. This is availability only (data loaded) — whether the user actually
+  // looked at the "Your saved spots" section is the dwell-gated INTENT event
+  // `saved_conditions_viewed`, logged in SpotList.
   const loggedSavedConditions = useRef(false);
   useEffect(() => {
     if (loggedSavedConditions.current) return;
     if (savedSpots.length === 0 || conditionsLoading) return;
     loggedSavedConditions.current = true;
     const calm = Object.values(condBySpot).filter((p) => p === "calm").length;
-    track("saved_conditions_viewed", { count: savedSpots.length, calm_count: calm });
-  }, [savedSpots.length, conditionsLoading, condBySpot]);
+    trackSystem("saved_conditions_loaded", {
+      count: savedSpots.length,
+      calm_count: calm,
+      latency_ms: savedCondLatency ?? 0,
+    });
+  }, [savedSpots.length, conditionsLoading, condBySpot, savedCondLatency]);
 
   const distanceMap = useMemo<Record<number, number> | undefined>(() => {
     if (!userLocation) return undefined;

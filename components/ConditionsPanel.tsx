@@ -10,7 +10,8 @@ import {
   type Conditions,
   type Paddleability,
 } from "@/lib/conditions";
-import { track } from "@/lib/analytics";
+import { trackSystem, trackIntent } from "@/lib/analytics";
+import { useGenuineView } from "@/lib/useGenuineView";
 
 /**
  * Live tide + wind for the selected spot. Client-only: fetches NOAA tides and
@@ -45,32 +46,38 @@ interface Loaded {
 
 export default function ConditionsPanel({ spot }: { spot: Spot }) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  // Fire the analytics event at most once per spot.
+  // SYSTEM event fires at most once per spot, when the fetch settles. This is an
+  // availability signal (success rate + latency), NOT engagement — engagement is
+  // the dwell-gated INTENT event below.
   const logged = useRef<number | null>(null);
 
   useEffect(() => {
     let alive = true;
+    const startedAt = performance.now();
+    const logLoaded = (c: Conditions) => {
+      if (logged.current === spot.id) return;
+      logged.current = spot.id;
+      trackSystem("conditions_loaded", {
+        spot_id: spot.id,
+        latency_ms: Math.round(performance.now() - startedAt),
+        failed: c.failed,
+        paddleability: c.wind?.paddleability ?? "unknown",
+        has_tides: !!c.tide,
+        has_wind: !!c.wind,
+        surface: "spot_drawer",
+      });
+    };
     getConditions(spot.id, spot.lat, spot.lng, spot.tide_sensitive)
       .then((c) => {
         if (!alive) return;
         setLoaded({ spotId: spot.id, conditions: c });
-        if (logged.current !== spot.id) {
-          logged.current = spot.id;
-          track("conditions_viewed", {
-            spot_id: spot.id,
-            spot_name: spot.water,
-            region: spot.region,
-            difficulty: spot.difficulty,
-            paddleability: c.wind?.paddleability ?? "unknown",
-            wind_mph: c.wind?.speedMax ?? null,
-            has_tides: !!c.tide,
-            failed: c.failed,
-          });
-        }
+        logLoaded(c);
       })
       .catch(() => {
         if (!alive) return;
-        setLoaded({ spotId: spot.id, conditions: { tide: null, wind: null, failed: true, fetchedAt: Date.now() } });
+        const failedConditions: Conditions = { tide: null, wind: null, failed: true, fetchedAt: Date.now() };
+        setLoaded({ spotId: spot.id, conditions: failedConditions });
+        logLoaded(failedConditions);
       });
     return () => {
       alive = false;
@@ -82,8 +89,29 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
   const loading = data === null;
   const isFlatwater = spot.difficulty === "flatwater";
 
+  // INTENT event: the panel was genuinely looked at (on screen + dwell), not just
+  // fetched. Read `data` via a ref so the one-shot callback sees the latest value.
+  const dataRef = useRef<Conditions | null>(null);
+  useEffect(() => {
+    dataRef.current = data;
+  });
+  const conditionsRef = useGenuineView({
+    key: spot.id,
+    onView: () => {
+      const d = dataRef.current;
+      trackIntent("conditions_viewed", {
+        spot_id: spot.id,
+        region: spot.region,
+        difficulty: spot.difficulty,
+        paddleability: d?.wind?.paddleability ?? "unknown",
+        had_data: !!d && !d.failed,
+      });
+    },
+  });
+
   return (
     <section
+      ref={conditionsRef}
       aria-label="Live water conditions"
       aria-busy={loading}
       className="mb-4 rounded-xl border border-gray-200 bg-white p-3.5"

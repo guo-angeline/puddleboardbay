@@ -1,20 +1,52 @@
 import posthog from "posthog-js";
+import type { Paddleability } from "@/lib/conditions";
 
 /**
  * Thin, type-safe wrapper around PostHog. Every call is a no-op until PostHog
  * is initialized (see components/PostHogProvider.tsx), and stays a no-op when
  * NEXT_PUBLIC_POSTHOG_KEY is unset, so the app runs fine without analytics.
  *
- * Event names are explicit so the PostHog dashboard stays readable:
- * - retention is automatic (pageviews + a persistent anonymous distinct id)
- * - segmentation comes from event properties (region, difficulty, free_only)
- * - persona comes from person properties set via `setPersona`
+ * Events are split into two categories so "data became available" can never be
+ * read as "a human looked" (the bug that made `conditions_viewed` count fetch
+ * settles, not engagement):
+ *
+ * - SYSTEM events (`trackSystem`) auto-fire when data settles. They describe the
+ *   system — availability, latency, failure — never intent. Name them with
+ *   data-lifecycle verbs: `_loaded`, `_failed`.
+ * - INTENT events (`trackIntent`) fire only on a deliberate human act: a click,
+ *   toggle, typed query, or a dwell-gated genuine view (see lib/useGenuineView).
+ *   Name them with human verbs: `_viewed`, `_clicked`, `_toggled`, `_changed`.
+ *
+ * Each wrapper stamps `event_category` so a SYSTEM event can never be silently
+ * counted as engagement in a query or dashboard. Any change here must be logged
+ * in analytics/INSTRUMENTATION_CHANGELOG.md (a guard hook will remind you).
  */
 
 /** Where a spot_viewed open originated, for funnel segmentation. */
 export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related";
 
-type EventName =
+/**
+ * SYSTEM / availability events. Auto-fire on data settling. Emit via
+ * `trackSystem`. These measure reliability, not user attention.
+ */
+type SystemEventName =
+  // Live tide/wind fetch settled for the open spot. Fires once per spot open
+  // regardless of whether the user ever looks at the panel — it is an
+  // availability signal (fetch success rate, latency), NOT engagement.
+  | "conditions_loaded"
+  // Saved-spots conditions batch resolved on app load. Availability only.
+  | "saved_conditions_loaded"
+  // The POST persisting a push subscription to /api/alerts/subscribe failed.
+  // Without this, a "granted" opt-in that never reached the backend is
+  // indistinguishable from a working one. Success is silent; failure is loud.
+  | "alert_subscribe_failed";
+
+/**
+ * INTENT / engagement events. Fire only on a deliberate user act or a
+ * dwell-gated genuine view. Emit via `trackIntent` (or the legacy `track` for
+ * the un-migrated human-action events below — those are intent by construction).
+ */
+type IntentEventName =
   | "spot_viewed"
   // Bottom-of-funnel intent: clicking Get Directions / Share / Photos in the
   // spot drawer (the real "I'm going here" signals, distinguished by `action`).
@@ -23,21 +55,24 @@ type EventName =
   | "spot_search"
   | "near_me_toggled"
   | "favorite_toggled"
-  // Saved-spot conditions surfaced in the "Your Spots" list. Fired once per
-  // session after the first batch resolves, to measure whether ranking saved
-  // spots by paddle-ability is what brings people back.
+  // The "Your saved spots" section was genuinely scrolled into view (dwell-gated
+  // via lib/useGenuineView). The real "I came back to check my spots" signal —
+  // distinct from `saved_conditions_loaded`, which only means the data resolved.
   | "saved_conditions_viewed"
   | "feedback_opened"
   | "view_switched"
-  | "pwa_prompt_shown"
+  // Actual installs only (Chromium appinstalled event, or an iOS install
+  // detected on first standalone launch), plus the declined native dialog
+  // (outcome: "dismissed"). The old auto-shown banner event `pwa_prompt_shown`
+  // is gone; prompt exposure is `alert_optin_shown` now.
   | "pwa_installed"
   // Mobile bottom-sheet drag: did people discover expand-to-full, and how do
   // they close the sheet (drag vs button)?
   | "spot_sheet_resized"
   | "spot_sheet_dismissed"
-  // Live tide/wind conditions loaded for a spot. The return hook: fires once per
-  // spot open after the fetch settles, with the paddle-ability read attached so
-  // we can tell if people check before going out.
+  // The live-conditions panel was genuinely viewed: on screen, dwell-gated.
+  // This is the true engagement metric and is much smaller than the old
+  // fetch-settle count — that's the point. Pairs with `conditions_loaded`.
   | "conditions_viewed"
   // Stage B push opt-in: the alert prompt was shown (after first save), and the
   // result of attempting to enable notifications. `result` distinguishes
@@ -46,15 +81,103 @@ type EventName =
   | "alert_optin_shown"
   | "alert_optin_result"
   // Fired when the app is opened from a push notification (URL contains from=alert).
-  | "alert_clicked";
+  | "alert_clicked"
+  // Experiment exposure: fired once per session when a variant-dependent UI
+  // actually renders (see lib/experiments.ts). Exposure = the user saw the
+  // treatment, not merely that they were bucketed.
+  | "experiment_exposed";
+
+export type EventName = SystemEventName | IntentEventName;
+
+/**
+ * Required-prop contracts for the events that carry load-bearing semantics.
+ * Events not listed fall back to a loose prop bag. Extend this when you add a
+ * metric a report depends on, so call sites can't omit a needed property.
+ */
+interface EventPropMap {
+  conditions_loaded: {
+    spot_id: number;
+    latency_ms: number;
+    failed: boolean;
+    paddleability: Paddleability;
+    has_tides: boolean;
+    has_wind: boolean;
+    surface: "spot_drawer";
+  };
+  conditions_viewed: {
+    spot_id: number;
+    region: string;
+    difficulty: string;
+    paddleability: Paddleability;
+    /** Was conditions data actually present when the panel was seen. */
+    had_data: boolean;
+  };
+  saved_conditions_loaded: { count: number; calm_count: number; latency_ms: number };
+  alert_subscribe_failed: { status: number | null; watched_count: number };
+  saved_conditions_viewed: { count: number; calm_count: number };
+  experiment_exposed: { experiment: string; variant: string };
+}
+
+type PropsFor<E extends EventName> = E extends keyof EventPropMap
+  ? EventPropMap[E]
+  : Record<string, unknown>;
 
 function ready(): boolean {
   return typeof window !== "undefined" && posthog.__loaded === true;
 }
 
+/**
+ * React runs effects child-first, so an event fired in a component's mount
+ * effect happens BEFORE PostHogProvider's init effect. Dropping those events
+ * silently is how the first `pwa_installed` (detected_standalone) was lost.
+ * Queue anything emitted pre-init and flush once PostHog loads. Bounded to
+ * ~10s of retries so environments without a key don't poll forever.
+ */
+const preReadyQueue: Array<() => void> = [];
+let flushAttempts = 0;
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleFlush() {
+  if (flushTimer || flushAttempts >= 40) return;
+  flushTimer = setTimeout(() => {
+    flushTimer = null;
+    flushAttempts += 1;
+    if (ready()) {
+      flushAttempts = 0;
+      for (const fn of preReadyQueue.splice(0)) fn();
+    } else if (preReadyQueue.length) {
+      scheduleFlush();
+    }
+  }, 250);
+}
+
+function runOrQueue(fn: () => void) {
+  if (ready()) {
+    fn();
+    return;
+  }
+  if (typeof window === "undefined") return; // SSR: nothing will ever load
+  preReadyQueue.push(fn);
+  scheduleFlush();
+}
+
+/**
+ * Legacy / general-purpose capture. Kept for the un-migrated human-action
+ * events. New SYSTEM or semantically-typed INTENT events should use
+ * `trackSystem` / `trackIntent` so they're category-stamped and prop-checked.
+ */
 export function track(event: EventName, props?: Record<string, unknown>) {
-  if (!ready()) return;
-  posthog.capture(event, props);
+  runOrQueue(() => posthog.capture(event, props));
+}
+
+/** Emit a SYSTEM/availability event (auto-fired on data settling). */
+export function trackSystem<E extends SystemEventName>(event: E, props: PropsFor<E>) {
+  runOrQueue(() => posthog.capture(event, { ...props, event_category: "system" }));
+}
+
+/** Emit an INTENT/engagement event (a deliberate act or dwell-gated view). */
+export function trackIntent<E extends IntentEventName>(event: E, props: PropsFor<E>) {
+  runOrQueue(() => posthog.capture(event, { ...props, event_category: "intent" }));
 }
 
 /**
@@ -66,6 +189,5 @@ export function setPersona(
   set: Record<string, unknown>,
   setOnce?: Record<string, unknown>
 ) {
-  if (!ready()) return;
-  posthog.setPersonProperties(set, setOnce);
+  runOrQueue(() => posthog.setPersonProperties(set, setOnce));
 }

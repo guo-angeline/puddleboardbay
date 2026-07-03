@@ -1,6 +1,8 @@
 <!-- analytics-report -->
 # SUP Spots: analytics readout
 
+> **Correction (2026-06-29):** the "conditions" claims below ("96 saw live conditions", "1,157 views ~12 each", "91% of openers") conflated fetch-success and spots-per-user with engagement — `conditions_viewed` fired on every spot open when the fetch settled, not when a user looked. The defensible finding is conditions **availability** (~91% of opens load without failure), a reliability metric. True engagement is now measured by a dwell-gated `conditions_viewed`; the two are not comparable across this date. See `analytics/INSTRUMENTATION_CHANGELOG.md` and `analytics/GLOSSARY.md`. Body left unedited as a historical record.
+
 **Window:** Jun 7–27, 2026 (20 days) · **Source:** PostHog project 458289 (US) · **Generated:** 2026-06-27
 
 ## How many users

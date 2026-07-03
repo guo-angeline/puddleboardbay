@@ -4,6 +4,8 @@
  * seam Stage C will read and POST to /api/alerts/subscribe.
  */
 
+import { trackSystem } from "@/lib/analytics";
+
 const STASH_KEY = "ptw-push-subscription";
 const ANON_KEY = "ptw-anon-id";
 
@@ -122,8 +124,12 @@ export async function postSubscription(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ anonId: getAnonId(), subscription, watchedSpotIds }),
     });
+    if (!res.ok) {
+      trackSystem("alert_subscribe_failed", { status: res.status, watched_count: watchedSpotIds.length });
+    }
     return res.ok;
   } catch {
+    trackSystem("alert_subscribe_failed", { status: null, watched_count: watchedSpotIds.length });
     return false;
   }
 }

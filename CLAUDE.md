@@ -11,11 +11,11 @@ npm run lint      # ESLint check
 vercel --prod --yes  # deploy to production (https://sup-spots.vercel.app)
 ```
 
-No test suite exists yet. Playwright is installed (`@playwright/test`) — use it for manual browser smoke tests when verifying UI changes.
+Unit tests run with `npm test` (vitest; covers the alert evaluator, selection, and subscribe validation). Playwright is installed (`@playwright/test`) for manual browser smoke tests when verifying UI changes.
 
 ## Architecture
 
-This is a fully static Next.js 16 app (App Router). All spot data is bundled at build time from `data/spots.json` — there is no backend, no database, and no API routes.
+This is a Next.js 16 app (App Router). All pages are static: spot data is bundled at build time from `data/spots.json`. The only server code is the conditions-alert loop: `app/api/alerts/subscribe` (stores push subscriptions in Supabase) and `app/api/cron/check-conditions` (Vercel Cron, sends web push), both `runtime = "nodejs"`. Server env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `CRON_SECRET`.
 
 ### Data flow
 
@@ -64,22 +64,32 @@ PostHog is wired up in `components/PostHogProvider.tsx` (US cloud, gated on `NEX
 
 **Always add simple logging for material UX changes.** Whenever you ship a new interaction or meaningfully change an existing one (a new control, gesture, filter, navigation path, or conversion action), add a lightweight event in the same change. The data is how we tell whether the change worked, shipping UX without it is a miss.
 
+**Grounded events only: never log "data loaded" as if a human acted.** Events are split into two categories in `lib/analytics.ts`, and the distinction is load-bearing (the old `conditions_viewed` fired on every fetch settle and got reported as "conditions is used heavily" — it wasn't):
+- **SYSTEM** events auto-fire when data settles. Name them `_loaded` / `_failed` and emit via `trackSystem`. They measure availability/latency, never intent.
+- **INTENT** events fire only on a deliberate act (click, toggle, typed query) or a dwell-gated genuine view. Name them `_viewed` / `_clicked` / `_toggled` and emit via `trackIntent`. For "did the user actually look at X", gate on `lib/useGenuineView` (IntersectionObserver + dwell) — do NOT fire on mount or inside a fetch `.then()`.
+
 How to do it:
-- Add the event name to the `EventName` union in `lib/analytics.ts`, then call `track("name", props)` at the interaction. The union is the allowlist, unknown names won't compile.
-- Include `spot_id` / `spot_name` / `region` whenever a spot is involved, so events segment consistently with `spot_viewed`.
+- Add the event to the right sub-union (`SystemEventName` or `IntentEventName`) in `lib/analytics.ts`; for metrics a report depends on, add a typed entry to `EventPropMap` so call sites can't omit a needed prop. The unions are the allowlist, unknown names won't compile. Both wrappers stamp `event_category`.
+- The bare `track()` remains for legacy human-action events; prefer `trackSystem`/`trackIntent` for anything new.
+- Include `spot_id` / `region` whenever a spot is involved, so events segment consistently with `spot_viewed`.
 - Group variants of one action under a single event with an `action` prop (e.g. `spot_action` with `action: "directions" | "share" | "photos"`) instead of many near-duplicate names.
 - Use `setPersona(...)` (person properties) for durable traits that define a segment (saver, budget, local), not for one-off events.
 - Keep it cheap and signal-rich: one event per real interaction. Don't log high-frequency noise (map pan/zoom, per-keystroke), debounce or skip it.
+- **Any logging change MUST get an entry in `analytics/INSTRUMENTATION_CHANGELOG.md`** (event, change type, why, and a Comparability note). A PostToolUse hook (`scripts/check-instrumentation-changelog.py`) reminds you. This is what stops a later analyst from reading a logging change as a behavior change.
 
-`track()` and `setPersona()` no-op when PostHog isn't initialized, so they're safe to call unconditionally. Confirm a new event by checking its string lands in the built bundle: `grep -rho "<event>" .next/static`.
+Experiments: read flags via `lib/experiments.ts` (`useExperiment` / `getVariant`); exposure is logged only when the treatment renders. Never call `posthog.identify()` / `reset()` (no login; it reshuffles buckets). Declare every experiment in `docs/experiments/` from `TEMPLATE.md` before shipping. **Every major product update (a new user-facing surface or a changed core flow) ships behind an A/B experiment flag, never straight to 100%** (owner directive, 2026-07-02). Low traffic means a longer read window, not a reason to skip the flag; small fixes and copy tweaks are exempt.
+
+`track()`, `trackSystem()`, `trackIntent()` and `setPersona()` no-op when PostHog isn't initialized, so they're safe to call unconditionally. Confirm a new event by checking its string lands in the built bundle: `grep -rho "<event>" .next/static`.
 
 ### Analytics reports
 
 When you produce an analytics report (user counts, retention, funnels, adoption), begin the message with the line `<!-- analytics-report -->`. A project Stop hook (`scripts/save-analytics-report.py`, wired in `.claude/settings.json`) archives any message containing that marker to `reports/analytics-<date>.md`. No marker, no archive. Reading PostHog data needs a Personal API key (`phx_…`) + project id `458289` (US); the app only ships the write-only ingestion key.
 
+**Before reporting any metric, read `analytics/INSTRUMENTATION_CHANGELOG.md`** and account for every entry in or near the window — never attribute a metric jump to user behavior before ruling out an instrumentation change. Use `analytics/REPORT_TEMPLATE.md` (its "Instrumentation changes affecting this window" section is required) and cite a query from `analytics/queries/*.sql` for every number; definitions are in `analytics/GLOSSARY.md`. Keep the availability-vs-engagement line sharp: a SYSTEM `_loaded` event is reliability, not "people use this".
+
 ## Deployment
 
-Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. The app builds as fully static (`○` in the build output) — no server functions.
+Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. Pages build static (`○` in the build output); the two `/api` routes are server functions (`ƒ`). Deploying is the only way changes go live: there is no git integration, so a commit without a `vercel --prod` deploy changes nothing in production (this bit us once: instrumentation sat undeployed for 3 days and the analytics window was polluted).
 
 `og:image` is set via the Next.js file convention: `app/opengraph-image.tsx` (site-wide) and `app/spot/[id]/opengraph-image.tsx` (per-spot, 1200x630). No `openGraph.images` array is needed in `app/layout.tsx`. Absolute URLs (canonical, OG, sitemap, robots, per-spot JSON-LD) all resolve from a single `SITE_URL` constant in `lib/structured-data.ts` (`https://paddletowater.com`), so update that one place if the production domain ever changes.
 
@@ -89,6 +99,8 @@ When updating any spot in `data/spots.json`, be careful not to alter the `lat`/`
 
 When user feedback comes in as a question or personal comment (e.g. "I didn't know SUPs were allowed, where do you put in?"), extract the underlying facts and fold them into the spot's `notes` as general, evergreen description. Never phrase notes as a reply to that person ("Yes, SUPs are allowed", "You put in at..."). The notes are read by every visitor, not the one who sent the feedback. Write what's true about the spot, not an answer to whoever asked.
 
-## Planned next phases
+## Vision & roadmap
 
-See `ROADMAP.md` for the current, data-driven priority order (source of truth). In short: the Jun 2026 analytics showed retention is the bottleneck (78% one-and-done) and conditions is the loved feature, so the roadmap now leads with the **conditions-alert retention loop** (save -> install -> anonymous web push when a spot is good; Stage A shipped) ahead of ratings/trip-reports/photos. The UGC content flywheel and a PaddlePass premium tier come after retention is proven.
+`ROADMAP.md` is the **only** place for vision, strategy, and the roadmap (it is also the studio backlog). Never create a separate plan, roadmap, or strategy doc; fold new product thinking into `ROADMAP.md` directly. The old standalone docs (IMPROVEMENT-PLAN.md, ux-mobile-findings.md, docs/strategy/) were consolidated into it and deleted on 2026-07-02 (full text in git history). Implementation specs/plans under `docs/superpowers/` are historical execution artifacts for already-shipped work, not roadmaps; analytics reports live in `reports/`.
+
+In short: the Jun 2026 analytics showed retention is the bottleneck (78% one-and-done) and conditions is the differentiator (loads reliably for ~91% of opens; genuine engagement now being measured, not the old fetch-settle count), so the roadmap now leads with the **conditions-alert retention loop** (save -> install -> anonymous web push when a spot is good; Stage A shipped) ahead of ratings/trip-reports/photos. The UGC content flywheel and a PaddlePass premium tier come after retention is proven.

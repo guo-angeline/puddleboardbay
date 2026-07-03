@@ -18,25 +18,30 @@ import { fetchSavedConditions } from "@/lib/savedConditions";
 export function useSavedConditions(savedSpots: Spot[]): {
   condBySpot: Record<number, Paddleability>;
   loading: boolean;
+  /** Batch fetch wall-clock in ms for the last resolved set, for availability logging. */
+  latencyMs: number | null;
 } {
   const [condBySpot, setCondBySpot] = useState<Record<number, Paddleability>>({});
   // Tracks which idsKey we have resolved results for. null = never fetched.
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const idsKey = savedSpots.map((s) => s.id).sort((a, b) => a - b).join(",");
   // Loading while: we have spots but haven't resolved for this exact set yet.
   const loading = resolvedKey !== idsKey && savedSpots.length > 0;
 
   useEffect(() => {
     let alive = true;
+    const startedAt = performance.now();
     fetchSavedConditions(savedSpots, getConditions).then((map) => {
       if (!alive) return;
       setCondBySpot(map);
       setResolvedKey(idsKey);
+      setLatencyMs(Math.round(performance.now() - startedAt));
     });
     return () => { alive = false; };
   // idsKey captures the only input that should retrigger the fetch.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 
-  return { condBySpot, loading };
+  return { condBySpot, loading, latencyMs };
 }
