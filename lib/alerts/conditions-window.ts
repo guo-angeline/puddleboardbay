@@ -8,6 +8,8 @@ export interface HourlyPeriod {
 export interface GoodWindow {
   windowKey: string; // YYYY-MM-DD (spot-local) of the window, for dedup
   label: string;     // human label, e.g. "Thursday morning"
+  startHour: number; // spot-local hour of the run's first calm period
+  endHour: number;   // spot-local hour AFTER the run's last calm period
 }
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -28,22 +30,27 @@ function windowLabel(startTime: string): string {
   return `${weekday} ${hour < 12 ? "morning" : "afternoon"}`;
 }
 
+export const DEFAULT_HORIZON_DAYS = 3;
+
 /**
  * Soonest run of >= minHours consecutive calm daytime hours (6am to 6pm
  * spot-local) within `horizonDays`. Hourly, not day-period: a calm morning
  * inside a breezy afternoon still counts, which is the normal summer shape
- * here. Returns null if none. Past hours are skipped. Pure.
+ * here. Once a qualifying run is found its start is locked; the scan then
+ * keeps extending the end of that same run until it breaks, it never moves
+ * on to a later run. Returns null if none. Past hours are skipped. Pure.
  */
 export function evaluateGoodWindow(
   periods: HourlyPeriod[],
   nowMs: number,
-  horizonDays = 3,
+  horizonDays = DEFAULT_HORIZON_DAYS,
   minHours = 2
 ): GoodWindow | null {
   const horizonMs = nowMs + horizonDays * 86400000;
   let runStart: HourlyPeriod | null = null;
   let runLength = 0;
   let prevMs = NaN;
+  let locked: { runStart: HourlyPeriod; lastPeriod: HourlyPeriod } | null = null;
   for (const period of periods) {
     const startMs = Date.parse(period.startTime);
     const { hour } = localParts(period.startTime);
@@ -54,6 +61,16 @@ export function evaluateGoodWindow(
       hour >= 6 &&
       hour < 18 &&
       paddleabilityFromWind(parseMaxWind(period.windSpeed)) === "calm";
+
+    if (locked) {
+      if (eligible && startMs - prevMs === 3600000) {
+        locked.lastPeriod = period;
+        prevMs = startMs;
+        continue;
+      }
+      break;
+    }
+
     if (eligible && runLength > 0 && startMs - prevMs === 3600000) {
       runLength += 1;
     } else if (eligible) {
@@ -65,10 +82,16 @@ export function evaluateGoodWindow(
     }
     prevMs = startMs;
     if (runStart && runLength >= minHours) {
-      return { windowKey: localParts(runStart.startTime).date, label: windowLabel(runStart.startTime) };
+      locked = { runStart, lastPeriod: period };
     }
   }
-  return null;
+  if (!locked) return null;
+  return {
+    windowKey: localParts(locked.runStart.startTime).date,
+    label: windowLabel(locked.runStart.startTime),
+    startHour: localParts(locked.runStart.startTime).hour,
+    endHour: localParts(locked.lastPeriod.startTime).hour + 1,
+  };
 }
 
 /** Fetch the NWS hourly forecast for a spot and evaluate a good window. Returns null on any fetch failure. */
