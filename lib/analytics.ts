@@ -88,6 +88,10 @@ type IntentEventName =
   // How the interstitial was left: dismissed with no further action, or the
   // user tapped through to directions.
   | "alert_interstitial_result"
+  // Dwell-gated genuine view of the "Next good window" block in the spot
+  // drawer (see lib/useGenuineView). Treatment-only diagnostic for the
+  // next_good_window experiment, not the experiment's primary metric.
+  | "next_window_viewed"
   // Experiment exposure: fired once per session when a variant-dependent UI
   // actually renders (see lib/experiments.ts). Exposure = the user saw the
   // treatment, not merely that they were bucketed.
@@ -123,6 +127,13 @@ interface EventPropMap {
   saved_conditions_viewed: { count: number; calm_count: number };
   alert_interstitial_shown: { spot_id: number };
   alert_interstitial_result: { spot_id: number; outcome: "dismissed" | "directions" };
+  next_window_viewed: {
+    spot_id: number;
+    region: string;
+    difficulty: string;
+    /** Block rendered with a real window vs. the quiet no-window line. */
+    had_window: boolean;
+  };
   experiment_exposed: { experiment: string; variant: string };
 }
 

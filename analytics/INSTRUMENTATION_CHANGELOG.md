@@ -119,3 +119,23 @@ on dismiss or on tapping through to directions (`outcome`).
   experiment itself is the existing `experiment_exposed` event
   (`experiment: "alert_interstitial"`), not these two — restrict any
   before/after read to the exposed cohort.
+
+## 2026-07-04: Next good window experiment (ROADMAP retention loop)
+
+**`next_window_viewed`: added (intent, dwell-gated).**
+Dwell-gated genuine view of the "Next good window" block in the spot drawer
+(see `lib/useGenuineView`), fired only in the `next_good_window` experiment's
+`treatment` variant (see `docs/experiments/next-good-window.md`). `had_window`
+distinguishes a block that rendered a real calm window from the quiet
+no-window line, so it can never be misread as "the block was seen and the
+user got nothing".
+
+**`experiment_exposed`: now also fires for `experiment: "next_good_window"`.**
+Logged for BOTH arms, once the next-window evaluation resolves (`ok: true`)
+and flags are ready, at that single trigger point, not gated behind the
+treatment render. This is the corrected pattern versus `alert_interstitial`,
+whose exposure only fires when the treatment card renders, so its control arm
+has no `experiment_exposed` rows and no counterfactual exposed cohort.
+`next_good_window`'s control is directly comparable to treatment.
+- **Comparability:** new events, no prior series; they exist only from
+  2026-07-04.
