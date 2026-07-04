@@ -2004,7 +2004,7 @@
     "water": "Folsom Lake",
     "notes": "Large reservoir northeast of Sacramento with several launch points; Beals Point has a ramp, beach, and parking. Power boats share the main body, so wake builds on warm afternoons, and open fetch lets wind kick up quickly. State park day-use fee at the entrance.",
     "lat": 38.7193431,
-    "lng": -121.1729010,
+    "lng": -121.172901,
     "geocode_display": "Beals Point, Folsom Lake State Recreation Area, Folsom, California, United States",
     "difficulty": "flatwater",
     "fee_amount": null,
@@ -2022,7 +2022,7 @@
     "water": "Lake Wilson (Riverfront Regional Park)",
     "notes": "Former gravel quarry lake in Riverfront Regional Park along the Russian River near Healdsburg. The northeast corner has the easiest put-in. Quiet, flat water shaded by valley oaks and redwoods. Sonoma County park day-use fee.",
     "lat": 38.5178779,
-    "lng": -122.8588320,
+    "lng": -122.858832,
     "geocode_display": "Riverfront Regional Park, Wilson Grove, Sonoma County, California, United States",
     "difficulty": "flatwater",
     "fee_amount": null,
@@ -2482,5 +2482,22 @@
     "dog_friendly": null,
     "rentals_available": false,
     "inspection_required": false
+  },
+  {
+    "water": "Lakeshore Park Lake",
+    "region": "South Bay",
+    "city": "Newark",
+    "difficulty": "flatwater",
+    "has_fee": false,
+    "fee_amount": null,
+    "lat": 37.5542,
+    "lng": -122.0352,
+    "notes": "A small neighborhood lake inside Lakeshore Park. A dock off Chelsea Drive serves as the put-in. No restrooms at the park. Fishing is allowed.",
+    "dog_friendly": null,
+    "tide_sensitive": false,
+    "rentals_available": false,
+    "inspection_required": null,
+    "power_boats": false,
+    "id": 148
   }
 ]
