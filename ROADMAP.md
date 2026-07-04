@@ -54,7 +54,7 @@ Owner directive 2026-07-03, top priority (after the first real-device push lande
 
 Owner directive 2026-07-03, top priority. In the spot drawer's conditions section, add a small section showing the next good launch window for this spot within the next 3 days, if one exists ("Next calm window: Sat 7 to 10am"). Reuse the same hourly calm-window evaluator the cron uses (`>= 2` consecutive calm daytime hours) so the alert and the in-app answer never disagree. This is also the natural preview of the PaddlePass "multi-day forecast windows" paid feature. New user-facing surface: A/B flag + instrumentation required.
 
-## 3. [in-progress] 2026-07-02T16:02:37Z Fix the 58% landing bounce
+## 3. [parked] stale in-progress (2026-07-02 session ended without landing fix code; re-promote to ready to resume) Fix the 58% landing bounce
 
 142 of 247 visitors never open a single spot. On mobile (77% of users), surface value on load instead of a bare map: auto-open or prompt the nearest spot, or a "good to paddle near you today" view. Near-me works when asked, but nobody asks (10 users). Pairs naturally with the conditions data Stage A already fetches.
 
