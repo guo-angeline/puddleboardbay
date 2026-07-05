@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { Spot } from "@/lib/types";
-import { trackIntent } from "@/lib/analytics";
+import { track, trackIntent } from "@/lib/analytics";
 import { useExperiment } from "@/lib/experiments";
 
 interface Props {
@@ -21,16 +21,34 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   const { variant, ready, logExposure } = useExperiment("alert_interstitial");
   const isTreatment = ready && variant === "treatment";
 
+  // Exposure is the trigger, not the render. This component mounts for BOTH
+  // arms whenever the app opened from an alert on this spot (HomeClient gates
+  // the mount on the alert context, not the variant), so exposure is logged
+  // here for control and treatment alike. Logging only in the treatment branch
+  // is what broke the first cut: control had zero exposed users, leaving no
+  // counterfactual cohort to measure lift against.
+  useEffect(() => {
+    if (!ready) return;
+    logExposure();
+  }, [ready, logExposure]);
+
   useEffect(() => {
     if (!isTreatment) return;
-    logExposure();
     trackIntent("alert_interstitial_shown", { spot_id: spot.id });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTreatment, spot.id]);
 
   if (!isTreatment) return null;
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}`;
+  // Same identity the drawer's action events carry, so the card's directions
+  // tap lands in the shared spot_action series and the experiment can compare
+  // it against control's drawer button.
+  const spotEventProps = {
+    spot_id: spot.id,
+    spot_name: spot.water,
+    region: spot.region,
+    has_fee: spot.has_fee,
+  };
 
   function handleDismiss() {
     trackIntent("alert_interstitial_result", { spot_id: spot.id, outcome: "dismissed" });
@@ -38,6 +56,9 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   }
 
   function handleDirections() {
+    // Fire the shared directions metric (the arms' comparable success event)
+    // plus the within-treatment result split for card-level diagnostics.
+    track("spot_action", { ...spotEventProps, action: "directions", source: "alert_interstitial" });
     trackIntent("alert_interstitial_result", { spot_id: spot.id, outcome: "directions" });
     onDismiss();
   }
