@@ -68,7 +68,9 @@ Organic is 10 users; expected this soon after the 140 spot pages went live. Rech
 
 ---
 
-## 5. [ready] Tech follow-ups (from building the retention engine)
+## 5. [blocked(D1)] Tech follow-ups (from building the retention engine)
+
+The `npm audit fix` sub-task shipped (PR #8, merged). The three remaining sub-tasks all touch the protected alert cron or need a schema migration, so they are escalated as D1 (see DECISIONS.md). Answer D1 to unblock.
 
 Small items, one ship each, in this order:
 
@@ -90,6 +92,26 @@ Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces 
 - Geolocation-denied recovery: guidance lives in a `title` tooltip invisible on touch; show an inline toast.
 - Map zoom controls are 30px (HIG minimum 44) and far from the thumb.
 - Empty-state copy says "filters" when search caused it, and "Clear filters" silently also clears search.
+
+---
+
+## 8. [proposed] "Go here instead": nearby calmer alternative when your spot is blown out
+
+*(Proposed by the studio 2026-07-05. Sequenced AFTER the ~2026-07-15 retention read, not before.)*
+
+The vision's signature promise is a redirect, not a wind number: "Crissy is blown out by 10am, go to Richardson Bay instead" (line 18, the stated moat). Today an opened spot that reads breezy/windy dead-ends, yet ~half of conditions checks land there (breezy 569 / windy 62 of ~1,155, `reports/analytics-2026-06-27.md`). When the selected spot has no near-term calm window, surface the 1-2 nearest spots that are calm now or soonest, each a tap-through. Clearest in-app expression of the per-spot-judgment moat, and a within-session reason to keep exploring instead of leaving.
+
+Acceptance: in the drawer, when the selected spot is not calm near-term, show up to 2 nearest calm/soonest-calm spots as tap-throughs; reuse the SAME `evaluateGoodWindow` as the cron/item 2 so nothing disagrees; scope candidate fetch to nearest-K + cache (no unbounded NWS fan-out); A/B flag (control shows nothing); new `alt_suggested_shown`/`alt_clicked` intent events with `spot_id`+`region` and a changelog entry. Decision to settle first: the "not good enough to recommend" threshold must equal the calm-window definition, or the app contradicts itself.
+
+## 9. [proposed] Conditions-first share: make the one working acquisition channel demo the wedge
+
+*(Proposed by the studio 2026-07-05. Advisory: acquisition, not retention; sequence BELOW proving the alert loop, do not pull ahead.)*
+
+Growth is 82% direct/word-of-mouth; Google sent 10 users and the 140 SEO pages are not ranking yet (`reports/analytics-2026-06-27.md`). Shares are the real distribution, but Share was used by 1 user / 3 events, and a shared link lands on a generic view that buries the differentiator. Per-spot OG images already exist (`app/spot/[id]/opengraph-image.tsx`). Make a shared deep-link open the recipient straight onto that spot's conditions view, so every share demos the one thing only we do.
+
+Acceptance: Share produces a deep link that opens directly on the spot's conditions section; recipient arrivals attributable via `spot_viewed` `source: "deeplink"`; A/B flag (control keeps today's share); changelog entry for any prop change. Note: OG images are build-time static and can't cheaply embed live conditions, so the value is the landing behavior, not a live-conditions card. Advisory: sequence after the ~2026-07-15 retention read.
+
+*(A third idea considered, inline paddleability dots on the list/pins, overlaps parked item 3 and should be folded there, not opened separately.)*
 
 ---
 

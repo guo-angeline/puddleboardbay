@@ -2,6 +2,11 @@
 
 CEO briefings after each shipped or parked item, newest first, 15 lines max each.
 
+## 2026-07-05 · Owner said "merge them for me": queue drained, state reconciled
+What: merged PR #6 (interstitial exposure fix), #7 (next-good-window), #8 (npm audit) into main, resolving the #6/#7 overlap in experiments.ts/analytics.ts/changelog/ROADMAP/BRIEFINGS by hand (both experiments + both events kept; 55 tests + build green after each merge). Closed #5 as redundant. Restored the studio state that lived only in the working tree: D1 (open), items 8 + 9 (proposed), item 5 blocked(D1).
+NOT deployed: main is current but production is unchanged until the owner runs `vercel --prod --yes`. After deploy, create the `alert-interstitial` and `next-good-window` PostHog flags to start both experiments; until then both features are dark.
+Open on owner: deploy; create 2 flags; answer D1 (rec: defer). No open PRs, no [ready] items.
+
 ## 2026-07-04T16:20:00Z · Item 5 sub-task: npm audit fix (PR #8, open)
 What: took the smallest, safe sub-item of item 5 directly rather than launch another heavy pipeline right after the session-limit failure. `npm audit fix` (non-breaking) cleared 2 advisories, lockfile-only. 3 moderate prod advisories remain that need --force (breaking major bumps); deliberately NOT forced, left for owner review. Verified: 44 tests, build clean, lint unaffected (no source changed).
 Judgment: reordered within item 5 (audit before the cron/schema sub-items) because the other three touch the protected cron or need a schema migration and warrant careful, non-rushed passes. Item 5 stays [ready] with the remaining three sub-items.
