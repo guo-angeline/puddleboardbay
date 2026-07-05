@@ -119,3 +119,51 @@ on dismiss or on tapping through to directions (`outcome`).
   experiment itself is the existing `experiment_exposed` event
   (`experiment: "alert_interstitial"`), not these two — restrict any
   before/after read to the exposed cohort.
+
+## 2026-07-04 (later) — Alert interstitial: exposure symmetry + shared lift metric (semantics-changed)
+
+Fixes a validity bug in the same-day interstitial instrumentation before the
+`alert-interstitial` flag was turned on (no data collected against the broken
+version, so nothing to discard).
+
+**`experiment_exposed` (`experiment: "alert_interstitial"`) — semantics-changed.**
+Was logged only when the treatment card rendered, so the control arm had zero
+exposed users and no counterfactual. Now logged for BOTH arms at the alert-open
+trigger (component mounts in both arms; `logExposure()` moved out of the
+treatment-only branch to a `ready`-gated effect). From now on `experiment_exposed`
+for this experiment means "reached the alert-open where the arms diverge",
+control included.
+
+**`spot_action` (`action: "directions"`) — props-changed (additive).** The
+card's Get Directions now also emits `spot_action` (previously only the
+treatment-only `alert_interstitial_result`), carrying `source: "alert_interstitial"`
+alongside the usual `spot_id`/`spot_name`/`region`/`has_fee`. This makes
+directions the shared, arm-comparable success metric (control converts via the
+drawer button, treatment via the card). The `source` prop is new and absent on
+drawer-originated directions taps.
+
+- **Primary metric moved:** `alert_interstitial` primary is now `spot_action`
+  /`directions` rate among exposed users per arm (was `alert_interstitial_result`,
+  which is treatment-only and cannot measure lift; kept as a diagnostic).
+- **Comparability:** only read the experiment from 2026-07-04 (post-fix) forward;
+  the shared metric and control exposure did not exist before then. A small,
+  expected uptick in total `spot_action`/`directions` volume comes from the card
+  now emitting it; segment on `source` to separate card taps from drawer taps.
+
+## 2026-07-04: Next good window experiment (ROADMAP retention loop)
+
+**`next_window_viewed`: added (intent, dwell-gated).**
+Dwell-gated genuine view of the "Next good window" block in the spot drawer
+(see `lib/useGenuineView`), fired only in the `next_good_window` experiment's
+`treatment` variant (see `docs/experiments/next-good-window.md`). `had_window`
+distinguishes a block that rendered a real calm window from the quiet
+no-window line, so it can never be misread as "the block was seen and the
+user got nothing".
+
+**`experiment_exposed`: now also fires for `experiment: "next_good_window"`.**
+Logged for BOTH arms, once the next-window evaluation resolves (`ok: true`)
+and flags are ready, at that single trigger point, not gated behind the
+treatment render. This is the corrected pattern (matching the alert-interstitial
+fix above): control is directly comparable to treatment.
+- **Comparability:** new events, no prior series; they exist only from
+  2026-07-04.

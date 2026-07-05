@@ -12,6 +12,7 @@ import {
 } from "@/lib/conditions";
 import { trackSystem, trackIntent } from "@/lib/analytics";
 import { useGenuineView } from "@/lib/useGenuineView";
+import NextGoodWindowPanel from "@/components/NextGoodWindowPanel";
 
 /**
  * Live tide + wind for the selected spot. Client-only: fetches NOAA tides and
@@ -218,6 +219,8 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
           </p>
         </div>
       )}
+
+      <NextGoodWindowPanel spot={spot} />
     </section>
   );
 }

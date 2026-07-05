@@ -48,9 +48,21 @@ export const EXPERIMENTS = {
   // survives the click instead of dropping into a bare spot drawer.
   alert_interstitial: {
     flag: "alert-interstitial",
+    // Primary is the SHARED directions signal (spot_action action=directions),
+    // comparable across arms among exposed users. alert_interstitial_result is
+    // a treatment-only diagnostic, not the lift metric.
     variants: ["control", "treatment"],
-    primaryMetric: "alert_interstitial_result",
-    guardrails: ["spot_action", "spot_sheet_dismissed"],
+    primaryMetric: "spot_action",
+    guardrails: ["spot_sheet_dismissed", "conditions_loaded"],
+  },
+  // ROADMAP retention loop: preview the paid multi-day window in-drawer, ahead
+  // of the PaddlePass paywall, to see if a forward-looking "come back Sat"
+  // window gives people a reason to plan a return paddle.
+  next_good_window: {
+    flag: "next-good-window",
+    variants: ["control", "treatment"],
+    primaryMetric: "spot_action",
+    guardrails: ["conditions_loaded", "spot_sheet_dismissed"],
   },
 } as const satisfies Record<string, ExperimentDef>;
 
