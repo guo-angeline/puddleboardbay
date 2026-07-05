@@ -69,7 +69,7 @@ Organic is 10 users; expected this soon after the 140 spot pages went live. Rech
 Small items, one ship each, in this order:
 
 - **Bounded-concurrency NWS fetch** in the cron (`app/api/cron/check-conditions`): it does 2 serial NWS calls per unique watched spot, which approaches the 60s function limit as the watched set grows. Batch with bounded concurrency + cache the `/points -> forecast URL` resolution. Do before many spots are watched.
-- **`npm audit fix`**: 4 moderate prod advisories (dompurify, postcss) pulled in transitively; the critical/high are dev-only.
+- **`npm audit fix`** [done 2026-07-04, PR #8]: non-breaking pass cleared 2 advisories (lockfile-only, semver-compatible). 3 moderate prod advisories remain (dompurify, postcss) that need `npm audit fix --force` (breaking major bumps); left for an owner-reviewed pass, not done autonomously. Dev-only high/critical untouched.
 - **UNIQUE `alert_sends` dedupe index + `ON CONFLICT`** for DB-level dedup (currently app-enforced via `sentKeys`). Note: schema change touching alert infrastructure, expect this to escalate per studio policy.
 - Restrict the cron's unique-spot fetch to spots reachable from an enabled subscription; sort the alert headline by soonest window. Note: cron behavior change, expect escalation.
 
