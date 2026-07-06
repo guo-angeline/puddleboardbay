@@ -2482,5 +2482,22 @@
     "dog_friendly": null,
     "rentals_available": false,
     "inspection_required": false
+  },
+  {
+    "water": "Lakeshore Park Lake",
+    "region": "South Bay",
+    "city": "Newark",
+    "difficulty": "flatwater",
+    "has_fee": false,
+    "fee_amount": null,
+    "lat": 37.5542,
+    "lng": -122.0352,
+    "notes": "A small neighborhood lake inside Lakeshore Park. A dock off Chelsea Drive serves as the put-in. No restrooms at the park. Fishing is allowed.",
+    "dog_friendly": null,
+    "tide_sensitive": false,
+    "rentals_available": false,
+    "inspection_required": null,
+    "power_boats": false,
+    "id": 148
   }
 ]
