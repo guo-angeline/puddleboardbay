@@ -2,6 +2,16 @@
 
 CEO briefings after each shipped or parked item, newest first, 15 lines max each.
 
+## 2026-07-07 · Both experiments LIVE; spot #148 deployed; studio resumed
+What: owner created both PostHog flags (`alert-interstitial`, `next-good-window`, control/treatment 50/50), so both A/B experiments are now running on the already-deployed code. Separately deployed main (`vercel --prod --yes`) so the owner-merged spot #148 (Lakeshore Park Lake, Newark, PR #10) is live (verified /spot/148 = 200). Flipped the studio marker back to studio:v1 (it was only ever paused in the working tree, never in git).
+Verification: homepage 200, /spot/148 200. Flag creation not independently verifiable by the manager (no read key); taken on owner confirmation ("done").
+State: no open PRs, no [ready] items (item 5 blocked on D1, items 7/8/9 proposed). D1 still open, non-blocking. Do not read the experiments before ~2026-07-21 (14 days) AND 30 exposed users per arm.
+
+## 2026-07-05 · DEPLOYED to production (owner authorized)
+What: ran `vercel --prod --yes` on main (49cb2bd). Verified live: homepage 200, and BOTH flag keys (`alert-interstitial`, `next-good-window`) confirmed present in the production JS bundle. Items 1 and 2 (with the corrected instrumentation) are now live. Both features remain DARK by default: no PostHog flag exists yet, so everyone gets control (nothing renders / today's behavior).
+Remaining to fully activate: create the two 50/50 flags in PostHog project 458289. Manager cannot do this (needs the owner's phx_ personal API key, which the app does not expose); handed the owner a one-command script that reads the key from env. Deploy-before-flag order was deliberate: the corrected instrumentation is live before any experiment turns on.
+Still open: D1 (defer vs approve item-5 cron work).
+
 ## 2026-07-05 · Owner said "merge them for me": queue drained, state reconciled
 What: merged PR #6 (interstitial exposure fix), #7 (next-good-window), #8 (npm audit) into main, resolving the #6/#7 overlap in experiments.ts/analytics.ts/changelog/ROADMAP/BRIEFINGS by hand (both experiments + both events kept; 55 tests + build green after each merge). Closed #5 as redundant. Restored the studio state that lived only in the working tree: D1 (open), items 8 + 9 (proposed), item 5 blocked(D1).
 NOT deployed: main is current but production is unchanged until the owner runs `vercel --prod --yes`. After deploy, create the `alert-interstitial` and `next-good-window` PostHog flags to start both experiments; until then both features are dark.
