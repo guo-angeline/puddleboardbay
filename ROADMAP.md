@@ -83,9 +83,9 @@ Small items, one ship each, in this order:
 
 Owner verified 2026-07-03: push landed on iOS, copy well received, click deep-linked to the spot. Loop proven end to end; follow-up product ideas from this test are items 1 and 2.
 
-## 6b. [done, code merged, NOT deployed] 2026-07-08 Recalibrate the experiment method (per D2(a))
+## 6b. [done] 2026-07-08 Recalibrate the experiment method (per D2(a))
 
-**Status:** merged to `main` (c243cc4); build + 55 tests pass; verifier CONFIRMED. **Production deploy is gated pending owner review** (auto-mode classifier blocked the autonomous `vercel --prod`, since converting the interstitial to 100% touches the "never straight to 100%" directive even though D2(a) is the owner's explicit exception). Owner: run `vercel --prod --yes` from the repo root to ship; production is unchanged until then.
+**Status:** merged to `main` (c243cc4) and **DEPLOYED to production 2026-07-08** (owner ran `vercel --prod`). Verified live: homepage 200, and the deployed JS chunk is byte-identical to the verified local build. Production confirms the `alert-interstitial` flag string is gone (100% rollout) while the monitoring events (`alert_interstitial_shown`/`_result`) and the still-active `next-good-window` flag remain. build + 55 tests pass; verifier CONFIRMED.
 
 Owner answered D2 (a): the two live A/B tests are underpowered at ~14 users/day and can't read this year. Three things done:
 - **Convert `alert_interstitial` to a monitored 100% rollout.** It fires only on push-opens with 1 subscription, so it collects ~0 exposures/week and can never reach significance. Ship the treatment card to everyone; watch guardrails (`spot_sheet_dismissed`, `conditions_loaded`) for regressions instead of comparing arms.
