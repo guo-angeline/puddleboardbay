@@ -2499,5 +2499,23 @@
     "inspection_required": null,
     "power_boats": false,
     "id": 148
+  },
+  {
+    "id": 149,
+    "region": "East Bay",
+    "city": "Martinez",
+    "water": "Martinez Marina",
+    "notes": "Features a launch ramp, beach area, and docks. Located on the Carquinez Strait with views of the Benicia–Martinez Bridge.",
+    "lat": 38.0253682,
+    "lng": -122.1370117,
+    "geocode_display": "Martinez Marina, Tarantino Drive, Martinez, Contra Costa County, California, 94510, United States",
+    "difficulty": "bay",
+    "fee_amount": null,
+    "has_fee": null,
+    "power_boats": null,
+    "tide_sensitive": false,
+    "dog_friendly": null,
+    "rentals_available": false,
+    "inspection_required": false
   }
 ]
