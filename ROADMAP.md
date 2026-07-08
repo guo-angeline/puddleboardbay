@@ -48,7 +48,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 Owner directive 2026-07-03, top priority (after the first real-device push landed and deep-linked correctly). When the app opens from a push (`from=alert`, already tagged by the service worker), opening the bare spot drawer loses the alert's context. Show a floating info box or interstitial over the deep-linked spot carrying the alert-specific message: exactly when the calm window is and where to launch (put-in details from the spot's notes). The cron already computes the window; the message needs to survive the click (e.g. via URL params or notification data payload). User-facing flow change: ship behind an A/B flag per policy, and instrument dismiss/engage.
 
-**Shipped (code merged), NOT deployed** — `vercel --prod --yes` has not been run from this branch; production is unchanged until the owner deploys. `composeAlert` (`lib/alerts/select.ts`) now carries the window label as a `window` URL param on the notification's deep link. `AlertInterstitial` (`components/AlertInterstitial.tsx`) renders a floating card over the drawer with that window label and the spot's `notes`, with a Get Directions shortcut, gated behind the `alert_interstitial` PostHog flag (`docs/experiments/alert-interstitial.md`) — control renders nothing, so today's behavior is unchanged until the flag is turned on. New events `alert_interstitial_shown` / `alert_interstitial_result` (see `analytics/INSTRUMENTATION_CHANGELOG.md`, 2026-07-04). Verification: `npm test` (44 passed, including new `composeAlert` URL cases), `npm run lint` (clean), `npm run build` (clean; confirmed `alert_interstitial_shown`/`alert_interstitial_result`/`alert-interstitial` strings land in `.next/static`). No cron schedule, dedup, or Supabase-write behavior changed — only the URL payload the cron already sends.
+**Shipped (code merged), NOT deployed:** `vercel --prod --yes` has not been run from this branch; production is unchanged until the owner deploys. `composeAlert` (`lib/alerts/select.ts`) now carries the window label as a `window` URL param on the notification's deep link. `AlertInterstitial` (`components/AlertInterstitial.tsx`) renders a floating card over the drawer with that window label and the spot's `notes`, with a Get Directions shortcut, gated behind the `alert_interstitial` PostHog flag (`docs/experiments/alert-interstitial.md`), control renders nothing, so today's behavior is unchanged until the flag is turned on. New events `alert_interstitial_shown` / `alert_interstitial_result` (see `analytics/INSTRUMENTATION_CHANGELOG.md`, 2026-07-04). Verification: `npm test` (44 passed, including new `composeAlert` URL cases), `npm run lint` (clean), `npm run build` (clean; confirmed `alert_interstitial_shown`/`alert_interstitial_result`/`alert-interstitial` strings land in `.next/static`). No cron schedule, dedup, or Supabase-write behavior changed, only the URL payload the cron already sends. **Superseded 2026-07-08 (item 6b, D2(a)):** the `alert_interstitial` A/B flag was retired; the card is now a monitored 100% rollout and renders on every alert-open, so the "control renders nothing" note above no longer describes production.
 
 **Instrumentation follow-up (PR #6, merged + DEPLOYED 2026-07-05):** live in production. **Experiment STARTED 2026-07-07** (owner created the `alert-interstitial` flag, control/treatment 50/50). Read via `analytics/queries/experiment_alert_interstitial.sql` after the 14-day / 30-exposed-per-arm window. the first cut could not measure lift: `experiment_exposed` logged only in the treatment branch (control had no exposed cohort) and the card's directions tap never hit the shared `spot_action`. Fixed to symmetric trigger-based exposure for both arms + `spot_action(directions, source=alert_interstitial)` as the arm-comparable primary metric. Caught before the flag was turned on, so no data lost. **Do not create the PostHog flag / start the experiment until this is deployed**, or the first data collects against the broken instrumentation.
 
@@ -68,9 +68,9 @@ Organic is 10 users; expected this soon after the 140 spot pages went live. Rech
 
 ---
 
-## 5. [blocked(D1)] Tech follow-ups (from building the retention engine)
+## 5. [parked] Tech follow-ups (from building the retention engine): deferred per D1(a) 2026-07-08
 
-The `npm audit fix` sub-task shipped (PR #8, merged). The three remaining sub-tasks all touch the protected alert cron or need a schema migration, so they are escalated as D1 (see DECISIONS.md). Answer D1 to unblock.
+The `npm audit fix` sub-task shipped (PR #8, merged). The three remaining sub-tasks all touch the protected alert cron or need a schema migration. D1 resolved (a): **defer all three** until the watched set grows and the two experiments read out. They stay parked, not abandoned; re-promote to `[ready]` when scale (more than 1 subscription / many watched spots) actually justifies touching the cron. The bounded-concurrency refactor has zero benefit at 1 subscription and is pure risk to the path that wakes real users.
 
 Small items, one ship each, in this order:
 
@@ -82,6 +82,15 @@ Small items, one ship each, in this order:
 ## 6. [done] 2026-07-03 Confirm push lands and deep-links on a real device
 
 Owner verified 2026-07-03: push landed on iOS, copy well received, click deep-linked to the spot. Loop proven end to end; follow-up product ideas from this test are items 1 and 2.
+
+## 6b. [in-progress] 2026-07-08 Recalibrate the experiment method (per D2(a))
+
+Owner answered D2 (a): the two live A/B tests are underpowered at ~14 users/day and can't read this year. Do three things:
+- **Convert `alert_interstitial` to a monitored 100% rollout.** It fires only on push-opens with 1 subscription, so it collects ~0 exposures/week and can never reach significance. Ship the treatment card to everyone; watch guardrails (`spot_sheet_dismissed`, `conditions_loaded`) for regressions instead of comparing arms.
+- **Decontaminate `next_good_window`'s primary.** The always-on interstitial now fires `spot_action`/`directions` (`source: "alert_interstitial"`) for every alert-open, which would pollute the shared metric. Exclude interstitial-sourced directions from the `next_good_window` primary so its exposed-cohort directions rate stays a clean drawer-vs-drawer comparison.
+- **Recalibrate `next_good_window`'s decision rule to a realistic MDE.** ~430-680 exposed/arm for a 5pp lift at the ~5-10% base rate; the old "30/arm, ship on +5pp" only detected a 20+pp swing. State the honest read window (months) and mark early reads directional-only. It stays a flag-gated A/B (board directive), just with a truthful decision rule.
+
+This sits against the board directive "every major update behind an A/B flag, never straight to 100%", but D2(a) is the owner's explicit exception for the interstitial, with rationale documented. No new user-facing surface: the card already shipped and was already shown to 50%.
 
 ## 7. [proposed] Mobile polish leftovers (deferred from the Jun 2026 mobile UX pass)
 

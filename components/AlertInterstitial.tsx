@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import type { Spot } from "@/lib/types";
 import { track, trackIntent } from "@/lib/analytics";
-import { useExperiment } from "@/lib/experiments";
 
 interface Props {
   spot: Spot;
@@ -12,37 +11,28 @@ interface Props {
 }
 
 /**
- * Floating card over the deep-linked spot's drawer, shown only when the app
+ * Floating card over the deep-linked spot's drawer, shown whenever the app
  * opened from a push alert. Repeats the calm-window timing the notification
  * already named, plus the spot's put-in notes, so that context survives the
  * click instead of dropping into a bare drawer (ROADMAP item 1).
+ *
+ * Monitored 100% rollout (D2(a), 2026-07-08): this is no longer an A/B test.
+ * The interstitial fires only on push-opens with a tiny watched set, so an arm
+ * comparison could never reach significance; instead the card ships to everyone
+ * and we watch the guardrails (`spot_sheet_dismissed`, `conditions_loaded`) for
+ * regressions. The mount is gated on the alert context in HomeClient, so this
+ * component renders the card unconditionally.
  */
 export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Props) {
-  const { variant, ready, logExposure } = useExperiment("alert_interstitial");
-  const isTreatment = ready && variant === "treatment";
-
-  // Exposure is the trigger, not the render. This component mounts for BOTH
-  // arms whenever the app opened from an alert on this spot (HomeClient gates
-  // the mount on the alert context, not the variant), so exposure is logged
-  // here for control and treatment alike. Logging only in the treatment branch
-  // is what broke the first cut: control had zero exposed users, leaving no
-  // counterfactual cohort to measure lift against.
   useEffect(() => {
-    if (!ready) return;
-    logExposure();
-  }, [ready, logExposure]);
-
-  useEffect(() => {
-    if (!isTreatment) return;
     trackIntent("alert_interstitial_shown", { spot_id: spot.id });
-  }, [isTreatment, spot.id]);
-
-  if (!isTreatment) return null;
+  }, [spot.id]);
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}`;
-  // Same identity the drawer's action events carry, so the card's directions
-  // tap lands in the shared spot_action series and the experiment can compare
-  // it against control's drawer button.
+  // Same identity the drawer's action events carry, plus source="alert_interstitial"
+  // so the card's directions taps can be told apart from drawer taps (and
+  // excluded from the next_good_window primary metric, which they would
+  // otherwise contaminate now that the card is always on).
   const spotEventProps = {
     spot_id: spot.id,
     spot_name: spot.water,
@@ -56,8 +46,6 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   }
 
   function handleDirections() {
-    // Fire the shared directions metric (the arms' comparable success event)
-    // plus the within-treatment result split for card-level diagnostics.
     track("spot_action", { ...spotEventProps, action: "directions", source: "alert_interstitial" });
     trackIntent("alert_interstitial_result", { spot_id: spot.id, outcome: "directions" });
     onDismiss();

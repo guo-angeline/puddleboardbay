@@ -2,7 +2,7 @@
 
 The studio pauses escalation-worthy work and files it here. Answer by typing after `Answer:` on any entry; the next loop iteration ingests it and unblocks the gated items. Entries are append-only, newest last.
 
-## D1 [OPEN] 2026-07-04 · Remaining item-5 cron/schema work: defer or approve?
+## D1 [RESOLVED] 2026-07-04 · Remaining item-5 cron/schema work: defer or approve?
 
 Context: item 5's one safe sub-task (`npm audit fix`) shipped (PR #8, merged). The three remaining sub-tasks all touch protected surfaces, which `.claude/studio.md` says must escalate:
 - **Bounded-concurrency NWS fetch** in `app/api/cron/check-conditions` (perf refactor of the alert-sending cron).
@@ -18,9 +18,9 @@ Options:
 
 Recommendation: (a). Get the two experiments live and reading, then revisit item 5 when scale actually justifies touching the cron.
 
-Answer:
+Answer: a
 
-## D2 [OPEN] 2026-07-07 · The two live A/B experiments are underpowered; recalibrate the method
+## D2 [RESOLVED] 2026-07-07 · The two live A/B experiments are underpowered; recalibrate the method
 
 Context: the instrumentation is sound (symmetric trigger-based exposure, a real counterfactual control, dwell-gated diagnostics), but no power analysis was done before launch, and one done now is sobering.
 - **Power:** detecting a 5pp lift on a ~5-10% directions rate at 80% power / a=0.05 needs ~430-680 exposed users PER ARM. The doc's "30 per arm" only detects a ~20+pp swing. At ~5 spot-openers/day, `next-good-window` needs on the order of a year to be powered; `alert-interstitial` fires only on push-opens with 1 subscription, so it collects ~0 exposures/week and can never reach significance this year.
@@ -34,4 +34,4 @@ Options:
 
 Recommendation: (a). At this scale, flag-gated rollout with guardrail monitoring is the rigorous instrument, not an underpowered test. This does sit against the board directive "every major update ships behind an A/B flag", which is right for a high-traffic product but collides with reality at ~14 users/day; (a) keeps the flag-gating and the guardrails while dropping the pretense of a powered test.
 
-Answer:
+Answer: a

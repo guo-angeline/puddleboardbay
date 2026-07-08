@@ -9,16 +9,28 @@
 --          docs/experiments/next-good-window.md), so control is a real
 --          counterfactual cohort here, unlike alert_interstitial. Events
 --          exist only from 2026-07-04 (see INSTRUMENTATION_CHANGELOG.md).
---          Decision rule needs >= 14 days AND >= 30 exposed users per variant
---          before any read.
+-- Decontamination (2026-07-08, D2(a)): alert_interstitial became a monitored
+--          100% rollout, so its card fires spot_action/directions
+--          (source='alert_interstitial') for EVERY alert-open regardless of the
+--          next_good_window arm. Those taps are excluded below so the primary
+--          stays a clean drawer-vs-drawer comparison; only drawer directions
+--          (source empty/null) count. Windows spanning 2026-07-08 mix the old
+--          (uncontaminated shared metric) and new definitions, so read only
+--          from 2026-07-08 forward.
+-- Decision rule: this test needs ~430-680 exposed users per variant to detect a
+--          5pp lift at the ~5-10% base rate (80% power, a=0.05); the old
+--          "30/arm" only detected a 20+pp swing. At ~14 users/day that is a
+--          months-long read window; treat any earlier read as directional only.
 SELECT
   properties.variant AS variant,
   uniqIf(person_id, event = 'experiment_exposed'
                     AND properties.experiment = 'next_good_window') AS exposed_users,
   countIf(event = 'spot_action'
-          AND properties.action = 'directions') AS directions_actions,
+          AND properties.action = 'directions'
+          AND ifNull(properties.source, '') != 'alert_interstitial') AS directions_actions,
   round(100.0 * uniqIf(person_id, event = 'spot_action'
-                       AND properties.action = 'directions')
+                       AND properties.action = 'directions'
+                       AND ifNull(properties.source, '') != 'alert_interstitial')
               / greatest(uniqIf(person_id, event = 'experiment_exposed'
                        AND properties.experiment = 'next_good_window'), 1), 1)
     AS directions_rate_pct,

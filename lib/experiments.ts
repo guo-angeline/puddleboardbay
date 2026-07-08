@@ -43,18 +43,13 @@ export const EXPERIMENTS = {
     primaryMetric: "spot_action",
     guardrails: ["conditions_loaded", "spot_sheet_dismissed"],
   },
-  // ROADMAP item 1: a floating card over the deep-linked spot's drawer that
-  // repeats the alert's calm-window timing and put-in notes, so the message
-  // survives the click instead of dropping into a bare spot drawer.
-  alert_interstitial: {
-    flag: "alert-interstitial",
-    // Primary is the SHARED directions signal (spot_action action=directions),
-    // comparable across arms among exposed users. alert_interstitial_result is
-    // a treatment-only diagnostic, not the lift metric.
-    variants: ["control", "treatment"],
-    primaryMetric: "spot_action",
-    guardrails: ["spot_sheet_dismissed", "conditions_loaded"],
-  },
+  // NOTE: alert_interstitial was retired as an A/B test on 2026-07-08 (D2(a)).
+  // It fired only on push-opens with a tiny watched set, so an arm comparison
+  // could never reach significance; it now ships as a monitored 100% rollout
+  // (the card always renders, watch `spot_sheet_dismissed`/`conditions_loaded`
+  // for regressions). See components/AlertInterstitial.tsx and
+  // docs/experiments/alert-interstitial.md.
+  //
   // ROADMAP retention loop: preview the paid multi-day window in-drawer, ahead
   // of the PaddlePass paywall, to see if a forward-looking "come back Sat"
   // window gives people a reason to plan a return paddle.

@@ -167,3 +167,38 @@ treatment render. This is the corrected pattern (matching the alert-interstitial
 fix above): control is directly comparable to treatment.
 - **Comparability:** new events, no prior series; they exist only from
   2026-07-04.
+
+## 2026-07-08: Experiment method recalibration (D2(a))
+
+Both live A/B tests were underpowered at ~14 users/day (power analysis: ~430-680
+exposed/arm needed for a 5pp lift vs the docs' "30/arm"). D2(a) recalibrates the
+method. No new events; the changes are to exposure logging and metric definitions.
+
+**`experiment_exposed` (`experiment: "alert_interstitial"`): removed.**
+`alert_interstitial` was retired as an A/B test and converted to a monitored
+100% rollout (the card now renders on every alert-open; `lib/experiments.ts` no
+longer declares the experiment and `AlertInterstitial` no longer reads the flag
+or calls `logExposure`). The `alert-interstitial` variant of `experiment_exposed`
+stops appearing after 2026-07-08.
+- **Comparability:** the `alert_interstitial` A/B readout is discontinued from
+  2026-07-08; do not attempt a treatment-vs-control lift after that date (there
+  is no control arm). `alert_interstitial_shown` / `alert_interstitial_result`
+  are unchanged but are now absolute rollout diagnostics, not arm comparisons.
+
+**`spot_action`/`directions` (`source: "alert_interstitial"`): semantics-changed (volume).**
+The interstitial card now fires for 100% of alert-opens (was ~50%), so the
+count of directions taps carrying `source: "alert_interstitial"` roughly doubles
+from 2026-07-08 with no change in user behavior. Drawer taps (source empty/null)
+are unaffected.
+
+**`next_good_window` primary metric: semantics-changed (definition, decontaminated).**
+Because the interstitial card is now always on, its `source: "alert_interstitial"`
+directions taps would leak into the `next_good_window` exposed-cohort directions
+rate. The primary now **excludes** `source = "alert_interstitial"`, counting drawer
+directions only (`analytics/queries/experiment_next_good_window.sql`). The
+decision rule is also recalibrated to the realistic MDE (~430-680 exposed/arm;
+months-long read window; early reads directional only).
+- **Comparability:** the `next_good_window` primary (`directions_rate_pct`) is
+  discontinuous at 2026-07-08. Read the recalibrated, interstitial-excluded
+  definition only from 2026-07-08 forward; windows spanning the date mix the two
+  definitions. No event schema changed, so `spot_action` itself is continuous.

@@ -25,12 +25,19 @@ paddle, versus today's drawer which only answers "is it good right now".
   even though only treatment shows the window block.
 
 ## Primary metric (exactly one)
-- Event: `spot_action` with `action: "directions"`.
-- Definition: rate of `action: "directions"` among exposed users
+- Event: `spot_action` with `action: "directions"`, **excluding
+  `source: "alert_interstitial"`** (drawer taps only).
+- Definition: rate of drawer `action: "directions"` among exposed users
   (`experiment_exposed`, `experiment: "next_good_window"`), treatment vs
   control. Comparable because both arms have the drawer's directions button;
   only the window block differs. Link the query:
   `analytics/queries/experiment_next_good_window.sql`.
+- **Decontamination (2026-07-08, D2(a)):** `alert_interstitial` became a
+  monitored 100% rollout, so its card fires `spot_action`/`directions`
+  (`source: "alert_interstitial"`) on every alert-open regardless of this
+  experiment's arm. Those taps are excluded from the primary above so the metric
+  stays a clean drawer-vs-drawer comparison. Read this metric only from
+  2026-07-08 forward under the new definition.
 
 ## Guardrails (must not regress)
 - `conditions_loaded`: the window block reuses the same conditions fetch,
@@ -43,15 +50,27 @@ paddle, versus today's drawer which only answers "is it good right now".
   treatment only. Tells us whether people actually looked at the block, not
   whether it converted: the primary metric is `spot_action`.
 
-## Decision rule
-- Minimum runtime: 14 days AND minimum exposed users: 30 per variant.
-- Ship treatment if the directions rate improves by >= 5 percentage points
-  with no guardrail regression beyond 2 points. Otherwise keep control.
-- **Caveat:** acquisition is ~14 users/day (ROADMAP.md:26), so 30 exposed
-  users per variant needs a long read window at this traffic. This test can
-  cleanly read in-session directions intent but cannot cleanly measure
-  retention lift (return visits) short-term; treat any early retention read
-  as directional only.
+## Decision rule (recalibrated 2026-07-08, D2(a))
+- **Realistic MDE, not "30 per arm".** Detecting a 5pp lift on a ~5-10%
+  directions rate at 80% power / a=0.05 needs **~430-680 exposed users per
+  variant**. The old rule ("30/arm, ship on +5pp") only had power to detect a
+  20+pp swing, i.e. it would have called noise a win. Do not ship on the old bar.
+- **Read window:** at ~14 users/day acquisition (ROADMAP.md:26) and exposure
+  only on drawer opens that resolve a window, powering the primary is a
+  months-long read. Minimum runtime stays 14 days as a novelty-effect floor, but
+  a *decision* requires the exposed-count target above, not just elapsed days.
+- **Ship rule:** ship treatment only if the drawer-directions rate (primary,
+  interstitial-excluded) beats control by >= 5 pp AND both arms have reached the
+  exposed-count target above AND no guardrail regresses beyond 2 pp. Otherwise
+  keep control. Any read before the target is **directional only**, never a ship
+  decision. No sequential-testing correction is in place, so do not "peek and
+  ship" early.
+- **What this test can and cannot do:** it can cleanly read in-session drawer
+  directions intent once powered; it cannot cleanly measure the real objective
+  (retention / return visits) short-term. If the exposed-count target proves
+  unreachable in a reasonable window, the fallback (per D2(a)) is to convert this
+  to a monitored 100% rollout too, watching the guardrails and `next_window_viewed`
+  engagement rather than a lift test.
 
 ## Result (fill in at the end)
 - Exposed users / variant, primary metric per variant, guardrail readings,
