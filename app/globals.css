@@ -52,9 +52,16 @@
 /* Lock the app shell to the viewport. Without this, iOS Safari's collapsing
    toolbar resizes a height:100% shell on every swipe (the "wobble"), and the
    page rubber-bands. Fixed body + overflow hidden + overscroll:none means the
-   shell never moves; only the intended panels (map, list, sheet) scroll. */
+   shell never moves; only the intended panels (map, list, sheet) scroll.
+   Height is 100dvh (dynamic viewport), not 100%: on iOS a fixed body's
+   `height:100%` resolves to a legacy value shorter than the real screen, so
+   the shell stopped short and the body background showed as a dead band along
+   the bottom (worst in the installed/standalone PWA). Scroll is locked here,
+   so dvh never changes and can't reintroduce the wobble. 100% stays as the
+   fallback for browsers without dvh. */
 html, body {
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
 }
