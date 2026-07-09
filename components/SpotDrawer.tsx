@@ -166,7 +166,14 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
           zIndex: 1200,
           ...(isMobile && sheetH != null
             ? {
-                height: sheetH,
+                // Anchor the box's bottom edge at the *physical* screen bottom, not
+                // the layout-viewport bottom, so the white sheet paints through the
+                // home-indicator safe-area inset instead of leaving the page canvas
+                // showing. Height grows by the same inset so the visible top (peek
+                // height) is unchanged; inner content padding keeps text above the
+                // indicator.
+                height: `calc(${sheetH}px + env(safe-area-inset-bottom))`,
+                bottom: "calc(-1 * env(safe-area-inset-bottom))",
                 maxHeight: "none",
                 transition: dragging ? "none" : "height 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
               }
