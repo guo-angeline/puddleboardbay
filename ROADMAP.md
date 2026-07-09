@@ -124,7 +124,7 @@ Acceptance: Share produces a deep link that opens directly on the spot's conditi
 
 *(A third idea considered, inline paddleability dots on the list/pins, overlaps parked item 3 and should be folded there, not opened separately.)*
 
-## 10. [ready] Spot sheet: remove the "Report an issue with this spot" button
+## 10. [in-progress] 2026-07-09T17:14:51Z Spot sheet: remove the "Report an issue with this spot" button
 
 *(Owner request 2026-07-09.)*
 
