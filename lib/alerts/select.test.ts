@@ -39,6 +39,16 @@ describe("composeAlert", () => {
     expect(url).toBe("/?spot=2&from=alert&window=Thursday%20morning");
   });
 
+  it("appends the subscription token as `t` when given, for the open-ping join", () => {
+    const { url } = composeAlert([sw(2, "Foster City Lagoons", "2026-07-04", "Saturday")], "abc123");
+    expect(url).toBe("/?spot=2&from=alert&window=Saturday&t=abc123");
+  });
+
+  it("omits the token param when no token is supplied", () => {
+    const { url } = composeAlert([sw(2, "Foster City Lagoons", "2026-07-04", "Saturday")]);
+    expect(url).not.toContain("&t=");
+  });
+
   it("summarizes extras with a +N more", () => {
     const { body } = composeAlert([
       sw(2, "Foster City Lagoons", "2026-07-04", "Saturday"),

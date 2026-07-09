@@ -134,6 +134,29 @@ export async function postSubscription(
   }
 }
 
+/**
+ * Report an app-open from a push back to the server, keyed on the durable token
+ * that rode the notification deep link (`t` param). This is the ITP-proof
+ * retention signal: the token comes from the URL, not client storage, so the
+ * ping fires even after Safari has purged localStorage. Fire-and-forget; a same
+ * origin POST is also less likely to be ad-blocked than the PostHog event.
+ */
+export function reportAlertOpen(token: string, spotId?: number): void {
+  if (!token) return;
+  try {
+    const body = JSON.stringify({ token, spot_id: spotId });
+    // keepalive so the request survives the navigation/paint that follows.
+    void fetch("/api/alerts/opened", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    });
+  } catch {
+    /* best-effort: a missed open just under-counts one return */
+  }
+}
+
 /** Re-sync watched ids if this device already has a stashed subscription. */
 export async function syncWatchedSpots(watchedSpotIds: number[]): Promise<void> {
   const stashed = readStashedSubscription();

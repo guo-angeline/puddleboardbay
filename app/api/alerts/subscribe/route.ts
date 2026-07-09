@@ -30,6 +30,9 @@ export async function POST(req: Request) {
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
           enabled: true,
+          // Resurrecting a previously-disabled endpoint: clear the churn stamp
+          // so retention counts it as continuous, not a new + churned device.
+          disabled_at: null,
           last_seen: new Date().toISOString(),
         },
         { onConflict: "endpoint" }

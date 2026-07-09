@@ -31,18 +31,30 @@ export function selectAlertSpots(
   return out;
 }
 
-/** One batched push for a device's good spots. No em dashes in copy. */
-export function composeAlert(spots: SpotWindow[]): { title: string; body: string; url: string } {
+/**
+ * One batched push for a device's good spots. No em dashes in copy.
+ *
+ * `token` is the subscription's durable opaque id (push_subscriptions.token). It
+ * rides the deep link as `t` so the app can report the open back to the server
+ * (see /api/alerts/opened), which is how long-horizon subscriber retention is
+ * measured without depending on client storage that ITP purges. Omitted when
+ * absent so older callers/tests keep the same URL.
+ */
+export function composeAlert(
+  spots: SpotWindow[],
+  token?: string
+): { title: string; body: string; url: string } {
   if (spots.length === 0) throw new Error("composeAlert requires at least one spot");
   const first = spots[0];
   const extra = spots.length - 1;
   const tail = extra > 0 ? ` +${extra} more` : "";
+  // window carries the label through the deep link so the alert interstitial
+  // (item 1) can show the same "when" the notification body already named,
+  // without a second fetch.
+  const tokenParam = token ? `&t=${encodeURIComponent(token)}` : "";
   return {
     title: "Good paddling ahead",
     body: `${first.label} looks calm at ${first.spotName}${tail}.`,
-    // window carries the label through the deep link so the alert interstitial
-    // (item 1) can show the same "when" the notification body already named,
-    // without a second fetch.
-    url: `/?spot=${first.spotId}&from=alert&window=${encodeURIComponent(first.label)}`,
+    url: `/?spot=${first.spotId}&from=alert&window=${encodeURIComponent(first.label)}${tokenParam}`,
   };
 }

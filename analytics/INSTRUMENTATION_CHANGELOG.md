@@ -274,3 +274,40 @@ Supabase `alert_sends` ÷ PostHog `alert_clicked`, aggregate only),
 `queries/alert_driven_returns.sql`, plus GLOSSARY sections "Alert loop" and
 "Identity" (PWA partition, Safari ITP ~7-day purge, person-profile coverage).
 Retention reads must use these definitions and caveats from now on.
+
+## 2026-07-09 (later) — Durable long-horizon retention (server-side, ITP-proof)
+
+Adds a server-side retention path so retention beyond ~1 week is measurable for
+the subscribed cohort despite the identity limits above (Safari ITP purge, iOS
+PWA partition). No PostHog event added/renamed/removed; this is a new **data
+source** in Supabase plus one PostHog event gaining an upstream twin. Migration:
+`supabase/migrations/0002_retention.sql` (must be applied in Supabase).
+
+**`alert_opens` — added (Supabase table, server-side "return" ledger).**
+`/api/alerts/opened` writes one row per app-open from a push, keyed on the
+durable per-subscription `token` that now rides the notification deep link (`t`
+param, see `composeAlert`). Because the token travels in the payload, not client
+storage, the signal survives an ITP storage wipe. This is the server-side twin
+of PostHog `alert_clicked` and more complete (same-origin POST, not ad-blocked).
+- **Comparability:** exists only from 2026-07-09. `alert_opens` counts run
+  HIGHER than `alert_clicked` for the same period (ad blockers drop the PostHog
+  event but not the same-origin ping); do not treat the two as interchangeable
+  series. Alert CTR switches to the clean Supabase `alert_opens` ÷ `alert_sends`
+  join from this date (`queries/alert_ctr.sql`); the old cross-store fallback is
+  retained for pre-2026-07-09 windows only.
+
+**`push_subscriptions.disabled_at`, `push_subscriptions.token` — added (schema).**
+`disabled_at` is stamped by the cron when a subscription returns 410 Gone (was a
+bare `enabled` boolean with no timestamp), and cleared by the subscribe route on
+resurrection. `token` is a durable opaque per-subscription id.
+- **Comparability:** reachable-audience retention is exact only for churn from
+  2026-07-09 forward; rows disabled before then were backfilled `disabled_at =
+  last_seen` (approximate). No PostHog series affected.
+
+**Two durable retention metrics defined (Supabase):**
+`queries/reachable_audience_retention.sql` (share of a signup-week cohort still
+accepting pushes k weeks on) and `queries/active_subscriber_retention.sql`
+(share that opened a push in week W+k). These are the reliable long-horizon
+retention numbers; PostHog `retention_w1.sql` remains device-based and
+Safari-censored past ~7 days and must be labelled as such. GLOSSARY gains a
+"Long-horizon retention" subsection.

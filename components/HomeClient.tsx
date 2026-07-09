@@ -14,7 +14,7 @@ import { distanceMiles } from "@/lib/distance";
 import { searchSpots } from "@/lib/search";
 import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSavedConditions } from "@/components/useSavedConditions";
-import { syncWatchedSpots } from "@/lib/push";
+import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -87,6 +87,11 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             spot_name: found.water,
             region: found.region,
           });
+          // Durable, server-side return signal for long-horizon subscriber
+          // retention. The token rode the deep link, so this works even after
+          // ITP has purged client storage. See /api/alerts/opened.
+          const token = params.get("t");
+          if (token) reportAlertOpen(token, found.id);
           const windowLabel = params.get("window");
           if (windowLabel) setAlertBanner({ spotId: found.id, windowLabel });
         }

@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   // 1. Load enabled subscriptions + their watched spots + recent sends.
   const { data: subs, error: subErr } = await db
     .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
+    .select("id, endpoint, p256dh, auth, token")
     .eq("enabled", true);
   if (subErr) return NextResponse.json({ error: "db" }, { status: 500 });
 
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
     planned.push({ subscription_id: sub.id, spots: picks.map((p) => p.spotId) });
     if (dry) continue;
 
-    const payload = composeAlert(picks);
+    const payload = composeAlert(picks, sub.token ?? undefined);
     const result = await sendPush(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
       payload
@@ -87,7 +87,12 @@ export async function GET(req: Request) {
       );
       if (insertErr) console.error("alert_sends insert failed for", sub.id, insertErr.message);
     } else if (result.gone) {
-      const { error: disableErr } = await db.from("push_subscriptions").update({ enabled: false }).eq("id", sub.id);
+      // Stamp disabled_at so the reachable-audience retention curve can date the
+      // churn (enabled alone is a point-in-time boolean).
+      const { error: disableErr } = await db
+        .from("push_subscriptions")
+        .update({ enabled: false, disabled_at: new Date().toISOString() })
+        .eq("id", sub.id);
       if (disableErr) console.error("failed to disable subscription", sub.id, disableErr.message);
       disabled += 1;
     }

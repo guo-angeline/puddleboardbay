@@ -57,14 +57,35 @@ filter on it is complete only from that date.)
 - **Net enabled** — granted users minus users with any `alert_subscribe_failed`.
   Subscribe success is silent by design, so this is a floor, not an exact count.
   → `queries/alert_optin_funnel.sql`
-- **Alert CTR** — `alert_clicked` opens ÷ pushes sent. CROSS-STORE: sends live
-  in Supabase (`alert_sends`), opens in PostHog; no join key exists (pushes are
-  anonymous). Aggregate ratio only, never a per-user funnel.
+- **Alert CTR** — subscriptions that opened the app from a push ÷ subscriptions
+  sent a push. From 2026-07-09 both sides are in Supabase (`alert_opens` ÷
+  `alert_sends`) joined on `subscription_id`: a clean single-store ratio.
+  Pre-2026-07-09 only the cross-store fallback existed (PostHog `alert_clicked`
+  ÷ Supabase `alert_sends`, aggregate-only, ad-blocker-suppressed).
   → `queries/alert_ctr.sql`
 - **Alert-driven returns** — unique users per day with `alert_clicked`, plus
-  share of DAU. The identity-split-proof success measure for the retention
-  loop; see Identity below for why person-based retention misses these wins.
+  share of DAU (PostHog view, for DAU context). The durable version is the two
+  server-side retention metrics below; see Identity for why.
   → `queries/alert_driven_returns.sql`
+
+### Long-horizon retention (the reliable, ITP-proof numbers)
+Person-based retention (`retention_w1.sql`, DAU) is censored past ~7 days on iOS
+(see Identity). For horizons beyond a week, use these two, both computed in
+**Supabase** off the server-held subscription id, which ITP cannot touch:
+- **Reachable-audience retention** — of subscriptions created in week W, the
+  share still `enabled` (accepting pushes, `disabled_at` unset or later) k weeks
+  on. A subscription still reachable IS a retained user; needs no client
+  identity at all. Reachability ceiling, lags real churn (only flips on the next
+  send's 410). → `queries/reachable_audience_retention.sql`
+- **Active subscriber retention** — of subscriptions created in week W, the
+  share that opened the app from a push (`alert_opens`) in week W+k. Genuine
+  re-engagement, ITP-proof. Confounded by send frequency (no send that week =
+  reads as non-retained), so read it beside reachable-audience retention.
+  → `queries/active_subscriber_retention.sql`
+- **`alert_opens`** (Supabase table) — one row per app-open from a push,
+  recorded by `/api/alerts/opened` from the durable token in the deep link.
+  Exists from 2026-07-09. This is the server-side twin of PostHog
+  `alert_clicked`, and more complete (same-origin, not ad-blocked).
 
 ## Identity — what a "user" is (read before any retention claim)
 There is no login. A "person" is a device+browser storage scope
@@ -74,7 +95,9 @@ There is no login. A "person" is a device+browser storage scope
   success case (save in Safari → install → return via push) therefore looks
   like two one-and-done users in person-based retention. Segment by the
   `display_mode` super property (`standalone` | `browser`, on every event from
-  2026-07-09) and use **Alert-driven returns** for the loop's true effect.
+  2026-07-09) and use the two server-side **Long-horizon retention** metrics
+  above (reachable-audience / active subscriber) for the loop's true effect,
+  since they key on the server-held subscription id, not client identity.
 - **Safari ITP.** Safari purges script-writable storage after ~7 days without a
   visit, so a Safari user returning later looks new. W1 retention mostly fits
   inside the cap; W4+ and resurrection metrics systematically undercount on
