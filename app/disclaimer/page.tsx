@@ -59,8 +59,8 @@ export default function DisclaimerPage() {
           <section>
             <h2 style={h2Style}>Accuracy of information</h2>
             <p style={pStyle}>
-              Spot details on Paddle to Water — including launch fees, access hours, parking,
-              coordinates, and conditions — are compiled from public sources and community
+              Spot details on Paddle to Water, including launch fees, access hours, parking,
+              coordinates, and conditions, are compiled from public sources and community
               contributions. This information may be inaccurate, incomplete, or outdated.
               Fees change, access points close, and conditions vary by season. Always verify
               current conditions and access directly with the relevant park, marina, or land
