@@ -117,9 +117,8 @@ export default function DisclaimerPage() {
             <p style={pStyle}>
               If you find inaccurate or outdated information, please use the{" "}
               <strong>Feedback</strong> button on the{" "}
-              <Link href="/" style={linkStyle}>main page</Link>{" "}
-              or the <strong>Report an issue</strong> link inside any spot&rsquo;s detail
-              view. Community reports help keep this resource accurate for everyone.
+              <Link href="/" style={linkStyle}>main page</Link>. Community reports
+              help keep this resource accurate for everyone.
             </p>
           </section>
 
