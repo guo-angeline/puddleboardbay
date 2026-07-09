@@ -14,6 +14,24 @@ without touching this file.
 
 ---
 
+## 2026-07-09 — Spot-sheet CTA hierarchy re-weighted (no event change, rates shift)
+
+**`favorite_toggled`, `spot_action` (`action: "directions" | "photos"`) — no schema change; emphasis/layout changed.**
+The spot sheet's action buttons were re-ordered and re-weighted (item 11): Save
+is now the full-width filled primary CTA, Share the outlined secondary, and Get
+Directions + Photos are demoted to a smaller neutral row (previously Get
+Directions was the filled primary and Save/Share/Photos were an equal secondary
+row). No events were added, removed, or renamed, and no props changed. Shipped
+to 100% (no A/B flag) per owner direction 2026-07-09.
+- **Comparability:** expect a **layout-driven** shift from 2026-07-09: `favorite_toggled`
+  (save) and `spot_action`/`share` rates should rise, `spot_action`/`directions`
+  should fall, purely because the buttons changed prominence. Do NOT read a
+  post-07-09 rise in saves/shares as an organic behavior change. Because this went
+  straight to 100% with no control arm, there is no clean counterfactual; compare
+  against the pre-07-09 baseline as a before/after, not a causal A/B.
+
+---
+
 ## 2026-07-09 — Wordmark home link
 
 **`nav_home_clicked` — added (intent).**
