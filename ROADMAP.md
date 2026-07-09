@@ -124,13 +124,13 @@ Acceptance: Share produces a deep link that opens directly on the spot's conditi
 
 *(A third idea considered, inline paddleability dots on the list/pins, overlaps parked item 3 and should be folded there, not opened separately.)*
 
-## 10. [proposed] Spot sheet: remove the "Report an issue with this spot" button
+## 10. [ready] Spot sheet: remove the "Report an issue with this spot" button
 
 *(Owner request 2026-07-09.)*
 
 Drop the "Report an issue with this spot" link at the bottom of the spot sheet (`components/SpotDrawer.tsx`, the `setReportOpen` button ~line 356, plus its `FeedbackModal` at ~line 366). Low-traffic utility control that adds a line of chrome to every sheet; issue reports still reach us via the header **Feedback** button. Acceptance: the report link is gone from the sheet, no orphaned `reportOpen` state/handlers left, header Feedback still works. Small change; exempt from the A/B-flag rule.
 
-## 11. [proposed] Spot sheet: re-arrange CTAs to lead with Share + Save, not Get Directions
+## 11. [ready] Spot sheet: re-arrange CTAs to lead with Share + Save, not Get Directions
 
 *(Owner request 2026-07-09.)*
 
