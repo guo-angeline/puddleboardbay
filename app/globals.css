@@ -53,20 +53,28 @@
    toolbar resizes a height:100% shell on every swipe (the "wobble"), and the
    page rubber-bands. Fixed body + overflow hidden + overscroll:none means the
    shell never moves; only the intended panels (map, list, sheet) scroll.
-   Height is 100dvh (dynamic viewport), not 100%: on iOS a fixed body's
-   `height:100%` resolves to a legacy value shorter than the real screen, so
-   the shell stopped short and the body background showed as a dead band along
-   the bottom (worst in the installed/standalone PWA). Scroll is locked here,
-   so dvh never changes and can't reintroduce the wobble. 100% stays as the
-   fallback for browsers without dvh. */
-html, body {
+
+   The body's height comes from the fixed insets (top:0 + bottom:0), NOT from
+   `height:100%`/`100dvh`. On iOS a *fixed* box's percentage/vh height resolves
+   against a legacy viewport that is shorter than the real screen, so the shell
+   stopped short and the body background (--bg) painted as a dead sage band
+   along the very bottom, in the home-indicator zone (visible below the map,
+   the list, and the spot sheet). Positional insets pin the box to the true
+   screen bottom instead (edge-to-edge under viewport-fit=cover) and sidestep
+   that bug entirely. Scroll is locked, so nothing wobbles. */
+html {
   height: 100%;
-  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
   overflow: hidden;
   overscroll-behavior: none;
 }
-body { position: fixed; inset: 0; width: 100%; }
-html { -webkit-text-size-adjust: 100%; }
 
 body {
   background: var(--bg);
