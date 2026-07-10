@@ -93,6 +93,13 @@ When you produce an analytics report (user counts, retention, funnels, adoption)
 
 Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. Pages build static (`○` in the build output); the two `/api` routes are server functions (`ƒ`). Deploying is the only way changes go live: there is no git integration, so a commit without a `vercel --prod` deploy changes nothing in production (this bit us once: instrumentation sat undeployed for 3 days and the analytics window was polluted).
 
+### Scheduled jobs (two schedulers, do not lose the second one)
+
+Two cron paths run on schedules, but they are triggered by **different** schedulers:
+
+1. **`/api/cron/check-conditions`** (daily calm-window push) is a Vercel Cron, declared in `vercel.json` (`0 2 * * *`). Vercel runs it.
+2. **`/api/cron/send-reminders`** (drains launch-time push reminders) is **NOT in `vercel.json`**: this account is on Vercel **Hobby**, which rejects sub-daily crons at deploy time. It is instead driven by a **Supabase pg_cron** job named `send-launch-reminders` (`*/15 * * * *`, set up 2026-07-09) that `net.http_get`s the endpoint with the `CRON_SECRET` bearer. If you ever migrate schedulers or the reminder loop goes silent, check `select * from cron.job;` in Supabase, not `vercel.json`. (Email alerts `/api/cron/send-email-alerts`, if daily, can live in `vercel.json`.)
+
 `og:image` is set via the Next.js file convention: `app/opengraph-image.tsx` (site-wide) and `app/spot/[id]/opengraph-image.tsx` (per-spot, 1200x630). No `openGraph.images` array is needed in `app/layout.tsx`. Absolute URLs (canonical, OG, sitemap, robots, per-spot JSON-LD) all resolve from a single `SITE_URL` constant in `lib/structured-data.ts` (`https://paddletowater.com`), so update that one place if the production domain ever changes.
 
 ## Editing spot data

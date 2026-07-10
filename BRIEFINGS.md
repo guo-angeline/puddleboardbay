@@ -1,6 +1,11 @@
 # Briefings: the board log
 
-CEO briefings after each shipped or parked item, newest first, 15 lines max each.
+## 2026-07-10 · Closed item 19 (scheduler documented); blocked item 18 on D7
+What (19): the launch-reminder scheduler was already wired earlier this session (owner's Supabase pg_cron `send-launch-reminders` at */15 hitting /api/cron/send-reminders; Vercel Hobby can't do sub-daily crons). Item 19's only un-done residual was "record the scheduler so it's not lost", now documented in CLAUDE.md Deployment > "Scheduled jobs" (+ .claude/studio.md). Marked done. On-device fire confirmation still owed (owner declined the smoke test).
+What (18): the iOS storage-partition bug (may void items 13/14 on ~72% of saves) is gated by its own acceptance on a real-iOS-device repro the studio can't run. Filed D7 (run the repro; if confirmed, server-side favorites persistence) and marked item 18 blocked(D7) so the loop stops re-picking a hardware-gated item.
+Backlog now: 0 ready items. Everything else is done (13-17, 20-23 shipped) or blocked-on-owner (18 -> D7). The epic that motivated all this (retention reach + enrollment) is largely built; the gate now is the ~early-Aug retention read, not more building.
+
+## 2026-07-10 · Shipped item 20 (next-good-window to 100%); reconciled item 21
 
 ## 2026-07-10 · Shipped item 20 (next-good-window to 100%); reconciled item 21
 What: retired the underpowered `next_good_window` A/B and shipped the "Looking ahead / next calm window" panel to 100% (was hidden from half of users; the one surface that makes a cold, non-push app open worthwhile). Removed the experiment gate; kept the dwell-gated next_window_viewed event; stopped experiment_exposed for it. Doc marked retired; changelog comparability note (volume rises as rollout, not organic).
