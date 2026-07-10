@@ -14,6 +14,18 @@ without touching this file.
 
 ---
 
+## 2026-07-10 (latest+) — Return-session re-offer trigger (props-changed)
+
+Item 16. A non-installed user with 2+ saved spots and no subscription is now
+re-offered alerts on a later visit (not only at the first save), gated by the
+item-15 snooze so it never nags.
+
+**`alert_optin_shown.trigger` / `alert_optin_dismissed.trigger` — props-changed
+(value added).** New value `"return_session"`. `alert_optin_shown` volume rises
+again from 2026-07-10 as returning engaged-but-unsubscribed users are re-offered;
+segment by `trigger` to keep first-save comparable. (Item 17, iOS enable copy, is
+a copy/layout change only, no events.)
+
 ## 2026-07-10 (latest) — Dismiss is a snooze; always-on entry point; dismiss event (added + props-changed)
 
 Item 15. Dismissing the alerts prompt used to write a permanent `ptw-install-dismissed`

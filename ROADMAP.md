@@ -74,13 +74,17 @@ Acceptance: on a standalone launch, if there are saved spots and no active push 
 
 Acceptance: dismissal becomes a snooze, not a permanent kill (re-offer after N further saves or after a cooldown); decouple the install-dismiss flag from the enable-alerts flag so declining one does not silence the other; add a low-friction always-available entry point to enable alerts for users with saved spots (candidate: a small bell/"Alerts off" affordance on the "Your saved spots" section header in `components/SpotList.tsx:77`). Instrument the new entry point (`alert_optin_shown` with a `trigger` prop) and log dismissals with the snooze reason; changelog entry.
 
-## 16. [ready] The alerts offer only ever fires on the first save
+## 16. [done] 2026-07-10 The alerts offer only ever fires on the first save
+
+**Shipped 2026-07-10.** A non-installed user with 2+ saved spots and no subscription is now re-offered alerts on a later visit (new `return_session` trigger, auto-surfaced on load), not only at the first save. Reuses item 15's re-ask cadence: gated by the 14-day snooze and hard-denial so it never nags, and the engaged gate (2+ saves) avoids pestering a single-save user. Standalone (installed) relaunch is item 14; this covers the non-installed browser return. `alert_optin_shown`/`_dismissed` `trigger` gains `"return_session"` (changelog noted). Verified: 64 tests, lint, build clean; Playwright confirms auto-surface with 2+ saves on iOS UA, and quiet with 1 save or while snoozed.
 
 The prompt is triggered solely by the first `ptw:spotsaved` (`components/HomeClient.tsx:147` -> `components/InstallPrompt.tsx:111`). Someone who saves several spots on day one, dismisses, and returns engaged on day three is never re-asked, yet re-engaging returning users is the entire point of the loop. The offer fires exactly once, at the least-committed moment. Overlaps item 15's re-ask cadence; likely built together.
 
 Acceptance: broaden the trigger so an engaged-but-not-subscribed user is re-offered alerts at a natural later moment (e.g. on a subsequent save once they hold 2+ saved spots, or on a return session with saved spots and no subscription), respecting the item-15 snooze/cooldown so it never nags. Cap frequency to avoid noise. Reuse `alert_optin_shown` with a `trigger` prop identifying the occasion; changelog entry. Decision to settle with item 15: the single re-ask cadence both items share, define it once.
 
-## 17. [ready] iOS enable step is a wall of instructions with no tap target
+## 17. [done] 2026-07-10 iOS enable step is a wall of instructions with no tap target
+
+**Shipped 2026-07-10.** The iOS enable step now leads with the payoff ("Get pinged when your spots are calm") and turns the run-on instruction into a short numbered sequence (1. tap Share icon, 2. Add to Home Screen, 3. open it to turn on alerts). Apple still has no programmatic install, so the manual steps stay, but they read as steps, not a paragraph. Copy/layout only, no new events; no em dashes. Verified in the Playwright render check (payoff line + 3-step ordered list).
 
 Android gets an Install button; iOS gets a paragraph describing OS chrome plus an inline Share glyph and no button (`components/InstallPrompt.tsx:214`). It is Apple's constraint that there is no programmatic install, but nothing softens the highest-friction step: no reinforcement of the payoff, no sense of progress. Lowest priority, cosmetic and OS-bounded.
 

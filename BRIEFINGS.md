@@ -2,6 +2,13 @@
 
 CEO briefings after each shipped or parked item, newest first, 15 lines max each.
 
+## 2026-07-10 · Shipped items 16 + 17: alerts funnel complete
+What (16): the alerts offer used to only fire on the first save. Now a non-installed user with 2+ saved spots and no subscription is re-offered on a later visit (new return_session trigger, on load), reusing item 15's cadence: gated by the 14-day snooze + hard-denial so it never nags, and a 2+-saves engaged gate so single-save users aren't pestered. Standalone relaunch is item 14; this covers the non-installed browser return.
+What (17): the iOS enable step now leads with the payoff ("Get pinged when your spots are calm") and reads as a 3-step numbered sequence instead of a run-on paragraph. Copy/layout only, no new events.
+Instrumentation: alert_optin_shown/_dismissed trigger gains "return_session" (changelog); item 17 no events.
+Verified: 64 tests, lint + build clean; Playwright confirms 16 auto-surfaces with 2+ saves on iOS and stays quiet with 1 save / while snoozed, and 17's payoff line + 3-step list render. Both deployed.
+Funnel status: items 13-17 all shipped + live. The save -> install -> enable-alerts funnel diagnosed by the owner's 5 items is now fully repaired ahead of the ~07-15 retention re-check.
+
 ## 2026-07-10 · Shipped item 15: dismiss is a snooze + a fallback way back into alerts
 What: dismissing the alerts prompt used to write a permanent flag that killed the funnel forever, with no other entry point anywhere. Fixed in three parts: (1) dismiss is now a 14-day snooze, not a permanent kill; (2) an always-available "🔔 Turn on alerts" affordance in the saved-spots header lets an unsubscribed user re-open the prompt any time (bypassing the snooze); (3) the old permanent ptw-install-dismissed flag is no longer read (devices that had it get re-offered once, intended). Hard denials stay permanent.
 This DEFINED THE RE-ASK CADENCE (14-day snooze + manual entry) that item 16 will reuse, so item 16 is now smaller: it just adds broader trigger occasions gated by this snooze. Note item 14 already covers the standalone-relaunch re-offer.

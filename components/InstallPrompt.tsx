@@ -83,7 +83,7 @@ export default function InstallPrompt() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [enabling, setEnabling] = useState(false);
   const [result, setResult] = useState<OptInResult | null>(null);
-  const [trigger, setTrigger] = useState<"first_save" | "standalone_relaunch" | "manual">("first_save");
+  const [trigger, setTrigger] = useState<"first_save" | "standalone_relaunch" | "manual" | "return_session">("first_save");
 
   // Track whether a spot drawer is open. We no longer HIDE for it (that suppressed
   // the prompt at the exact moment it's earned, since the primary "Save this spot"
@@ -154,6 +154,26 @@ export default function InstallPrompt() {
     window.addEventListener("ptw:spotsaved", onSaved);
     return () => window.removeEventListener("ptw:spotsaved", onSaved);
   }, []);
+
+  // Return-session re-offer (item 16): a non-installed user who saved before but
+  // never subscribed is re-offered alerts on a later visit, without needing a new
+  // save, so the offer is not stuck at the first save. Standalone (installed)
+  // relaunch is handled separately (item 14). Gated to engaged users (2+ saved
+  // spots) and the item-15 snooze / hard-denial so it never nags.
+  useEffect(() => {
+    if (platform !== "ios" && platform !== "android") return;
+    if (readStashedSubscription()) return;
+    try {
+      const optedOut = snoozedUntil() > Date.now() || localStorage.getItem(DENIED_KEY) === "1";
+      if (!optedOut && readFavoriteIds().length >= 2) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTrigger("return_session");
+        setVisible(true);
+      }
+    } catch {
+      /* private mode */
+    }
+  }, [platform]);
 
   // Always-available entry point (item 15): the "Turn on alerts" affordance in
   // the saved-spots header dispatches this. An explicit tap bypasses the snooze
@@ -277,22 +297,27 @@ export default function InstallPrompt() {
       </>
     );
   } else if (platform === "ios") {
+    // item 17: keep the payoff visible and turn the run-on instructions into a
+    // short numbered sequence. Apple has no programmatic install, so the manual
+    // steps stay, but they read as steps, not a paragraph.
+    const shareIcon = (
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+        strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+        <polyline points="16 6 12 2 8 6" />
+        <line x1="12" y1="2" x2="12" y2="15" />
+      </svg>
+    );
     body = (
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-          Get alerts when {spotName} is good to paddle
-        </p>
-        <p style={muted}>
-          <span>Add this app to your home screen first: tap the Share icon</span>{" "}
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-            strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-          <span>, then pick &ldquo;Add to Home Screen.&rdquo; Open it from there to turn on alerts.</span>
-        </p>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Get pinged when your spots are calm</p>
+        <p style={{ ...muted, marginTop: 2 }}>Add the app to your home screen, then open it to turn on alerts.</p>
+        <ol style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
+          <li>Tap the Share icon {shareIcon}</li>
+          <li>Pick &ldquo;Add to Home Screen&rdquo;</li>
+          <li>Open it from there to turn on alerts</li>
+        </ol>
       </div>
     );
   } else {
