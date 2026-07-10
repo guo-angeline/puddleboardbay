@@ -39,9 +39,21 @@ export default function SpotList({
   // subscription in an effect (localStorage) to avoid an SSR hydration mismatch,
   // and hides once alerts are enabled.
   const [alertsOn, setAlertsOn] = useState(true);
+  // item 18 recovery floor: iOS gives the installed PWA a storage partition
+  // separate from Safari, so favorites saved in Safari are gone on first launch
+  // (repro confirmed, D7). We can't rehydrate them (the anon id is partitioned
+  // too), so the empty-favorites state on an INSTALLED app shows an explicit
+  // re-save nudge instead of the generic first-run one, which makes the item-14
+  // alert re-offer reachable once they re-save.
+  const [isStandalone, setIsStandalone] = useState(false);
   useEffect(() => {
     const sync = () => setAlertsOn(!!readStashedSubscription());
     sync();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsStandalone(
+      ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true) ||
+        window.matchMedia("(display-mode: standalone)").matches
+    );
     window.addEventListener("ptw:alertsenabled", sync);
     return () => window.removeEventListener("ptw:alertsenabled", sync);
   }, []);
@@ -83,7 +95,11 @@ export default function SpotList({
           tell people it exists. Drops away the moment they save anything. */}
       {savedSpots.length === 0 && onToggleFavorite && mainSpots.length > 0 && (
         <p className="px-4 pt-2.5 pb-1 text-[11px] text-[--muted]">
-          Tap <span style={{ color: "#E23B54" }}>♥</span> to watch a spot&rsquo;s conditions.
+          {isStandalone ? (
+            <>Re-save your spots here to get calm-window alerts. Saves from Safari don&rsquo;t carry into the installed app.</>
+          ) : (
+            <>Tap <span style={{ color: "#E23B54" }}>♥</span> to watch a spot&rsquo;s conditions.</>
+          )}
         </p>
       )}
 

@@ -1,5 +1,10 @@
 # Briefings: the board log
 
+## 2026-07-10 · Item 18 shipped (iOS re-save recovery); device-exclusion setter
+What: owner confirmed the iOS storage-partition bug (D7=a). But the approved fix (favorites keyed to anon id) can't work, the anon id is partitioned too, so a client fix can't cross the boundary and rehydration needs a fragile URL-token bridge + a Supabase table. Surfaced that; owner chose the recovery-nudge floor. Shipped: installed (standalone) users with empty favorites now see "Re-save your spots here to get calm-window alerts. Saves from Safari don't carry into the installed app." instead of the generic first-run nudge, so re-saving re-arms the item-14/15/16 offers. The real iOS-install-wall answer stays the email channel (22/23, email-first, no install). Full rehydration deferred.
+Also shipped (PR #30): a `?internal=1` URL setter so the owner can exclude a test device from analytics by visiting a link; resolves the "mark my device" ask. Historical repro-session events still need the person_id in EXCLUDED_PERSONS.md (needs the PostHog key).
+Verified: 87 tests, lint + build clean; Playwright confirms recovery copy on standalone, normal nudge in-browser. Backlog now 0 ready, 0 open decisions.
+
 ## 2026-07-10 · Closed item 19 (scheduler documented); blocked item 18 on D7
 What (19): the launch-reminder scheduler was already wired earlier this session (owner's Supabase pg_cron `send-launch-reminders` at */15 hitting /api/cron/send-reminders; Vercel Hobby can't do sub-daily crons). Item 19's only un-done residual was "record the scheduler so it's not lost", now documented in CLAUDE.md Deployment > "Scheduled jobs" (+ .claude/studio.md). Marked done. On-device fire confirmation still owed (owner declined the smoke test).
 What (18): the iOS storage-partition bug (may void items 13/14 on ~72% of saves) is gated by its own acceptance on a real-iOS-device repro the studio can't run. Filed D7 (run the repro; if confirmed, server-side favorites persistence) and marked item 18 blocked(D7) so the loop stops re-picking a hardware-gated item.
