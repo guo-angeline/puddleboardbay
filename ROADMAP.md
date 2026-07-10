@@ -5,6 +5,7 @@
 <!-- The studio loop works the top-most [ready] item. Steer by editing statuses: promote [proposed] to [ready], demote to [parked], reorder. Shipped items move to the Shipped section with date + commit + deploy refs. -->
 <!-- Pause everything by changing the marker above to studio:paused -->
 
+> **Current focus (Jul–Sep 2026): retention is the #1 goal.** Everything else is secondary until the return rate moves. 78% one-and-done, W1 13-17%, first durable read ~early Aug. The bet: own a low-friction, reliable channel to re-reach users (email first, PWA push second, native never for now) and give them a reason to come back (calm-window alerts + a cold-open reason to check). Acquisition, SEO, UGC, and PaddlePass all wait behind proof that we can retain. See the "Retention: reach + enrollment redesign" epic below.
 
 ---
 
@@ -45,6 +46,52 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - 2026-07-09 [done] Spot sheet: re-weighted the CTAs for Save-first, Share-second (item 11). Save is now the full-width filled-azure primary (retention target), Share the outlined secondary (virality target), Get Directions + Photos demoted to a neutral row; saved state stays the soft-pink confirmed treatment. Shipped straight to 100%, NO A/B flag, per owner direction (DECISIONS.md D3, explicit exception to the flag policy: ~14 users/day can't power a test). Existing `favorite_toggled` / `spot_action` events unchanged; comparability note added (save/share rates rise, directions fall, as a layout effect from 2026-07-09, not organic). Verified live on prod (`/?spot=1`): Save filled primary, Share outlined secondary, Get Directions + Photos demoted. Deployed.
 
 ---
+
+## Epic: retention reach + enrollment redesign (email-first) — 2026-07-10
+
+The lead work for the 2-month retention push. Install converts at ~1% (1 install / 182 prompts) and iOS web push needs an install first; email converts far higher, works on desktop, and is cross-device + identity-bearing (it also fixes the iOS Safari/PWA partition that blinds retention measurement). This epic adds an anonymous email alert channel on the SAME calm-window evaluator as push, and turns the install-only opt-in into a channel-agnostic enrollment surface that picks the right ask per platform. Full spec, schema, copy, and instrumentation: `docs/superpowers/specs/2026-07-10-email-alert-channel-and-enrollment.md`. Two blocking owner escalations before the first send: **D5** (CAN-SPAM postal address) and **D6** (rollout mechanism). Sequence: 21 (cheap, ship now) -> 22 (the build) -> 23 (placements, depends on 22).
+
+## 21. [ready] Rename Save -> Watch + broaden the enrollment trigger to conditions-interest
+
+Two cheap, independent Phase-0 wins that need no email backend. (a) Rename "Save this spot" to "Watch this spot" and the saved-section header to "Watching (N)": favorites = watch list = alert set are one array, so "watch" teaches the payoff and is honest even pre-subscribe (the saved section already shows live condition badges). Copy tweak, ships to 100%, no flag. (b) Broaden the enrollment prompt from save-only to conditions-interest: fire when the user genuinely viewed conditions (dwell-gated `conditions_viewed`) on 2+ distinct spots in a session, in addition to save / return-session, respecting the existing 14-day snooze. A bigger, better-qualified pool than savers (many check conditions without saving).
+
+Acceptance: PRD section 13 Phase 0. Add `trigger: "conditions_interest"` to `alert_optin_shown` (`lib/analytics.ts`), an `INSTRUMENTATION_CHANGELOG.md` entry, and confirm the string lands in `.next/static`. Monitored 100% rollout with guardrails (shown volume by trigger, dismiss rate), not a powered arm.
+
+## 22. [ready] Email alert channel (anonymous, same evaluator as push)
+
+The load-bearing build. Anonymous email alerts (email + watched spots, no account) fired by the SAME `evaluateGoodWindow` (`lib/alerts/conditions-window.ts`) as the push cron, so the two never disagree. Provider: Resend (React Email, free tier covers current scale, one-click List-Unsubscribe + complaint webhooks). New parallel Supabase tables (`email_subscriptions` / `email_watched_spots` / `email_sends` / `email_opens`, migration `0003`, kept off the protected push path), double opt-in, a daily `/api/cron/send-email-alerts` (1/UTC-day cap, per-(spot,window) dedup, `?dry=1`), one-click unsubscribe, and the ITP-proof `email_opens` return ledger. Full schema + copy + events: PRD sections 6-13.
+
+Gated: the first lawful send needs **D5** (postal address for the CAN-SPAM footer) and **D6** (rollout mechanism). The build can start now; the send cannot go out until both are answered. First PII the app stores, handled per PRD section 8 (minimal storage, instant unsubscribe, delete-on-request). Deliverability (SPF/DKIM/DMARC on `alerts.paddletowater.com`) per PRD section 7; new events + changelog per section 11.
+
+## 23. [ready] Per-platform enrollment matrix (email as the fallback tier)
+
+Depends on 22. Redesign `components/InstallPrompt.tsx` into a channel-agnostic enrollment card that shows ONE ask at a time by platform: desktop leads with email (today's desktop prompt is a dead, button-less card); iOS Safari leads with email and demotes install to a secondary "add to home screen too" (install converts ~1%); the push-denied installed user (`DENIED_KEY`) gets an email rescue instead of a dead end; Android keeps the one-tap install primary with email as the decline fallback. Full matrix + exact copy strings: PRD section 10; acceptance: PRD section 13 Phase 2.
+
+## Epic: retention post-13-17 gaps (2026-07-10 journey re-audit)
+
+After items 13-17 shipped, a full re-audit of every live retention journey (save -> install -> alerts, the push -> return loop, the launch-reminder loop, and in-session re-engagement) surfaced three gaps that blunt the funnel we just repaired. Sequenced 18 (highest leverage) -> 19 (cheap unblock, shippable independently now) -> 20 (trivial governance). Owner picked these three on 2026-07-10. These fix the push channel; the email second-channel that was considered alongside them was promoted the same day into the "retention reach + enrollment redesign" epic above (items 21-23), which now leads the backlog. The "nothing calm this week" fallback (folds into item 8) and a cold-open "Calm near you today" home stay deferred, not dropped.
+
+## 18. [ready] iOS install loses saved spots: the Safari -> PWA storage partition voids items 13/14
+
+Highest-leverage retention work available. `app/manifest.ts` sets `start_url: "/"`, and favorites are localStorage-only with no server persistence until a push subscription exists (`watched_spots` only syncs after subscribe, `lib/push.ts:161`). iOS gives an installed PWA a storage partition separate from Safari, so the installed app launches with an empty `ptw-favorites`. Item-14's re-offer gate (`readFavoriteIds().length > 0`, `components/InstallPrompt.tsx:115`) then fails, the return-session re-offer never fires, and the manual "Turn on alerts" button (needs `savedSpots > 0`, `components/SpotList.tsx:96`) never renders. The installed iOS user lands on an empty app with no saves and no alert offer, a dead end. iOS was ~72% of historical saves, so this likely nullifies items 13/14 on the platform that matters most.
+
+Verify first: on a real iOS device, save a spot in Safari, Add to Home Screen, launch the PWA, and confirm `ptw-favorites` is empty and no prompt fires. Some iOS versions capture the current page URL at add-time, which could partly mitigate; the repro is the gating experiment before any fix.
+
+Acceptance: saved spots survive the Safari -> installed-PWA transition, OR the installed-with-empty-favorites state shows an explicit recovery ("re-save your spots") instead of a blank app, so the item-14 re-offer becomes reachable. Approaches to weigh at build time: (a) persist favorites server-side keyed to the anon id or a pre-subscription token so the PWA rehydrates; (b) bridge the saved spot through `start_url` / the add-time URL and re-save on first launch; (c) empty-state recovery UI as a floor. Instrument the recovery path (`alert_optin_shown` already carries `trigger`; add a value or a distinct event) with an `INSTRUMENTATION_CHANGELOG.md` entry. New user-facing behavior on the primary platform: A/B flag is the data-lead's call given low traffic, but the changelog entry is required.
+
+## 19. [ready] Wire the launch-reminder scheduler (the loop is shipped but dead)
+
+`app/api/cron/send-reminders/route.ts` is deliberately excluded from `vercel.json` because Vercel Hobby rejects sub-daily crons (DECISIONS D4), so every "Remind me at launch time" tap in the alert interstitial writes a `launch_reminders` row that never fires (`sent_at` stays null). A complete retention loop sits inert, and the CTA is a broken promise.
+
+Acceptance: an external sub-daily scheduler hits `/api/cron/send-reminders` with the `CRON_SECRET` bearer every ~15-30 min, and a reminder fires ~30 min before its window opens. Preferred: Supabase pg_cron + pg_net (Supabase is already the store); alternatives are a GitHub Actions cron or a Vercel Pro upgrade. Verify with a dry-run (`?dry=1`) then a real scheduled fire landing on a device. If it cannot be wired, hide the "Remind me at launch time" CTA in `components/AlertInterstitial.tsx` so we stop promising what we do not deliver. No new client events required; record the scheduler in the deploy notes (`.claude/studio.md` / CLAUDE.md Deployment section) so it is not lost.
+
+## 20. [ready] Ship "Next good window" to 100% (retire the underpowered A/B)
+
+`components/NextGoodWindowPanel.tsx` renders only for the `next_good_window` treatment arm, but the test needs ~430-680 exposed per arm (months at ~14 users/day) and cannot cleanly measure return short-term (`docs/experiments/next-good-window.md`). It is the one surface that makes opening the app cold (not via a push) worthwhile, and it is hidden from half of users.
+
+Acceptance: remove the experiment gate so the "Looking ahead / next calm window" panel renders for everyone; keep the dwell-gated `next_window_viewed` intent event for a monitored rollout. Owner-approved D3-style exception to the A/B-flag policy (low traffic cannot power the test). Update `docs/experiments/next-good-window.md` to "retired, 100% rollout" and add an `INSTRUMENTATION_CHANGELOG.md` comparability note (the panel shows to all users from the ship date, so `next_window_viewed` volume rises as a rollout effect, not organic).
+
+*Considered and deferred (do not open yet): email as a no-install alert channel (bypasses the iOS install wall, needs a provider + unsubscribe); a "nothing calm this week, here is a calmer nearby spot" fallback for silent-churn savers (fold into item 8); a cold-open "Calm near you today" home surface (the 7am-oracle vision as a default view, sequence after the loop is proven).*
 
 ## Epic: repair the save -> install -> alerts funnel (2026-07-09 journey audit)
 

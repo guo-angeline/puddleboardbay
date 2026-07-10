@@ -55,3 +55,29 @@ Options:
 Recommendation: (a). The calendar reminder already delivers "remind me when it's time to launch" with none of the protected-infra risk.
 
 Answer: b (owner: build the server-side push reminder, 2026-07-09)
+
+## D5 [RESOLVED] 2026-07-10 · Email alerts: CAN-SPAM postal address for the footer
+
+Context: the email alert channel (PRD `docs/superpowers/specs/2026-07-10-email-alert-channel-and-enrollment.md`, ROADMAP item 22) requires a valid physical postal address in every email footer (CAN-SPAM, a legal requirement). We have none on file. The build can proceed, but no email can send lawfully until this is supplied.
+
+Options:
+- **(a) [recommended] A PO box** — cheapest, keeps the home address private.
+- **(b) The founder's home or business address.**
+- **(c) A registered-agent or virtual-mailbox address.**
+
+Recommendation: (a). A PO box satisfies CAN-SPAM without exposing a home address.
+
+Answer: b: 500 folsom st, San Francisco, CA 94105 (this is a secure apartment building and I didn't enter the aprtment number)
+
+## D6 [RESOLVED] 2026-07-10 · Email alerts: rollout mechanism for the new channel
+
+Context: email is a new user-facing surface, so the board directive says ship behind an A/B flag, but ~14 users/day cannot power a test (the D2/D3 reality). This gates ROADMAP item 22.
+
+Options:
+- **(a) [recommended] Monitored 100% rollout behind a kill-switch flag** (defaults on; flips off instantly if deliverability or spam-complaint guardrails breach), not a control/treatment split. Consistent with D2(a) and D3.
+- **(b) A true control/treatment split**, accepted as directional-only for months.
+- **(c) Hold the channel** until traffic grows enough to power a test.
+
+Recommendation: (a). Flag-gated rollout with guardrail monitoring is the rigorous instrument at this scale, matching how D2/D3 were resolved.
+
+Answer: a
