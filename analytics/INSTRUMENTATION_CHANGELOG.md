@@ -14,6 +14,27 @@ without touching this file.
 
 ---
 
+## 2026-07-10 (latest) — Dismiss is a snooze; always-on entry point; dismiss event (added + props-changed)
+
+Item 15. Dismissing the alerts prompt used to write a permanent `ptw-install-dismissed`
+flag that killed the funnel forever with no way back. Now dismiss is a 14-day
+snooze (`ptw-alerts-snoozed-until`), and a "Turn on alerts" affordance in the
+saved-spots header (SpotList) lets an unsubscribed user re-open the prompt any
+time (bypassing the snooze).
+
+**`alert_optin_shown.trigger` — props-changed (value added).** Now also
+`"manual"` (the saved-spots-header entry point), alongside `first_save` and
+`standalone_relaunch`.
+
+**`alert_optin_dismissed` — added (intent).** Fires when the prompt is dismissed,
+with `platform` and `trigger`. Dismiss was previously silent, so there is no
+prior series.
+- **Comparability:** `alert_optin_shown` volume rises further as dismissed users
+  are re-offered after the snooze and via the manual entry point (was: dismissed
+  once = gone forever). Segment by `trigger` to keep first-save comparable. The
+  old `ptw-install-dismissed` localStorage flag is no longer read; devices that
+  had it set will be re-offered once (intended, that was the permanent-kill bug).
+
 ## 2026-07-10 (later) — alert_optin_shown gains a `trigger` prop; iOS relaunch re-offer (props-changed)
 
 Item 14 fix. Installed iOS users dead-ended: the enable-alerts step only fired

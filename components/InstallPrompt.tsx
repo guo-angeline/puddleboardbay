@@ -17,10 +17,24 @@ declare global {
   }
 }
 
-const STORAGE_KEY = "ptw-install-dismissed";
 // Set when the OS permission is hard-denied, so a standalone relaunch does not
 // re-offer alerts to someone who already said no at the browser level (item 14).
 const DENIED_KEY = "ptw-alerts-denied";
+// Item 15: dismiss is a SNOOZE, not a permanent kill. It writes a timestamp
+// here; the prompt stays quiet until it passes, then may re-offer. This replaces
+// the old permanent `ptw-install-dismissed` flag (which killed the funnel
+// forever with no way back). An explicit tap on the always-available "Turn on
+// alerts" entry point (SpotList) bypasses the snooze.
+const SNOOZE_KEY = "ptw-alerts-snoozed-until";
+const SNOOZE_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+function snoozedUntil(): number {
+  try {
+    return Number(localStorage.getItem(SNOOZE_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+}
 // One pwa_installed per device, however the install happened (in-app button,
 // browser menu, or iOS Add to Home Screen detected on first standalone launch).
 // v2: the v1 build (live ~30 min on 2026-07-02) set the flag while the event
@@ -69,7 +83,7 @@ export default function InstallPrompt() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [enabling, setEnabling] = useState(false);
   const [result, setResult] = useState<OptInResult | null>(null);
-  const [trigger, setTrigger] = useState<"first_save" | "standalone_relaunch">("first_save");
+  const [trigger, setTrigger] = useState<"first_save" | "standalone_relaunch" | "manual">("first_save");
 
   // Track whether a spot drawer is open. We no longer HIDE for it (that suppressed
   // the prompt at the exact moment it's earned, since the primary "Save this spot"
@@ -97,7 +111,7 @@ export default function InstallPrompt() {
       // Otherwise the installed iOS user dead-ends: the enable step only fired
       // on a fresh save, which they already did before installing.
       try {
-        const optedOut = localStorage.getItem(STORAGE_KEY) === "1" || localStorage.getItem(DENIED_KEY) === "1";
+        const optedOut = snoozedUntil() > Date.now() || localStorage.getItem(DENIED_KEY) === "1";
         if (!optedOut && readFavoriteIds().length > 0 && !readStashedSubscription()) {
           setTrigger("standalone_relaunch");
           setVisible(true);
@@ -131,7 +145,7 @@ export default function InstallPrompt() {
   // Show after the first save, framed around alerts for that spot.
   useEffect(() => {
     function onSaved(e: WindowEventMap["ptw:spotsaved"]) {
-      if (localStorage.getItem(STORAGE_KEY) === "1") return; // user dismissed before
+      if (snoozedUntil() > Date.now()) return; // snoozed (was: permanent dismiss)
       if (readStashedSubscription()) return; // already subscribed
       setSpotName(e.detail?.spotName || "this spot");
       setTrigger("first_save");
@@ -139,6 +153,20 @@ export default function InstallPrompt() {
     }
     window.addEventListener("ptw:spotsaved", onSaved);
     return () => window.removeEventListener("ptw:spotsaved", onSaved);
+  }, []);
+
+  // Always-available entry point (item 15): the "Turn on alerts" affordance in
+  // the saved-spots header dispatches this. An explicit tap bypasses the snooze
+  // and the first-save gate, so a user who dismissed can still opt in later.
+  useEffect(() => {
+    function onEnableRequest() {
+      if (readStashedSubscription()) return; // already subscribed
+      setTrigger("manual");
+      setResult(null);
+      setVisible(true);
+    }
+    window.addEventListener("ptw:enablealerts", onEnableRequest);
+    return () => window.removeEventListener("ptw:enablealerts", onEnableRequest);
   }, []);
 
   const shownRef = useRef(false);
@@ -152,7 +180,12 @@ export default function InstallPrompt() {
 
   function handleDismiss() {
     setVisible(false);
-    localStorage.setItem(STORAGE_KEY, "1");
+    try {
+      localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
+    } catch {
+      /* private mode */
+    }
+    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger });
   }
 
   async function handleInstall() {
@@ -180,6 +213,7 @@ export default function InstallPrompt() {
     trackIntent("alert_optin_result", { platform, result: r });
     if (r === "granted") {
       setPersona({ alerts_enabled: true });
+      window.dispatchEvent(new Event("ptw:alertsenabled")); // let the saved-spots entry point hide
       setTimeout(() => setVisible(false), 1600);
     } else if (r === "denied") {
       // Persist the hard denial so a standalone relaunch does not re-offer.

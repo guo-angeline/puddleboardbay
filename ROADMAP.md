@@ -66,7 +66,9 @@ On iOS the banner gives manual Add-to-Home-Screen instructions ending "Open it f
 
 Acceptance: on a standalone launch, if there are saved spots and no active push subscription (`readStashedSubscription()` is null) and the user has not permanently opted out, auto-surface the "Enable alerts" step without requiring a new save. Do not re-prompt once granted or hard-denied. Reuse `alert_optin_shown` with a `trigger: "standalone_relaunch"` prop so the resurfaced prompt is distinguishable in the funnel; changelog entry for the new prop.
 
-## 15. [ready] One dismiss kills the entire funnel forever, with no fallback entry point
+## 15. [done] 2026-07-10 One dismiss kills the entire funnel forever, with no fallback entry point
+
+**Shipped 2026-07-10.** Three parts: (1) dismiss is now a **14-day snooze** (`ptw-alerts-snoozed-until`), not a permanent kill; the old `ptw-install-dismissed` permanent flag is no longer read. (2) An always-available **"🔔 Turn on alerts"** entry point in the saved-spots header (`components/SpotList.tsx`) for unsubscribed users, dispatches `ptw:enablealerts` which InstallPrompt handles, bypassing the snooze. (3) Hard denials stay permanent (item 14). New `alert_optin_dismissed` event; `alert_optin_shown.trigger` gains `"manual"` (changelog noted). **This defines the re-ask cadence (14-day snooze + manual entry) that item 16 reuses.** Verified: 64 tests, lint, build clean; Playwright confirms the entry point shows/re-opens the prompt, dismiss sets a snooze (no permanent flag), and a save while snoozed does not re-surface.
 
 `handleDismiss` writes `ptw-install-dismissed=1` (`components/InstallPrompt.tsx:131`) and `onSaved` early-returns on that key (`components/InstallPrompt.tsx:113`), and there is no other entry to alerts anywhere in the app (no bell, no settings, no re-ask). Dismiss the banner once, before understanding it, and alerts can never be enabled again on that device short of clearing storage. A single shared flag also gates both the install step and the separate enable-alerts step.
 

@@ -2,6 +2,13 @@
 
 CEO briefings after each shipped or parked item, newest first, 15 lines max each.
 
+## 2026-07-10 · Shipped item 15: dismiss is a snooze + a fallback way back into alerts
+What: dismissing the alerts prompt used to write a permanent flag that killed the funnel forever, with no other entry point anywhere. Fixed in three parts: (1) dismiss is now a 14-day snooze, not a permanent kill; (2) an always-available "🔔 Turn on alerts" affordance in the saved-spots header lets an unsubscribed user re-open the prompt any time (bypassing the snooze); (3) the old permanent ptw-install-dismissed flag is no longer read (devices that had it get re-offered once, intended). Hard denials stay permanent.
+This DEFINED THE RE-ASK CADENCE (14-day snooze + manual entry) that item 16 will reuse, so item 16 is now smaller: it just adds broader trigger occasions gated by this snooze. Note item 14 already covers the standalone-relaunch re-offer.
+Instrumentation: new alert_optin_dismissed event; alert_optin_shown.trigger gains "manual"; changelog updated.
+Verified: 64 tests, lint + build clean; Playwright confirms entry point shows + re-opens the prompt, dismiss snoozes (no permanent flag), save-while-snoozed stays quiet, no JS errors.
+Next up: item 16 (broaden re-offer triggers, reuse item-15 cadence), then 17 (iOS copy polish).
+
 ## 2026-07-10 · Shipped item 14: iOS no longer dead-ends after install
 What: installed iOS users hit a dead end. The enable-alerts step only fired on a fresh save, so someone who saved a spot then installed (the normal iOS flow) never saw it again on relaunch and had to save another spot with no hint that was required. iOS is the bulk of saves, so this sat on the main path. Fix: a standalone relaunch now auto-surfaces the enable step (generic "your saved spots" copy) when there are saved spots, no subscription, and no opt-out; hard denials are persisted so they aren't re-offered.
 Instrumentation: alert_optin_shown gains a `trigger` prop (first_save | standalone_relaunch) so the resurfaced prompt is distinguishable in the funnel; changelog notes total volume rises as installed-but-unsubscribed iOS users finally get re-offered.

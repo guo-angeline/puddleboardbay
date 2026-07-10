@@ -82,6 +82,7 @@ type IntentEventName =
   // funnel leaks.
   | "alert_optin_shown"
   | "alert_optin_result"
+  | "alert_optin_dismissed"
   // Fired when the app is opened from a push notification (URL contains from=alert).
   | "alert_clicked"
   // The alert deep-link interstitial (treatment variant) rendered over the
@@ -131,9 +132,16 @@ interface EventPropMap {
   // (push.ts imports trackSystem from this module).
   alert_optin_shown: {
     platform: "standalone" | "ios" | "android";
-    // What surfaced the prompt: the first save, or an installed standalone
-    // relaunch that re-offered alerts without needing a new save (item 14).
-    trigger: "first_save" | "standalone_relaunch";
+    // What surfaced the prompt: the first save (item 1), an installed standalone
+    // relaunch re-offer (item 14), or an explicit tap on the always-available
+    // "Turn on alerts" entry point in the saved-spots header (item 15).
+    trigger: "first_save" | "standalone_relaunch" | "manual";
+  };
+  // Prompt dismissed (item 15): dismissal is a 14-day snooze, not a permanent
+  // kill. `trigger` is which surfacing was dismissed.
+  alert_optin_dismissed: {
+    platform: "standalone" | "ios" | "android";
+    trigger: "first_save" | "standalone_relaunch" | "manual";
   };
   alert_optin_result: {
     platform: "standalone" | "ios" | "android";
