@@ -40,6 +40,19 @@ function isFilteredTraffic(): boolean {
 
 export default function PostHogProvider() {
   useEffect(() => {
+    // Flag this device as internal by visiting `/?internal=1` once: it sets the
+    // `ptw-internal` localStorage flag (read by isFilteredTraffic below), so the
+    // device's traffic is filtered from analytics from here on. Much easier than
+    // setting localStorage by hand, which is painful on iOS Safari. Runs before
+    // the key check so it works regardless; the same visit is then filtered.
+    try {
+      if (new URLSearchParams(window.location.search).get("internal") === "1") {
+        localStorage.setItem("ptw-internal", "1");
+      }
+    } catch {
+      /* private mode: cannot persist the flag */
+    }
+
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (!key || posthog.__loaded) return;
 

@@ -14,6 +14,16 @@ without touching this file.
 
 ---
 
+## 2026-07-10 — Internal-device flag now settable via `?internal=1` (traffic filter)
+
+No event change. Added a URL setter: visiting `/?internal=1` once writes the
+`ptw-internal` localStorage flag (already read by `PostHogProvider.before_send`),
+so the device's traffic is filtered from analytics from then on. This is the
+easy way to flag owner/test devices (setting localStorage by hand is painful on
+iOS Safari). Comparability: no series changes; it just makes an existing filter
+easier to apply. Historical events from a device flagged this way still need the
+analysis-side `EXCLUDED_PERSONS.md` list (the flag only stops FUTURE events).
+
 ## 2026-07-10 (item 23) — Channel-agnostic enrollment matrix (props-changed)
 
 The install-only opt-in card became a per-platform enrollment card: desktop and iOS Safari lead with email, a push-denied installed user gets an email rescue, Android keeps one-tap install with an email fallback, and the email capture form now calls `/api/email/subscribe`.
