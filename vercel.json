@@ -1,6 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/check-conditions", "schedule": "0 2 * * *" },
-    { "path": "/api/cron/send-reminders", "schedule": "*/30 * * * *" }
+    { "path": "/api/cron/check-conditions", "schedule": "0 2 * * *" }
   ]
 }

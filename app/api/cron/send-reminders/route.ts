@@ -9,11 +9,12 @@ export const runtime = "nodejs";
  * send a "time to launch" push and mark it sent. Separate from the daily
  * conditions cron because reminders need sub-daily granularity.
  *
- * IMPORTANT (scheduler): this must be hit frequently (~every 15 min) for
- * reminders to fire near launch time. Vercel Hobby crons run only once a day,
- * so wire this to a sub-daily scheduler: Vercel Pro cron, or (free) Supabase
- * pg_cron + pg_net calling this endpoint with the CRON_SECRET bearer. See
- * ROADMAP item 1 / DECISIONS D4.
+ * IMPORTANT (scheduler): this must be hit frequently (~every 15-30 min) for
+ * reminders to fire near launch time. This account is on Vercel HOBBY, which
+ * REJECTS sub-daily crons at deploy time, so this is deliberately NOT in
+ * vercel.json. Wire it to a sub-daily scheduler instead: Supabase pg_cron +
+ * pg_net calling this endpoint with the CRON_SECRET bearer (free), or Vercel
+ * Pro. Until then, reminders are stored but never sent. See DECISIONS D4.
  *
  * Auth: Bearer CRON_SECRET, same as check-conditions. `?dry=1` reports due
  * counts without sending.
