@@ -44,7 +44,7 @@ Owner direction (2026-07-09, verbatim intent): optimize Save first (drives reten
 
 Answer: ship to 100%, no experiment flag (owner directive).
 
-## D4 [OPEN] 2026-07-09 · Server-sent launch-time PUSH reminder, or keep the calendar reminder?
+## D4 [RESOLVED] 2026-07-09 · Server-sent launch-time PUSH reminder, or keep the calendar reminder?
 
 Context: the alert interstitial now offers "Remind me at launch time" as a client-side CALENDAR reminder (`.ics`), which works today with zero backend. The owner's literal ask was to schedule a NOTIFICATION at launch time. That cannot be done client-side on this iOS-heavy base (iOS Safari / installed PWAs do not support the Notification Triggers / TimestampTrigger API). A launch-time PUSH therefore has to be server-side: a new Supabase `reminders` table + a scheduled send, likely a more-frequent cron than the single 02:00 UTC run. That touches the PROTECTED push/cron send path and Supabase rows, and a morning launch-time push is exactly the pattern that caused the 6am-wake incident and forced the 02:00 UTC reschedule. It would also collide with the daily send cap.
 
@@ -54,4 +54,4 @@ Options:
 
 Recommendation: (a). The calendar reminder already delivers "remind me when it's time to launch" with none of the protected-infra risk.
 
-Answer:
+Answer: b (owner: build the server-side push reminder, 2026-07-09)

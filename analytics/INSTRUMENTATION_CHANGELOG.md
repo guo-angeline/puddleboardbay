@@ -14,6 +14,21 @@ without touching this file.
 
 ---
 
+## 2026-07-09 (latest) — Launch reminder is now a scheduled push, not a calendar add (semantics nuance)
+
+Same-day follow-up to the entry below. The interstitial's "Remind me at launch
+time" CTA now schedules a SERVER-SENT push reminder (`/api/alerts/remind` ->
+`/api/cron/send-reminders`) instead of adding a calendar event; the owner wanted
+a real notification. No event or prop change.
+
+**`alert_interstitial_result{outcome:"reminder"}` — semantics nuance.** Still
+the same event and value, but from 2026-07-09 it means "a launch-time push
+reminder was scheduled", where earlier the same day (PR #14) it briefly meant "a
+calendar reminder was added". No data window of consequence spans the two (both
+shipped 2026-07-09, pre any read). Success of the feature is now measurable
+downstream as the reminder push landing (a `check-conditions`-style send) and an
+`alert_clicked` when the reminder is opened.
+
 ## 2026-07-09 (later) — Alert interstitial reframed: reminder replaces directions (props-changed)
 
 The interstitial was reframed to a saved-spot update with a calendar "Remind me
