@@ -12,18 +12,17 @@ interface Props {
   onDismiss: () => void;
 }
 
-const LEAD_MIN = 30; // fire the reminder this many minutes before the window opens
-
 /**
- * When to push the reminder: the window start, in the user's local time (the
- * audience and the spots share the Pacific timezone), minus the lead. Returns
- * epoch ms. `null` if the launch is already within the lead (nothing to remind).
+ * When to push the reminder: exactly at the window open, in the user's local
+ * time (the audience and the spots share the Pacific timezone). Returns epoch
+ * ms, or `null` if the window has already opened (nothing left to remind).
+ * Note: the sender cron runs every ~15 min, so the push lands within that of
+ * the open, not to the second.
  */
 function reminderFireMs(w: GoodWindow, nowMs: number): number | null {
   const [y, m, d] = w.windowKey.split("-").map(Number);
   const start = new Date(y, m - 1, d, w.startHour, 0, 0).getTime();
-  const fire = start - LEAD_MIN * 60_000;
-  return fire > nowMs ? fire : null;
+  return start > nowMs ? start : null;
 }
 
 /**

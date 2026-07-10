@@ -10,8 +10,9 @@ export const runtime = "nodejs";
  * The interstitial calls this when the user taps "Remind me at launch time".
  * The caller is already push-subscribed (the card only shows on push-opens), so
  * we identify their subscription by its `endpoint` and store a pending row that
- * /api/cron/send-reminders drains once `fire_at` passes. One reminder per
- * (subscription, spot, window); a repeat tap just refreshes fire_at.
+ * /api/cron/send-reminders drains once `fire_at` passes. `fire_at` is the window
+ * open time. One reminder per (subscription, spot, window); a repeat tap just
+ * refreshes fire_at.
  */
 export async function POST(req: Request) {
   let body: unknown;
