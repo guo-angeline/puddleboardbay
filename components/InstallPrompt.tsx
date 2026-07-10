@@ -67,7 +67,11 @@ export default function InstallPrompt() {
   const [enabling, setEnabling] = useState(false);
   const [result, setResult] = useState<OptInResult | null>(null);
 
-  // Hide while a spot drawer is open (banner sits above the drawer's Get Directions).
+  // Track whether a spot drawer is open. We no longer HIDE for it (that suppressed
+  // the prompt at the exact moment it's earned, since the primary "Save this spot"
+  // button now lives inside the drawer, item 13); instead we move to the top so we
+  // clear the drawer's bottom Save/Share actions. The old "cover Get Directions"
+  // concern is moot: Get Directions was demoted to a secondary row (item 11).
   useEffect(() => {
     const sync = () => setDrawerOpen(document.body.dataset.drawerOpen === "true");
     sync();
@@ -162,7 +166,11 @@ export default function InstallPrompt() {
     }
   }
 
-  if (!visible || !platform || drawerOpen) return null;
+  if (!visible || !platform) return null;
+
+  // When a drawer is open, anchor to the top so the banner is visible at save
+  // time without covering the drawer's bottom Save/Share actions.
+  const anchorTop = drawerOpen;
 
   const card: React.CSSProperties = {
     background: "#0B2A47",
@@ -253,10 +261,12 @@ export default function InstallPrompt() {
       aria-live="polite"
       style={{
         position: "fixed",
-        bottom: "env(safe-area-inset-bottom, 0px)",
         left: 0, right: 0, zIndex: 1500,
         display: "flex", justifyContent: "center",
-        padding: "0 0 12px 0", pointerEvents: "none",
+        pointerEvents: "none",
+        ...(anchorTop
+          ? { top: "env(safe-area-inset-top, 0px)", padding: "12px 0 0 0" }
+          : { bottom: "env(safe-area-inset-bottom, 0px)", padding: "0 0 12px 0" }),
       }}
     >
       <div style={card}>

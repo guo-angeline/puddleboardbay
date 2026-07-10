@@ -2,6 +2,11 @@
 
 CEO briefings after each shipped or parked item, newest first, 15 lines max each.
 
+## 2026-07-10 · Shipped item 13: alerts prompt no longer suppressed by the drawer
+What: highest-leverage funnel fix. Item 11 moved the primary "Save this spot" button into the drawer, but InstallPrompt returned null whenever a drawer was open, so saving via the primary CTA surfaced the enable-alerts step nowhere (only later, if/when the user closed the drawer; on desktop's persistent sidebar, potentially never). Fixed: the prompt now renders with the drawer open, anchored to the top so it clears the drawer's bottom Save/Share actions. The old reason for the guard (covering Get Directions) is moot since item 11 demoted it.
+Verified: 64 tests, lint + build clean; Playwright confirms the prompt is visible and top-anchored at save time with a drawer open, and unchanged (bottom-anchored) with no drawer. `alert_optin_shown` unchanged; changelog notes its shown-rate will rise as a fix, not behavior.
+Next up: items 14-17 (the rest of the alerts-funnel fixes) remain [ready]. Note items 15+16 share a re-ask cadence to define once, and 14 is the iOS standalone dead-end.
+
 ## 2026-07-09 · Built the server-side launch-time PUSH reminder (D4 answered b)
 What: owner directed building the real push reminder (not the calendar hand-off). Answered D4 (b). Shipped the code for a launch-time push: the "Remind me at launch time" CTA now POSTs to a new `/api/alerts/remind` (stores a `launch_reminders` row keyed to the user's existing push subscription, fire_at = window start minus 30 min), and a new `/api/cron/send-reminders` drains due reminders and sends the push via the existing sender. Removed the calendar (.ics) path. No change to the daily conditions cron/send logic.
 Verified (as far as possible without the DB): 64 tests (7 new for remind validation), lint + build clean, both routes registered; Playwright with a stubbed subscription confirms the CTA POSTs the correct payload (spot, windowKey, fireAt 30 min before the 7am window) and the card confirms "Reminder set". End-to-end (real Supabase insert + scheduled push delivery + iOS) is UNVERIFIED, needs the owner steps below.
