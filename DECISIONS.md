@@ -82,7 +82,7 @@ Recommendation: (a). Flag-gated rollout with guardrail monitoring is the rigorou
 
 Answer: a
 
-## D7 [OPEN] 2026-07-10 · Item 18 (iOS storage partition): run the on-device repro first
+## D7 [RESOLVED] 2026-07-10 · Item 18 (iOS storage partition): run the on-device repro first
 
 Item 18 claims that on iOS, installing the PWA from Safari gives it a separate storage partition, so the installed app launches with an empty `ptw-favorites`, which would void items 13/14 (the funnel fixes) on iOS, ~72% of historical saves. But the item's own acceptance says the repro is the GATE before any fix: some iOS versions capture the add-time URL, which could partly mitigate, so building a fix for a bug that may not reproduce would be wasted effort. The repro needs a real iOS device, which the studio does not have.
 
@@ -95,4 +95,4 @@ Options:
 
 Recommendation: run the repro; if confirmed, (a). This is the highest-leverage retention item IF it reproduces, and pure waste if it doesn't, hence the gate.
 
-Answer:
+Answer: a - also mark this device as my device (test device, excluded from analytics)
