@@ -45,6 +45,8 @@ Defined in `lib/types.ts`. Each `Spot` has:
 
 `MapView` uses `react-leaflet` which requires `window`. It is always loaded with `dynamic(..., { ssr: false })`. Never import `MapView` directly in a server component or remove the dynamic wrapper.
 
+**One canvas renderer for every marker.** The map runs `preferCanvas` and the spot pins share a single `L.canvas()` renderer (`useMemo` in `MapView`). Any `CircleMarker` you add (e.g. the user-location halo/dot) MUST be passed that same `renderer` prop. A marker without it makes Leaflet spin up its own default canvas; because layers like the location dot mount asynchronously, that second canvas stacks on top of the overlay pane and its per-canvas hit-testing swallows every click over the map (pins go dead, cursor stuck on grab) for anyone with location on. Symptom is desktop-looking but is really "location granted". One renderer, one canvas, one hit-test surface.
+
 ### Theme
 
 The palette is the **Meltwater** design system (glacial-pale base, deep-azure ink, water-type color coding), applied 2026-07-08 from the claude.ai/design "Style Directions" doc. CSS custom properties in `app/globals.css` are the source of truth; the full token set (base / ink / brand / waterType / status) lives there.

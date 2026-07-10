@@ -97,17 +97,25 @@ export default function MapView({ spots, selected, onSelect, userLocation, fitTo
       <FitBounds spots={spots} hasSelection={!!selected} enabled={fitToSpots} />
       <FlyToUser location={userLocation ?? null} />
 
-      {/* User location — halo + dot */}
+      {/* User location — halo + dot. Must use the SAME shared `renderer` as the
+          spot pins. Without an explicit renderer these markers spin up Leaflet's
+          default preferCanvas renderer, adding a SECOND canvas to the overlay
+          pane. Because it mounts after the spot canvas (location resolves async),
+          it stacks on top and swallows every click — pins became unclickable and
+          the cursor stuck on grab for anyone with location granted (auto-center)
+          or who tapped Near Me. One renderer, one canvas, one hit-test surface. */}
       {userLocation && (
         <>
           <CircleMarker
             center={[userLocation.lat, userLocation.lng]}
             radius={18}
+            renderer={renderer}
             pathOptions={{ color: "transparent", fillColor: "#0E6FD1", fillOpacity: 0.18, weight: 0 }}
           />
           <CircleMarker
             center={[userLocation.lat, userLocation.lng]}
             radius={7}
+            renderer={renderer}
             pathOptions={{ color: "#fff", fillColor: "#0E6FD1", fillOpacity: 1, weight: 3 }}
           />
         </>
