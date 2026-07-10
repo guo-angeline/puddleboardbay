@@ -46,6 +46,42 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## Epic: repair the save -> install -> alerts funnel (2026-07-09 journey audit)
+
+The retention loop (save a spot, install, enable web push) is discoverable at the top but breaks in the middle. Five findings from auditing the live flow, sequenced by impact-to-effort. Items 13 and 14 sit on the main path and are the priority; 15 and 16 overlap (re-ask cadence) and may be built together; 17 is OS-constrained polish. These repair an existing, already-shipped flow, so per the flag policy small fixes are exempt; where an item changes the core flow (13, 14) a flag is the data-lead's call, but instrumentation + a changelog entry is required for any event change regardless.
+
+## 13. [done] 2026-07-10 Prompt is suppressed by the very Save button that should trigger it
+
+**Shipped 2026-07-10.** `InstallPrompt` no longer returns null when a drawer is open; it renders even with the drawer open and anchors to the TOP so it clears the drawer's bottom Save/Share actions (the old "cover Get Directions" concern is moot, item 11 demoted it). So a save via the in-drawer primary CTA now surfaces the enable-alerts step at save time on both mobile (bottom sheet) and desktop (persistent sidebar). `alert_optin_shown`/`_result` unchanged; changelog notes the shown-rate rises as a fix, not behavior. Verified: 64 tests, lint, build clean; Playwright confirms the prompt is visible + top-anchored with a drawer open, and still bottom-anchored with none.
+
+Highest-leverage fix. `InstallPrompt` returns `null` whenever a spot drawer is open (`drawerOpen`, `components/InstallPrompt.tsx:165`), a rule added so the banner never covered the drawer's Get Directions. But since the 2026-07-09 CTA reweight (Shipped item 11), the full-width primary "Save this spot" button lives inside that drawer (`components/SpotDrawer.tsx:310`). So a user who saves via the primary CTA sees nothing at save time: the banner appears only later, when they happen to close the drawer, its alert framing now detached from the save that earned it. On desktop the drawer is a persistent sidebar that may never close, so the prompt can sit invisible indefinitely. Net effect: the reweight quietly routed most saves into the one place the prompt refuses to render.
+
+Acceptance: after a save, the enable-alerts step is visible at save time even with the drawer open (surface it inline in the drawer post-save, or allow the banner to render above the drawer without covering the primary actions). The old "hide over Get Directions" concern is now moot since Get Directions was demoted to a secondary row. Verify on both desktop (persistent sidebar) and mobile (bottom sheet). Existing `alert_optin_shown` / `alert_optin_result` events unchanged; changelog note that shown-rate will rise as a fix, not a behavior change.
+
+## 14. [ready] iOS silently dead-ends after install
+
+On iOS the banner gives manual Add-to-Home-Screen instructions ending "Open it from there to turn on alerts" (`components/InstallPrompt.tsx:214`). But on the next standalone launch `visible` starts `false` and only flips on a fresh `ptw:spotsaved` event (`components/InstallPrompt.tsx:64,111`), so the installed iOS user lands in the app and is never shown the enable-alerts step. They must save another spot to resurface it, with no hint that's required. iOS is the bulk of saves (owner's iOS PWA drove ~72% per the excluded-persons analytics), so this dead-end sits on the main path.
+
+Acceptance: on a standalone launch, if there are saved spots and no active push subscription (`readStashedSubscription()` is null) and the user has not permanently opted out, auto-surface the "Enable alerts" step without requiring a new save. Do not re-prompt once granted or hard-denied. Reuse `alert_optin_shown` with a `trigger: "standalone_relaunch"` prop so the resurfaced prompt is distinguishable in the funnel; changelog entry for the new prop.
+
+## 15. [ready] One dismiss kills the entire funnel forever, with no fallback entry point
+
+`handleDismiss` writes `ptw-install-dismissed=1` (`components/InstallPrompt.tsx:131`) and `onSaved` early-returns on that key (`components/InstallPrompt.tsx:113`), and there is no other entry to alerts anywhere in the app (no bell, no settings, no re-ask). Dismiss the banner once, before understanding it, and alerts can never be enabled again on that device short of clearing storage. A single shared flag also gates both the install step and the separate enable-alerts step.
+
+Acceptance: dismissal becomes a snooze, not a permanent kill (re-offer after N further saves or after a cooldown); decouple the install-dismiss flag from the enable-alerts flag so declining one does not silence the other; add a low-friction always-available entry point to enable alerts for users with saved spots (candidate: a small bell/"Alerts off" affordance on the "Your saved spots" section header in `components/SpotList.tsx:77`). Instrument the new entry point (`alert_optin_shown` with a `trigger` prop) and log dismissals with the snooze reason; changelog entry.
+
+## 16. [ready] The alerts offer only ever fires on the first save
+
+The prompt is triggered solely by the first `ptw:spotsaved` (`components/HomeClient.tsx:147` -> `components/InstallPrompt.tsx:111`). Someone who saves several spots on day one, dismisses, and returns engaged on day three is never re-asked, yet re-engaging returning users is the entire point of the loop. The offer fires exactly once, at the least-committed moment. Overlaps item 15's re-ask cadence; likely built together.
+
+Acceptance: broaden the trigger so an engaged-but-not-subscribed user is re-offered alerts at a natural later moment (e.g. on a subsequent save once they hold 2+ saved spots, or on a return session with saved spots and no subscription), respecting the item-15 snooze/cooldown so it never nags. Cap frequency to avoid noise. Reuse `alert_optin_shown` with a `trigger` prop identifying the occasion; changelog entry. Decision to settle with item 15: the single re-ask cadence both items share, define it once.
+
+## 17. [ready] iOS enable step is a wall of instructions with no tap target
+
+Android gets an Install button; iOS gets a paragraph describing OS chrome plus an inline Share glyph and no button (`components/InstallPrompt.tsx:214`). It is Apple's constraint that there is no programmatic install, but nothing softens the highest-friction step: no reinforcement of the payoff, no sense of progress. Lowest priority, cosmetic and OS-bounded.
+
+Acceptance: tighten the iOS copy and layout so the payoff ("get pinged when your spots are calm") stays visible alongside the mechanical steps, and the steps read as a short numbered sequence rather than a run-on sentence. House style: no em dashes, cut any line that does not add a fact. No new events required unless the layout adds a distinct interaction.
+
 ## 1. [done] 2026-07-04 Alert deep-link interstitial: tell the user exactly when and where to go (content bugfix 2026-07-09)
 
 Owner directive 2026-07-03, top priority (after the first real-device push landed and deep-linked correctly). When the app opens from a push (`from=alert`, already tagged by the service worker), opening the bare spot drawer loses the alert's context. Show a floating info box or interstitial over the deep-linked spot carrying the alert-specific message: exactly when the calm window is and where to launch (put-in details from the spot's notes). The cron already computes the window; the message needs to survive the click (e.g. via URL params or notification data payload). User-facing flow change: ship behind an A/B flag per policy, and instrument dismiss/engage.

@@ -14,6 +14,21 @@ without touching this file.
 
 ---
 
+## 2026-07-10 — Install/alerts prompt no longer suppressed by an open drawer (rate shift, no event change)
+
+Item 13 fix. `InstallPrompt` used to `return null` while a spot drawer was open,
+but item 11 moved the primary "Save this spot" button INTO the drawer, so saves
+via the primary CTA fired `ptw:spotsaved` and set the prompt visible while it
+rendered nothing. The prompt now renders even with the drawer open (anchored to
+the top so it clears the drawer's bottom actions).
+
+**`alert_optin_shown` — no event/prop change; RATE will rise.** The event is
+identical; it will simply fire at save time as intended instead of only when the
+user later closes the drawer (or never, on the desktop persistent sidebar). Read
+any increase in `alert_optin_shown` from 2026-07-10 as this fix surfacing the
+prompt, NOT a change in user behavior. Downstream `alert_optin_result` volume
+should rise proportionally.
+
 ## 2026-07-09 (latest) — Launch reminder is now a scheduled push, not a calendar add (semantics nuance)
 
 Same-day follow-up to the entry below. The interstitial's "Remind me at launch
