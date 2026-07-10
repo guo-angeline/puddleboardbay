@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
     const { data: due, error: dueErr } = await db
       .from("launch_reminders")
-      .select("id, spot_id, spot_name, subscription_id, push_subscriptions(endpoint, p256dh, auth)")
+      .select("id, spot_id, spot_name, subscription_id, push_subscriptions(endpoint, p256dh, auth, token)")
       .is("sent_at", null)
       .lte("fire_at", nowIso)
       .limit(100);
@@ -45,19 +45,28 @@ export async function GET(req: Request) {
     let sent = 0;
     let failed = 0;
     for (const r of due ?? []) {
-      const sub = r.push_subscriptions as unknown as { endpoint: string; p256dh: string; auth: string } | null;
+      const sub = r.push_subscriptions as unknown as {
+        endpoint: string;
+        p256dh: string;
+        auth: string;
+        token: string | null;
+      } | null;
       if (!sub) {
         // Subscription gone (cascade should prevent this, but be safe): retire the row.
         await db.from("launch_reminders").update({ sent_at: nowIso }).eq("id", r.id);
         continue;
       }
       const name = r.spot_name ?? "your spot";
+      // Carry the subscription's durable token so a reminder-open counts in the
+      // long-horizon return signal (/api/alerts/opened), same as the evening
+      // alert. No `window` param on purpose, so the interstitial does not re-show.
+      const tokenParam = sub.token ? `&t=${encodeURIComponent(sub.token)}` : "";
       const result = await sendPush(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         {
           title: "Time to launch",
-          body: `${name} has a calm window right now. Go paddle.`,
-          url: `/?spot=${r.spot_id}&from=alert`,
+          body: `${name} has a calm window right now. Go while it lasts.`,
+          url: `/?spot=${r.spot_id}&from=alert${tokenParam}`,
         }
       );
       if (result.ok || result.gone) {
