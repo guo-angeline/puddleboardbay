@@ -39,7 +39,12 @@ type SystemEventName =
   // The POST persisting a push subscription to /api/alerts/subscribe failed.
   // Without this, a "granted" opt-in that never reached the backend is
   // indistinguishable from a working one. Success is silent; failure is loud.
-  | "alert_subscribe_failed";
+  | "alert_subscribe_failed"
+  // The POST to /api/email/subscribe failed (email channel, item 22). Availability
+  // signal for the capture path; success is the intent event email_capture_submitted.
+  // Note: email SENDS are ledgered server-side in the email_sends table, not here,
+  // exactly like alert_sends (there is no client to fire a send event).
+  | "email_capture_failed";
 
 /**
  * INTENT / engagement events. Fire only on a deliberate user act or a
@@ -98,7 +103,16 @@ type IntentEventName =
   // Experiment exposure: fired once per session when a variant-dependent UI
   // actually renders (see lib/experiments.ts). Exposure = the user saw the
   // treatment, not merely that they were bucketed.
-  | "experiment_exposed";
+  | "experiment_exposed"
+  // Email channel (item 22). Capture form submitted (an address was typed and
+  // sent to /api/email/subscribe). Top of the email funnel.
+  | "email_capture_submitted"
+  // The double-opt-in confirm link was clicked (fires on the /?email_confirmed=1
+  // landing after the confirm route). The consent + activation step.
+  | "email_capture_confirmed"
+  // App opened from an alert EMAIL deep link (URL contains from=email). Email twin
+  // of alert_clicked; the durable return signal is the server email_opens ledger.
+  | "email_alert_opened";
 
 export type EventName = SystemEventName | IntentEventName;
 
@@ -131,22 +145,26 @@ interface EventPropMap {
   // Values mirror lib/push.ts OptInResult; kept inline to avoid a cycle
   // (push.ts imports trackSystem from this module).
   alert_optin_shown: {
-    platform: "standalone" | "ios" | "android";
+    platform: "standalone" | "ios" | "android" | "desktop";
     // What surfaced the prompt: the first save (item 1), an installed standalone
     // relaunch re-offer (item 14), an explicit tap on the always-available "Turn
     // on alerts" entry point in the saved-spots header (item 15), or genuine
     // conditions interest (item 21: dwell-viewed conditions on 2+ distinct spots
     // in a session, the core paddle-decision behavior, a bigger pool than savers).
     trigger: "first_save" | "standalone_relaunch" | "manual" | "return_session" | "conditions_interest";
+    // Which channel the enrollment card LED with (item 23): push (installable/
+    // installed) vs email (desktop, iOS Safari, or a push-denied rescue).
+    channel: "push" | "email";
   };
   // Prompt dismissed (item 15): dismissal is a 14-day snooze, not a permanent
   // kill. `trigger` is which surfacing was dismissed.
   alert_optin_dismissed: {
-    platform: "standalone" | "ios" | "android";
+    platform: "standalone" | "ios" | "android" | "desktop";
     trigger: "first_save" | "standalone_relaunch" | "manual" | "return_session" | "conditions_interest";
+    channel: "push" | "email";
   };
   alert_optin_result: {
-    platform: "standalone" | "ios" | "android";
+    platform: "standalone" | "ios" | "android" | "desktop";
     result: "granted" | "denied" | "unsupported";
   };
   alert_interstitial_shown: { spot_id: number };
@@ -159,6 +177,22 @@ interface EventPropMap {
     had_window: boolean;
   };
   experiment_exposed: { experiment: string; variant: string };
+  // Email channel (item 22). `trigger`/`platform` mirror the alert opt-in so the
+  // email and push enrollment funnels segment the same way.
+  email_capture_submitted: {
+    platform: "standalone" | "ios" | "android" | "desktop";
+    trigger:
+      | "first_save"
+      | "standalone_relaunch"
+      | "manual"
+      | "return_session"
+      | "conditions_interest"
+      | "push_denied";
+    watched_count: number;
+  };
+  email_capture_failed: { status: number | null };
+  email_capture_confirmed: { watched_count: number };
+  email_alert_opened: { spot_id: number };
 }
 
 type PropsFor<E extends EventName> = E extends keyof EventPropMap

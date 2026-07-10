@@ -59,13 +59,17 @@ Two cheap, independent Phase-0 wins that need no email backend. (a) Rename "Save
 
 Acceptance: PRD section 13 Phase 0. Add `trigger: "conditions_interest"` to `alert_optin_shown` (`lib/analytics.ts`), an `INSTRUMENTATION_CHANGELOG.md` entry, and confirm the string lands in `.next/static`. Monitored 100% rollout with guardrails (shown volume by trigger, dismiss rate), not a powered arm.
 
-## 22. [ready] Email alert channel (anonymous, same evaluator as push)
+## 22. [done] 2026-07-10 Email alert channel (anonymous, same evaluator as push)
+
+**Shipped + deployed 2026-07-10** (commit `8dd1fdc`, deploy `dpl_2MnY8z...`). Migration `0003` applied to Supabase; Resend domain `alerts.paddletowater.com` verified (DKIM/SPF/DMARC). Spine live-proven end to end: subscribe -> Supabase pending row + Resend confirm email -> confirm token -> `confirmed_at` set. All five routes verified live on prod. D5 (postal address = 500 Folsom St) and D6 (100% rollout behind `EMAIL_ALERTS_ENABLED` kill switch) resolved. Nightly `send-email-alerts` cron accepted at 02:00 UTC. Known: the first confirm email hit Outlook spam (new-domain reputation, expected); warmup + DMARC->quarantine (~2026-07-24, tracked in memory) is the path to inbox.
 
 The load-bearing build. Anonymous email alerts (email + watched spots, no account) fired by the SAME `evaluateGoodWindow` (`lib/alerts/conditions-window.ts`) as the push cron, so the two never disagree. Provider: Resend (React Email, free tier covers current scale, one-click List-Unsubscribe + complaint webhooks). New parallel Supabase tables (`email_subscriptions` / `email_watched_spots` / `email_sends` / `email_opens`, migration `0003`, kept off the protected push path), double opt-in, a daily `/api/cron/send-email-alerts` (1/UTC-day cap, per-(spot,window) dedup, `?dry=1`), one-click unsubscribe, and the ITP-proof `email_opens` return ledger. Full schema + copy + events: PRD sections 6-13.
 
 Gated: the first lawful send needs **D5** (postal address for the CAN-SPAM footer) and **D6** (rollout mechanism). The build can start now; the send cannot go out until both are answered. First PII the app stores, handled per PRD section 8 (minimal storage, instant unsubscribe, delete-on-request). Deliverability (SPF/DKIM/DMARC on `alerts.paddletowater.com`) per PRD section 7; new events + changelog per section 11.
 
-## 23. [ready] Per-platform enrollment matrix (email as the fallback tier)
+## 23. [done] 2026-07-10 Per-platform enrollment matrix (email as the fallback tier)
+
+**Shipped + deployed 2026-07-10** (commit `fa1ada8`, same deploy). `InstallPrompt` is now the channel-agnostic enrollment card: desktop and iOS Safari lead with email, push-denied installed users get the email rescue, Android keeps one-tap install with an email fallback. `alert_optin_shown/_dismissed` gained `channel` + `platform:"desktop"`; `email_capture_submitted` gained the `push_denied` trigger (changelog item 23). Deliverability tweaks (preheader, human copy, `EMAIL_REPLY_TO`) shipped alongside. Verified: 87 tests, lint, build, bundle strings.
 
 Depends on 22. Redesign `components/InstallPrompt.tsx` into a channel-agnostic enrollment card that shows ONE ask at a time by platform: desktop leads with email (today's desktop prompt is a dead, button-less card); iOS Safari leads with email and demotes install to a secondary "add to home screen too" (install converts ~1%); the push-denied installed user (`DENIED_KEY`) gets an email rescue instead of a dead end; Android keeps the one-tap install primary with email as the decline fallback. Full matrix + exact copy strings: PRD section 10; acceptance: PRD section 13 Phase 2.
 

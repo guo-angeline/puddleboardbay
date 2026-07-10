@@ -15,6 +15,7 @@ import { searchSpots } from "@/lib/search";
 import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
+import { reportEmailOpen } from "@/lib/email/client";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -56,6 +57,8 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // show (see composeAlert in lib/alerts/select.ts). Cleared on dismiss or
   // once the user navigates away from the alerted spot.
   const [alertBanner, setAlertBanner] = useState<{ spotId: number; windowLabel: string } | null>(null);
+  // Shown briefly after the email double-opt-in confirm link lands on /?email_confirmed=1.
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
 
   useEffect(() => {
     // Loading persisted state from an external store (localStorage) on mount is a
@@ -66,6 +69,26 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       if (raw) setFavorites(new Set(JSON.parse(raw) as number[]));
     } catch { /* private mode / bad JSON */ }
     setFavoritesLoaded(true);
+  }, []);
+
+  // Email double-opt-in landing: the confirm route redirects here. Fire the
+  // activation event, show a short confirmation, and strip the param so a reload
+  // doesn't re-fire it.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("email_confirmed") !== "1") return;
+    let watched = 0;
+    try {
+      watched = (JSON.parse(localStorage.getItem("ptw-favorites") || "[]") as number[]).length;
+    } catch { /* private mode */ }
+    trackIntent("email_capture_confirmed", { watched_count: watched });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEmailConfirmed(true);
+    const t = setTimeout(() => setEmailConfirmed(false), 5000);
+    params.delete("email_confirmed");
+    const qs = params.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+    return () => clearTimeout(t);
   }, []);
 
   // Pre-select from prop (spot pages) or ?spot= URL param (home page)
@@ -94,6 +117,13 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           if (token) reportAlertOpen(token, found.id);
           const windowLabel = params.get("window");
           if (windowLabel) setAlertBanner({ spotId: found.id, windowLabel });
+        } else if (from === "email") {
+          // Email twin of the alert-open path. Same durable, ITP-proof return
+          // signal via the token that rode the email deep link. See
+          // /api/email/opened. No interstitial (that is push-only, from=alert).
+          trackIntent("email_alert_opened", { spot_id: found.id });
+          const token = params.get("t");
+          if (token) reportEmailOpen(token, found.id);
         }
         trackIntent("spot_viewed", {
           spot_id: found.id,
@@ -519,6 +549,16 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       </div>
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+
+      {emailConfirmed && (
+        <div
+          role="status"
+          className="fixed left-1/2 -translate-x-1/2 z-[1600] rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)", background: "#0B2A47", maxWidth: "calc(100% - 32px)" }}
+        >
+          Email alerts on. We&rsquo;ll ping you when your spots are calm.
+        </div>
+      )}
     </div>
   );
 }

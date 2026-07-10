@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { trackIntent, setPersona } from "@/lib/analytics";
-import { enablePushAlerts, readStashedSubscription, type OptInResult } from "@/lib/push";
+import { trackIntent, trackSystem, setPersona } from "@/lib/analytics";
+import { enablePushAlerts, readStashedSubscription, getAnonId, type OptInResult } from "@/lib/push";
+import { isValidEmail } from "@/lib/email/validation";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -56,6 +57,14 @@ function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+// Desktop = not a phone/tablet UA. Desktop leads with EMAIL (item 23): desktop
+// PWA install is near-useless and desktop push is rarely seen, but a paddler
+// planning at a desk is the ideal email recipient. This holds even if the browser
+// is technically installable (Chrome desktop fires beforeinstallprompt).
+function isDesktopUA() {
+  return !/(iphone|ipad|ipod|android|mobile)/i.test(navigator.userAgent);
+}
+
 function isInStandaloneMode() {
   return (
     ("standalone" in navigator &&
@@ -72,8 +81,18 @@ function readFavoriteIds(): number[] {
   }
 }
 
-// standalone = installed (can enable push now); ios/android = needs install first.
-type Platform = "standalone" | "ios" | "android" | null;
+// standalone = installed (can enable push now); ios/android = needs install first;
+// desktop = leads with email (item 23).
+type Platform = "standalone" | "ios" | "android" | "desktop" | null;
+
+// Which channel the enrollment card leads with, per the item-23 matrix: desktop
+// and iOS Safari lead with email; a push-denied installed user gets the email
+// rescue; everyone else leads with push.
+function leadChannel(platform: Platform, result: OptInResult | null): "push" | "email" {
+  if (platform === "desktop" || platform === "ios") return "email";
+  if (platform === "standalone") return result === "denied" ? "email" : "push";
+  return "push"; // android / null
+}
 
 export default function InstallPrompt() {
   const [platform, setPlatform] = useState<Platform>(null);
@@ -84,6 +103,15 @@ export default function InstallPrompt() {
   const [enabling, setEnabling] = useState(false);
   const [result, setResult] = useState<OptInResult | null>(null);
   const [trigger, setTrigger] = useState<"first_save" | "standalone_relaunch" | "manual" | "return_session" | "conditions_interest">("first_save");
+  // Email capture (item 23). `email` is the field; `emailResult` is the outcome
+  // ("pending" = confirm mail sent, awaiting the double-opt-in click). `altChannel`
+  // toggles the secondary channel: on iOS it reveals the install steps, on Android
+  // it reveals the email form (install stays the default there).
+  const [email, setEmail] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailResult, setEmailResult] = useState<"pending" | "failed" | null>(null);
+  const [emailError, setEmailError] = useState(false);
+  const [altChannel, setAltChannel] = useState(false);
 
   // Track whether a spot drawer is open. We no longer HIDE for it (that suppressed
   // the prompt at the exact moment it's earned, since the primary "Save this spot"
@@ -130,10 +158,15 @@ export default function InstallPrompt() {
       setPlatform("ios");
       return () => window.removeEventListener("appinstalled", handleInstalled);
     }
+    // Desktop leads with email regardless of installability, so set it up front and
+    // keep it even if beforeinstallprompt later fires (desktop Chrome is installable).
+    if (isDesktopUA()) {
+      setPlatform("desktop");
+    }
     function handleBeforeInstall(e: BeforeInstallPromptEvent) {
       e.preventDefault();
       setDeferredPrompt(e);
-      setPlatform("android");
+      if (!isDesktopUA()) setPlatform("android");
     }
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     return () => {
@@ -161,7 +194,7 @@ export default function InstallPrompt() {
   // relaunch is handled separately (item 14). Gated to engaged users (2+ saved
   // spots) and the item-15 snooze / hard-denial so it never nags.
   useEffect(() => {
-    if (platform !== "ios" && platform !== "android") return;
+    if (platform !== "ios" && platform !== "android" && platform !== "desktop") return;
     if (readStashedSubscription()) return;
     try {
       const optedOut = snoozedUntil() > Date.now() || localStorage.getItem(DENIED_KEY) === "1";
@@ -214,10 +247,10 @@ export default function InstallPrompt() {
   useEffect(() => {
     if (!visible) { shownRef.current = false; return; }
     if (platform && !shownRef.current) {
-      trackIntent("alert_optin_shown", { platform, trigger });
+      trackIntent("alert_optin_shown", { platform, trigger, channel: leadChannel(platform, result) });
       shownRef.current = true;
     }
-  }, [visible, platform, trigger]);
+  }, [visible, platform, trigger, result]);
 
   function handleDismiss() {
     setVisible(false);
@@ -226,7 +259,44 @@ export default function InstallPrompt() {
     } catch {
       /* private mode */
     }
-    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger });
+    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger, channel: leadChannel(platform, result) });
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!platform) return;
+    const value = email.trim();
+    // Validate in JS (the form is noValidate) so we control the message instead of
+    // the browser's native bubble that re-fires on every keystroke after a submit.
+    if (!isValidEmail(value)) {
+      setEmailError(true);
+      return;
+    }
+    setEmailSubmitting(true);
+    const watched = readFavoriteIds();
+    // A push-denied installed user reaching the email rescue is a distinct context.
+    const submitTrigger = platform === "standalone" ? "push_denied" : trigger;
+    trackIntent("email_capture_submitted", { platform, trigger: submitTrigger, watched_count: watched.length });
+    try {
+      const res = await fetch("/api/email/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value, watchedSpotIds: watched, anonId: getAnonId() }),
+      });
+      if (!res.ok) {
+        trackSystem("email_capture_failed", { status: res.status });
+        setEmailResult("failed");
+      } else {
+        // Show "check your inbox" and leave it up: the user dismisses with the X.
+        // (It used to auto-hide after 4.5s, which closed before people could read it.)
+        setEmailResult("pending");
+        setPersona({ email_captured: true });
+      }
+    } catch {
+      trackSystem("email_capture_failed", { status: null });
+      setEmailResult("failed");
+    }
+    setEmailSubmitting(false);
   }
 
   async function handleInstall() {
@@ -286,6 +356,73 @@ export default function InstallPrompt() {
     background: "#0E6FD1", color: "#fff", border: "none", borderRadius: 8,
     padding: "6px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
   };
+  const linkBtn: React.CSSProperties = {
+    background: "transparent", border: "none", color: "rgba(255,255,255,0.7)",
+    textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, whiteSpace: "nowrap",
+  };
+
+  // Email capture block (item 23). `secondary` is an optional channel toggle
+  // rendered below (iOS: reveal install steps; Android: swap back to install).
+  function emailForm(headline: string, sub: string, secondary?: React.ReactNode) {
+    return (
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{headline}</p>
+        <p style={muted}>{sub}</p>
+        <form onSubmit={handleEmailSubmit} noValidate style={{ display: "flex", gap: 6, marginTop: 8 }}>
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(ev) => { setEmail(ev.target.value); if (emailError) setEmailError(false); }}
+            placeholder="you@email.com"
+            aria-label="Email address"
+            // Explicit light colors + color-scheme so a dark-mode browser does not
+            // paint the field dark (which made it blend into the card and hid the
+            // typed text). White box, dark text, gray placeholder.
+            style={{
+              flex: 1, minWidth: 0, borderRadius: 8, border: "1px solid #DCE7F0",
+              padding: "7px 10px", fontSize: 13, background: "#FFFFFF", color: "#0B2A47",
+              colorScheme: "light",
+            }}
+          />
+          <button type="submit" disabled={emailSubmitting} style={primaryBtn}>
+            {emailSubmitting ? "..." : "Email me alerts"}
+          </button>
+        </form>
+        {emailError && (
+          <p style={{ ...muted, color: "#FCA5A5" }}>Enter a valid email address.</p>
+        )}
+        {emailResult === "failed" && (
+          <p style={{ ...muted, color: "#FCA5A5" }}>Something went wrong. Try again.</p>
+        )}
+        <p style={{ ...muted, fontSize: 11 }}>One email a day, max. Only when a spot you watch looks good. Unsubscribe in one tap.</p>
+        {secondary && <div style={{ marginTop: 8 }}>{secondary}</div>}
+      </div>
+    );
+  }
+
+  const iosSteps = (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Add to your home screen for push</p>
+      <p style={{ ...muted, marginTop: 2 }}>Then open it from there to turn on alerts.</p>
+      <ol style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
+        <li>
+          Tap the Share icon{" "}
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+            strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+        </li>
+        <li>Pick &ldquo;Add to Home Screen&rdquo;</li>
+        <li>Open it from there to turn on alerts</li>
+      </ol>
+      <button onClick={() => setAltChannel(false)} style={{ ...linkBtn, marginTop: 8 }}>Get alerts by email instead</button>
+    </div>
+  );
 
   let body: React.ReactNode;
   if (result === "granted") {
@@ -295,56 +432,56 @@ export default function InstallPrompt() {
         <p style={muted}>We will ping you when your spots look good to paddle.</p>
       </div>
     );
-  } else if (platform === "standalone") {
+  } else if (emailResult === "pending") {
+    // Double opt-in sent: nothing to do until they click the confirm link.
     body = (
-      <>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-            {trigger === "first_save"
-              ? `Get a heads-up when ${spotName} is good to paddle`
-              : "Turn on alerts for the spots you watch"}
-          </p>
-          <p style={muted}>
-            {result === "denied"
-              ? "Notifications are blocked. Enable them for this site in your browser settings."
-              : "Turn on alerts and we will notify you when conditions look good."}
-          </p>
-        </div>
-        {result !== "denied" && (
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Check your inbox.</p>
+        <p style={muted}>Tap the confirm link and you are set. We will email when your spots are calm.</p>
+      </div>
+    );
+  } else if (platform === "desktop") {
+    // Desktop leads with email: install is near-useless, desktop push rarely seen.
+    body = emailForm("Get calm-window alerts by email.", "Watch a spot, we will email you when it is good to paddle.");
+  } else if (platform === "ios") {
+    // iOS Safari leads with email (install converts ~1%); push is the demoted option.
+    body = altChannel
+      ? iosSteps
+      : emailForm(
+          "Get pinged when your spots are calm.",
+          "One email when a spot you are watching has a calm window.",
+          <button onClick={() => setAltChannel(true)} style={linkBtn}>Prefer push? Add to Home Screen</button>
+        );
+  } else if (platform === "standalone") {
+    // Installed: push is the primary channel. If notifications were hard-denied,
+    // rescue with email instead of the old browser-settings dead end.
+    body = result === "denied"
+      ? emailForm("Notifications are off. Get alerts by email instead.", "We will email you when a watched spot looks good.")
+      : (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
+              {trigger === "first_save"
+                ? `Get a heads-up when ${spotName} is good to paddle`
+                : "Turn on alerts for the spots you watch"}
+            </p>
+            <p style={muted}>Turn on alerts and we will notify you when conditions look good.</p>
+          </div>
           <button onClick={handleEnable} disabled={enabling} style={primaryBtn}>
             {enabling ? "Enabling..." : "Enable alerts"}
           </button>
-        )}
-      </>
-    );
-  } else if (platform === "ios") {
-    // item 17: keep the payoff visible and turn the run-on instructions into a
-    // short numbered sequence. Apple has no programmatic install, so the manual
-    // steps stay, but they read as steps, not a paragraph.
-    const shareIcon = (
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-        strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-        <polyline points="16 6 12 2 8 6" />
-        <line x1="12" y1="2" x2="12" y2="15" />
-      </svg>
-    );
-    body = (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Get pinged when your spots are calm</p>
-        <p style={{ ...muted, marginTop: 2 }}>Add the app to your home screen, then open it to turn on alerts.</p>
-        <ol style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-          <li>Tap the Share icon {shareIcon}</li>
-          <li>Pick &ldquo;Add to Home Screen&rdquo;</li>
-          <li>Open it from there to turn on alerts</li>
-        </ol>
-      </div>
-    );
+        </>
+      );
   } else {
-    // android (beforeinstallprompt available) or unknown: offer install
-    body = (
-      <>
+    // android: one-tap install is the low-friction default; email is the fallback
+    // offered if they would rather not install.
+    body = altChannel
+      ? emailForm(
+          "Get alerts by email.",
+          "One email when a spot you watch has a calm window.",
+          <button onClick={() => setAltChannel(false)} style={linkBtn}>Install the app instead</button>
+        )
+      : (
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
             {trigger === "first_save"
@@ -352,12 +489,12 @@ export default function InstallPrompt() {
               : "Get alerts when your spots are good to paddle"}
           </p>
           <p style={muted}>Install the app, then turn on alerts for the spots you watch.</p>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
+            <button onClick={handleInstall} style={primaryBtn}>Install</button>
+            <button onClick={() => setAltChannel(true)} style={linkBtn}>Prefer email?</button>
+          </div>
         </div>
-        {platform === "android" && (
-          <button onClick={handleInstall} style={primaryBtn}>Install</button>
-        )}
-      </>
-    );
+      );
   }
 
   return (
