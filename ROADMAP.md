@@ -239,6 +239,42 @@ Attempts 2026-07-09 in the `app/globals.css` shell, none cleared it on-device: (
 
 ---
 
+<!-- Candidates proposed 2026-07-10 by the studio loop (product-visionary, dry-backlog branch). NOT promoted: the owner promotes to [ready] by editing the status. Ordered by impact per effort: 24 protects the channel shipped today, 25 must exist before the mid-July retention read, 26 is a durable pull-based reason-to-return. -->
+
+## 24. [done] 2026-07-11 Rescue the email confirm step: make double opt-in observable and recoverable
+
+**Shipped 2026-07-11 (PR #32, merge `25c56e9`, deployed to prod, verified live).** Resend control on the pending card (spam line + a Resend button that dims for a 20s cooldown), confirm-link losses now redirect to `/?email_confirmed=0&reason=no_token|stale` and fire `email_confirm_failed` (SYSTEM), a monitored `analytics/queries/email_confirm_funnel.sql` (Supabase primary + PostHog cross-check, guardrail flag), and `email_capture_failed` gained `source: submit|resend` so resend-fails don't corrupt the submitter correction. Monitored 100% behind the `EMAIL_ALERTS_ENABLED` kill switch, no A/B (D6). Live checks: prod confirm route returns the new redirect; resend card + cooldown dimming driven in-browser; 97 tests, lint, build all green. Note: the studio's own PR auto-merge was blocked by a new review guard (merge landed first); flag for the owner in BRIEFINGS.
+
+**Why:** The email channel shipped today but the first confirmation email hit Outlook spam (item 22 note; memory `dmarc-quarantine-followup`). Confirm is the single gate between `email_capture_submitted` and `email_capture_confirmed`, so if it silently lands in spam, every email enrollment dies there and the ~2026-07-15 to 07-22 retention read sees a zero email cohort. The 2026-07-09 report already shows the loop essentially unentered (1 opt-in shown, 0 grants ex-owner), so we cannot afford a silent leak in the one channel built to bypass the iOS install wall.
+
+**Acceptance:**
+- Post-submit state tells the user to check spam and offers a user-initiated "resend confirmation" (transactional, gated by the existing `EMAIL_ALERTS_ENABLED` kill switch; does NOT touch the alert-send cron or push path).
+- A monitored query reports submit to confirm conversion and time-to-confirm from the existing `email_capture_submitted` and `email_capture_confirmed` series, with a guardrail threshold that flags a low confirm rate.
+- New intent event `email_confirm_resend_clicked` (or a `resend` action prop on `email_capture_submitted`), plus an `analytics/INSTRUMENTATION_CHANGELOG.md` entry.
+- Rollout: monitored 100% behind the existing kill-switch flag (D6 precedent), not an A/B. Explicitly complementary to, not a duplicate of, the DNS DMARC to quarantine warmup already tracked for ~2026-07-24; no DNS work here.
+
+## 25. [proposed] Unified enrollment to activation to return funnel, ready before the mid-July retention read
+
+**Why:** The first durable retention read is due ~2026-07-15 to 07-22, but enrollment now spans two channels (push via `alert_sends`/`alert_opens`, email via `email_sends`/`email_opens`) and seven `alert_optin_shown` triggers, with no single query stitching shown to grant/confirm to server-side return, and no dedup for a user enrolled in both. Without it the read cannot attribute where the funnel leaks (the report flags the loop as unentered but cannot say at which step), and an unattributed retention read is not a trustworthy one.
+
+**Acceptance:**
+- Add `analytics/queries/` for a cross-channel enrollment funnel: `alert_optin_shown` (segmented by `trigger`/`channel`/`platform`) to grant/confirm to server-side return (`alert_opens` union `email_opens`), with an explicit cross-channel dedup note.
+- Define the enrolled-cohort return metric in `analytics/GLOSSARY.md` (reachable vs active, per channel and combined), each citing its query.
+- No new client events required (existing series only); if any prop is added, an `INSTRUMENTATION_CHANGELOG.md` entry. Analytics contract only, no protected surface touched.
+- Delivered before the read window opens so the early-August numbers are interpretable.
+
+## 26. [proposed] Cold-open return surface: your recently-checked spots, with conditions now
+
+**Why:** Conditions checking is the one validated, repeated behavior (89 of 100 openers genuinely view the dwell-gated conditions panel; the ~16% who return come back to re-check, per `reports/analytics-2026-07-09.md`), and it is the only reason-to-return not gated on the unproven alert loop or an install. A returner today lands on a bare map and must re-find their spots. Give cold opens a personal strip of the spots they recently viewed with live paddleability: a pull-based return reason that needs no push, no email, no install.
+
+**Acceptance:**
+- On load, if the device has recently-viewed spot ids (localStorage, last N), show a compact "Recently checked" strip with each spot's current paddleability badge, reusing the `getConditions` cache (no unbounded NWS fan-out; cap at N and dedup against the Watching section).
+- New intent events `recent_spots_shown` / `recent_spot_clicked` carrying `spot_id`+`region`, plus an `INSTRUMENTATION_CHANGELOG.md` entry.
+- Rollout: monitored 100% behind a kill-switch flag with guardrails (`spot_viewed`, `conditions_loaded`), per the D2/D3/D6 low-traffic precedent, not an A/B.
+- Net-new vs item 3 (first-time landing bounce), item 8 (calmer alternative when blown out), and item 20 (per-spot next-window): this targets returners with view history, not first-timers or a single open drawer.
+
+---
+
 ## Later (after retention is proven) — all [proposed], do not promote before the ~2026-07-15 funnel re-check
 
 - **UGC content flywheel:** ratings, photos, trip logs, user conditions reports. The long-term moat and SEO-acquisition engine, but it needs retained users to generate content first.

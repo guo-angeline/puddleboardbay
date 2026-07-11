@@ -96,3 +96,18 @@ Options:
 Recommendation: run the repro; if confirmed, (a). This is the highest-leverage retention item IF it reproduces, and pure waste if it doesn't, hence the gate.
 
 Answer: a - also mark this device as my device (test device, excluded from analytics)
+
+## D8 [OPEN] 2026-07-11 · Studio PR merges now hit a human-review guard: PR-only, or allow-list the merge?
+
+Context: shipping item 24, the studio opened PR #32 and tried to auto-merge it (`gh pr merge --merge`), the same step it used to ship items 13 to 23. A NEW auto-mode classifier BLOCKED it: "Merging the agent's own PR before any human review or approval." The merge had already landed a moment earlier, so item 24 is merged and deployed to prod, verified live. But going forward this guard will stop the autonomous loop at the merge step every time, which changes how `/studio` and `/ship` can complete.
+
+The deploy path is unaffected (`vercel --prod --yes` is the only route to prod and ran fine); the gate is specifically self-merging to `main`.
+
+Options:
+- **(a) [recommended] Keep the guard, switch the studio to PR-handoff.** The ship flow stops at "PR ready for your review", posts the link, and you merge. Because prod deploy is CLI-only and separate, you (or the studio, if you approve) then run `vercel --prod`. Safer: a human sees every diff before it reaches `main`. Cost: the loop is no longer fully hands-off; each item needs one merge click from you.
+- **(b) Allow-list the studio's merge command** (add a Bash permission rule for `gh pr merge` on `studio/*` branches) so the autonomous loop completes end to end as it did for items 13 to 23. Faster, but no human gate before `main`; you rely on the adversarial verifier + live-verify pass instead.
+- **(c) Hybrid:** studio auto-merges only low-risk classes (copy, docs, in-palette front-end) and hands off anything touching protected surfaces or server/schema. More nuanced, more config.
+
+Recommendation: (a) if you want a human gate on `main` (the guard firing suggests that is the intent); (b) if you want the loop to stay fully autonomous and trust the existing verifier gates. Either way, item 24 is already in and live; this only affects future iterations.
+
+Answer:
