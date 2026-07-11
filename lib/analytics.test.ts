@@ -59,4 +59,29 @@ describe("pre-init event queue", () => {
     trackIntent("favorite_toggled", { spot_id: 1 });
     expect(capture).toHaveBeenCalledTimes(1);
   });
+
+  it("emits email_confirm_resend_clicked as an intent event", () => {
+    posthog.__loaded = true;
+    const capture = vi.spyOn(posthog, "capture").mockImplementation(() => undefined);
+
+    trackIntent("email_confirm_resend_clicked", {
+      platform: "ios",
+      trigger: "first_save",
+      watched_count: 2,
+    });
+
+    expect(capture).toHaveBeenCalledWith("email_confirm_resend_clicked", {
+      platform: "ios",
+      trigger: "first_save",
+      watched_count: 2,
+      event_category: "intent",
+    });
+
+    trackIntent("email_confirm_failed", { reason: "stale_token" });
+
+    expect(capture).toHaveBeenCalledWith("email_confirm_failed", {
+      reason: "stale_token",
+      event_category: "intent",
+    });
+  });
 });

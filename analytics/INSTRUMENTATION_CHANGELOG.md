@@ -14,6 +14,12 @@ without touching this file.
 
 ---
 
+## 2026-07-10 (item 24): Confirm-step resend control (added)
+
+New INTENT event `email_confirm_resend_clicked` (`trackIntent`, props `{ platform, trigger, watched_count }`), fires when a user taps Resend confirm email in the post-submit pending card (`InstallPrompt.tsx`, `emailResult === "pending"`); the tap re-triggers `POST /api/email/subscribe` with the same email and watched spots (re-arms `confirm_token`, re-sends the confirm mail); resend has a client-side cooldown so one tap cannot spam it.
+
+**Comparability:** brand-new event, no prior series. Resend volume from 2026-07-10 forward is a NEW signal prompted by UI copy that did not exist before, not organic behavior, and is not a direct proxy for how often mail lands in spam; the primary signal for this item is the guardrail in `analytics/queries/email_confirm_funnel.sql`, resend clicks are a secondary diagnostic.
+
 ## 2026-07-10 — Auto-locate home map on load for granted-permission users (added)
 
 New SYSTEM event `location_auto_applied` (`trackSystem`, props `{ source: "permission_granted" }`). On home load, if the browser reports geolocation permission is already `granted` (Permissions API, no prompt), the map auto-centers on the user at zoom 11 and the list sorts by distance — the Near Me result, applied without a click (the map tab stays visible; unlike the click path it does not force the List tab). The event fires once per session when that auto-apply happens.

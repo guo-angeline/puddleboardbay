@@ -117,7 +117,13 @@ type IntentEventName =
   | "email_capture_confirmed"
   // App opened from an alert EMAIL deep link (URL contains from=email). Email twin
   // of alert_clicked; the durable return signal is the server email_opens ledger.
-  | "email_alert_opened";
+  | "email_alert_opened"
+  // The Resend control on the pending post-submit card was tapped, re-triggering
+  // the confirm email via /api/email/subscribe (same address, re-armed token).
+  | "email_confirm_resend_clicked"
+  // The /?email_confirmed=0 landing was hit: a confirm-link click carried an
+  // unknown or already-consumed token.
+  | "email_confirm_failed";
 
 export type EventName = SystemEventName | IntentEventName;
 
@@ -199,6 +205,20 @@ interface EventPropMap {
   email_capture_failed: { status: number | null };
   email_capture_confirmed: { watched_count: number };
   email_alert_opened: { spot_id: number };
+  // Mirrors email_capture_submitted so the resend and submit funnels segment
+  // the same way.
+  email_confirm_resend_clicked: {
+    platform: "standalone" | "ios" | "android" | "desktop";
+    trigger:
+      | "first_save"
+      | "standalone_relaunch"
+      | "manual"
+      | "return_session"
+      | "conditions_interest"
+      | "push_denied";
+    watched_count: number;
+  };
+  email_confirm_failed: { reason: "stale_token" | "no_token" };
 }
 
 type PropsFor<E extends EventName> = E extends keyof EventPropMap
