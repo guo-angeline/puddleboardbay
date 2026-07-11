@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 export async function GET(req: Request) {
   const t = new URL(req.url).searchParams.get("t");
   if (!t || t.length > 64) {
-    return NextResponse.redirect(new URL(SITE_URL));
+    return NextResponse.redirect(new URL(`${SITE_URL}/?email_confirmed=0&reason=no_token`));
   }
 
   const db = getSupabaseAdmin();
@@ -23,8 +23,9 @@ export async function GET(req: Request) {
     .maybeSingle();
 
   if (!sub) {
-    // Unknown or already-consumed token: send them into the app quietly.
-    return NextResponse.redirect(new URL(SITE_URL));
+    // Unknown or already-consumed token: send them into the app, tagged so the
+    // client can log the loss instead of silently swallowing it.
+    return NextResponse.redirect(new URL(`${SITE_URL}/?email_confirmed=0&reason=stale`));
   }
 
   await db
