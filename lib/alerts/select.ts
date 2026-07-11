@@ -3,6 +3,11 @@ export interface SpotWindow {
   spotName: string;
   windowKey: string;
   label: string;
+  // Window detail for the email copy (item 27). Optional so the push path,
+  // which only uses `label`, needs no change. The email cron populates them.
+  startHour?: number; // spot-local hour the calm run starts
+  endHour?: number;   // spot-local hour AFTER the calm run ends
+  maxWindMph?: number; // peak wind (mph) across the calm run
 }
 
 /** Dedup key for one (spot, window): shared by the selector and the route's alert_sends rows. */

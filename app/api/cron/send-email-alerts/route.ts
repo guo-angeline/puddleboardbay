@@ -76,7 +76,15 @@ export async function GET(req: Request) {
     if (!spot) continue;
     const win: GoodWindow | null = await findGoodWindow(spot.lat, spot.lng, nowMs);
     if (win) {
-      windowBySpot.set(spotId, { spotId, spotName: spot.water, windowKey: win.windowKey, label: win.label });
+      windowBySpot.set(spotId, {
+        spotId,
+        spotName: spot.water,
+        windowKey: win.windowKey,
+        label: win.label,
+        startHour: win.startHour,
+        endHour: win.endHour,
+        maxWindMph: win.maxWindMph,
+      });
     }
   }
 
@@ -96,9 +104,17 @@ export async function GET(req: Request) {
     const msg = composeAlertEmail({
       spotName: first.spotName,
       spotId: first.spotId,
-      windowLabel: first.label,
+      windowKey: first.windowKey,
+      startHour: first.startHour ?? 0,
+      endHour: first.endHour ?? 0,
+      maxWindMph: first.maxWindMph,
       notes: spotById.get(first.spotId)?.notes ?? undefined,
-      extraCount: picks.length - 1,
+      extras: picks.slice(1).map((p) => ({
+        name: p.spotName,
+        windowKey: p.windowKey,
+        startHour: p.startHour ?? 0,
+        endHour: p.endHour ?? 0,
+      })),
       token: sub.token,
     });
     const result = await sendEmail(sub.email, msg, sub.token);

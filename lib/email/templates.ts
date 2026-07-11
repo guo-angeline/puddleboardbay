@@ -41,7 +41,7 @@ function shell(bodyHtml: string, unsubUrl: string, preheader: string): string {
     ${bodyHtml}
     <hr style="border:none;border-top:1px solid #DCE7F0;margin:24px 0 12px">
     <p style="font-size:12px;color:#6E8598;line-height:1.5;margin:0">
-      You're getting this because you signed up for calm-window alerts at paddletowater.com.<br>
+      You're getting this because you signed up for paddle alerts at paddletowater.com.<br>
       <a href="${unsubUrl}" style="color:#6E8598">Unsubscribe</a> &middot; Paddle to Water, ${POSTAL_ADDRESS}
     </p>
   </div></body></html>`;
@@ -52,43 +52,102 @@ export function composeConfirmEmail(confirmToken: string, token: string): EmailM
   const subject = "Confirm your Paddle to Water alerts";
   const html = shell(
     `<p style="font-size:16px;font-weight:600;margin:0 0 8px">Confirm your alerts</p>
-     <p style="font-size:14px;line-height:1.5;margin:0 0 12px">You asked us to keep an eye on your paddling spots. Confirm and we'll email you when one has a calm window worth getting on the water for.</p>
+     <p style="font-size:14px;line-height:1.5;margin:0 0 12px">You asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle.</p>
      <a href="${url}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">Confirm alerts</a>
      <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:16px 0 0">One email a day at most, only when conditions are actually good. Unsubscribe any time in one tap.</p>
      <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:8px 0 0">Didn't sign up? Ignore this email and nothing happens.</p>`,
     unsubscribeUrl(token),
-    "Confirm to start getting calm-window alerts for your spots."
+    "Confirm to start getting paddle alerts for your spots."
   );
-  const text = `Confirm your Paddle to Water alerts.\n\nYou asked us to keep an eye on your paddling spots. Confirm and we'll email you when one has a calm window worth getting on the water for:\n${url}\n\nOne email a day at most, only when conditions are actually good. Unsubscribe any time in one tap.\n\nDidn't sign up? Ignore this email and nothing happens.`;
+  const text = `Confirm your Paddle to Water alerts.\n\nYou asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle:\n${url}\n\nOne email a day at most, only when conditions are actually good. Unsubscribe any time in one tap.\n\nDidn't sign up? Ignore this email and nothing happens.`;
   return { subject, html, text };
+}
+
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Weekday name for a spot-local YYYY-MM-DD window key (e.g. "Saturday"). */
+export function weekdayFromKey(windowKey: string): string {
+  return WEEKDAYS[new Date(`${windowKey}T00:00:00Z`).getUTCDay()];
+}
+
+/** A single spot-local hour, e.g. 7 -> "7am", 13 -> "1pm", 12 -> "12pm". */
+export function formatHour(h: number): string {
+  const ap = h % 24 < 12 ? "am" : "pm";
+  const n = h % 12 === 0 ? 12 : h % 12;
+  return `${n}${ap}`;
+}
+
+/** A calm-window hour range, e.g. (7,10) -> "7 to 10am", (10,13) -> "10am to 1pm". */
+export function formatHourRange(startHour: number, endHour: number): string {
+  const sameHalf = startHour % 24 < 12 === endHour % 24 < 12;
+  const startText = sameHalf ? String(startHour % 12 === 0 ? 12 : startHour % 12) : formatHour(startHour);
+  return `${startText} to ${formatHour(endHour)}`;
+}
+
+export interface AlertExtra {
+  name: string;
+  windowKey: string;
+  startHour: number;
+  endHour: number;
 }
 
 export interface AlertEmailInput {
   spotName: string;
   spotId: number;
-  windowLabel: string; // e.g. "Saturday morning"
+  windowKey: string; // YYYY-MM-DD spot-local, to name the weekday
+  startHour: number;
+  endHour: number;
+  maxWindMph?: number; // peak wind across the window; omitted/0 -> wind line dropped
   notes?: string; // put-in details from the spot
-  extraCount: number; // additional good spots beyond the first
+  extras: AlertExtra[]; // additional good spots beyond the first, already selected
   token: string;
 }
 
+// Name up to this many extra spots before collapsing the rest into "and N more".
+const MAX_NAMED_EXTRAS = 3;
+
+function extrasLine(extras: AlertEmailInput["extras"]): string {
+  if (extras.length === 0) return "";
+  const named = extras
+    .slice(0, MAX_NAMED_EXTRAS)
+    .map((e) => `${e.name}, ${weekdayFromKey(e.windowKey)} ${formatHourRange(e.startHour, e.endHour)}`);
+  const more = extras.length - named.length;
+  return `Also good: ${named.join("; ")}${more > 0 ? `, and ${more} more` : ""}.`;
+}
+
 export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
-  const { spotName, spotId, windowLabel, notes, extraCount, token } = input;
-  const tail = extraCount > 0 ? ` (+${extraCount} more looking good)` : "";
+  const { spotName, spotId, windowKey, startHour, endHour, maxWindMph, notes, extras, token } = input;
   const openUrl = emailOpenUrl(spotId, token);
-  const subject = `${spotName} looks calm ${windowLabel}`;
+  const weekday = weekdayFromKey(windowKey);
+  const hours = formatHourRange(startHour, endHour);
+  const lengthHours = endHour - startHour;
+  const count = extras.length + 1;
+
+  const subject =
+    count > 1 ? `${count} spots good to paddle ${weekday}` : `${spotName} is good to paddle ${weekday}`;
+
+  const windText = maxWindMph ? `, with wind topping out at ${maxWindMph} mph` : "";
+  const lengthLine = `That's about a ${lengthHours}-hour window${windText}.`;
+  const preheader = `${hours}, about a ${lengthHours}-hour window${windText}.`;
+
+  const extrasHtml = extras.length
+    ? `<p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(extrasLine(extras))}</p>`
+    : "";
   const notesHtml = notes
     ? `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 16px">${escapeHtml(notes)}</p>`
     : "";
+
   const html = shell(
-    `<p style="font-size:16px;font-weight:600;margin:0 0 8px">${escapeHtml(spotName)} looks calm ${escapeHtml(windowLabel)}${tail ? escapeHtml(tail) : ""}</p>
-     <p style="font-size:14px;line-height:1.5;margin:0 0 12px">A spot you watch has a calm window. Go while it lasts.</p>
+    `<p style="font-size:16px;font-weight:600;margin:0 0 8px">${escapeHtml(spotName)} is good to paddle ${escapeHtml(weekday)}, ${escapeHtml(hours)}.</p>
+     <p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(lengthLine)}</p>
+     ${extrasHtml}
      ${notesHtml}
-     <a href="${openUrl}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">Open in the app</a>`,
+     <a href="${openUrl}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">See the forecast</a>`,
     unsubscribeUrl(token),
-    `${spotName} looks calm ${windowLabel}. Check the window before you go.`
+    preheader
   );
-  const text = `${spotName} looks calm ${windowLabel}${tail}.\n\nA spot you watch has a calm window. Go while it lasts.\n${notes ? `\n${notes}\n` : ""}\nOpen in the app: ${openUrl}`;
+
+  const text = `${spotName} is good to paddle ${weekday}, ${hours}.\n\n${lengthLine}\n${extras.length ? `\n${extrasLine(extras)}\n` : ""}${notes ? `\n${notes}\n` : ""}\nSee the forecast: ${openUrl}`;
   return { subject, html, text };
 }
 

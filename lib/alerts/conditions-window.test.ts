@@ -92,6 +92,18 @@ describe("evaluateGoodWindow (hourly)", () => {
     expect(w!.label).toBe("Thursday morning");
   });
 
+  it("reports maxWindMph as the peak wind across the calm run", () => {
+    const periods = [
+      h("2026-07-02", 7, "3 mph"),
+      h("2026-07-02", 8, "6 mph"),
+      h("2026-07-02", 9, "4 mph"),
+      h("2026-07-02", 10, "14 mph"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    expect(w!.maxWindMph).toBe(6); // 6 is the max among the calm hours; the 14 mph hour is excluded
+  });
+
   it("extends endHour across the whole calm run, not just minHours", () => {
     const periods = [
       h("2026-07-02", 7, "6 mph"),

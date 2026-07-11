@@ -10,6 +10,7 @@ export interface GoodWindow {
   label: string;     // human label, e.g. "Thursday morning"
   startHour: number; // spot-local hour of the run's first calm period
   endHour: number;   // spot-local hour AFTER the run's last calm period
+  maxWindMph: number; // peak wind (mph) across the calm run, for the alert copy
 }
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -49,22 +50,25 @@ export function evaluateGoodWindow(
   const horizonMs = nowMs + horizonDays * 86400000;
   let runStart: HourlyPeriod | null = null;
   let runLength = 0;
+  let runMaxWind = 0;
   let prevMs = NaN;
-  let locked: { runStart: HourlyPeriod; lastPeriod: HourlyPeriod } | null = null;
+  let locked: { runStart: HourlyPeriod; lastPeriod: HourlyPeriod; maxWind: number } | null = null;
   for (const period of periods) {
     const startMs = Date.parse(period.startTime);
     const { hour } = localParts(period.startTime);
+    const wind = parseMaxWind(period.windSpeed);
     const eligible =
       !Number.isNaN(startMs) &&
       startMs >= nowMs &&
       startMs <= horizonMs &&
       hour >= 6 &&
       hour < 18 &&
-      paddleabilityFromWind(parseMaxWind(period.windSpeed)) === "calm";
+      paddleabilityFromWind(wind) === "calm";
 
     if (locked) {
       if (eligible && startMs - prevMs === 3600000) {
         locked.lastPeriod = period;
+        locked.maxWind = Math.max(locked.maxWind, wind);
         prevMs = startMs;
         continue;
       }
@@ -73,16 +77,19 @@ export function evaluateGoodWindow(
 
     if (eligible && runLength > 0 && startMs - prevMs === 3600000) {
       runLength += 1;
+      runMaxWind = Math.max(runMaxWind, wind);
     } else if (eligible) {
       runStart = period;
       runLength = 1;
+      runMaxWind = wind;
     } else {
       runStart = null;
       runLength = 0;
+      runMaxWind = 0;
     }
     prevMs = startMs;
     if (runStart && runLength >= minHours) {
-      locked = { runStart, lastPeriod: period };
+      locked = { runStart, lastPeriod: period, maxWind: runMaxWind };
     }
   }
   if (!locked) return null;
@@ -91,6 +98,7 @@ export function evaluateGoodWindow(
     label: windowLabel(locked.runStart.startTime),
     startHour: localParts(locked.runStart.startTime).hour,
     endHour: localParts(locked.lastPeriod.startTime).hour + 1,
+    maxWindMph: locked.maxWind,
   };
 }
 
