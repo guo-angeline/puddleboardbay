@@ -14,6 +14,10 @@ interface Props {
   allSpots: Spot[];
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
+  // Item 9: open the mobile sheet at full height instead of the peek height.
+  // Set for shared-link arrivals so the recipient sees the conditions view and
+  // the CTA row without having to discover the drag.
+  startExpanded?: boolean;
 }
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
@@ -40,7 +44,7 @@ const NOTES_TRUNCATE = 220;
 const PEEK = 0.58; // default resting height
 const FULL = 0.92; // dragged-up / expanded height
 
-export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavorite, onToggleFavorite }: Props) {
+export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavorite, onToggleFavorite, startExpanded }: Props) {
   const [copied, setCopied] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
 
@@ -54,13 +58,19 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
+    // Item 9: shared-link arrivals open at FULL height; everything else at PEEK.
+    // Read once on mount (the `h ?? ` guard means a later drag is never clobbered).
+    const initFraction = startExpanded ? FULL : PEEK;
+    if (startExpanded) snapState.current = "full";
     const sync = () => {
       setIsMobile(mq.matches);
-      if (mq.matches) setSheetH((h) => h ?? Math.round(window.innerHeight * PEEK));
+      if (mq.matches) setSheetH((h) => h ?? Math.round(window.innerHeight * initFraction));
     };
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
+  // Mount-only: startExpanded is an initial-height hint, not a live control.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function onHandleStart(e: ReactTouchEvent) {
@@ -133,7 +143,9 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
 
   async function handleShare() {
     trackIntent("spot_action", { ...spotEventProps, action: "share" });
-    const url = `${window.location.origin}/spot/${spot!.id}`;
+    // `from=share` lets the recipient's app open the spot with the sheet
+    // expanded (item 9), and tags the arrival's spot_viewed as source:"share".
+    const url = `${window.location.origin}/spot/${spot!.id}?from=share`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({

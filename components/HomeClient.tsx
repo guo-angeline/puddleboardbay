@@ -16,6 +16,7 @@ import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/l
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 import { reportEmailOpen } from "@/lib/email/client";
+import { killSwitchOn } from "@/lib/experiments";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -41,6 +42,9 @@ interface Props {
 export default function HomeClient({ initialSpotId }: Props = {}) {
   const [filters, setFilters] = useState<Filters>({ region: "", difficulty: "", freeOnly: false, search: "" });
   const [selected, setSelected] = useState<Spot | null>(null);
+  // Item 9: one-shot hint to open the mobile sheet expanded, set only for a
+  // shared-link arrival (from=share). Any in-app selection resets it to false.
+  const [startExpanded, setStartExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"map" | "list">("map");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -112,7 +116,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelected(found);
         const from = params.get("from");
-        const source: SpotViewedSource = from === "alert" ? "alert" : "deeplink";
+        const source: SpotViewedSource =
+          from === "alert" ? "alert" : from === "share" ? "share" : "deeplink";
+        if (from === "share" && killSwitchOn("share-expand-sheet")) {
+          // Shared-link arrival: open the mobile sheet at full height so the
+          // conditions view and the CTA row are visible without a drag (item 9).
+          // SpotDrawer reads this once on mount; harmless on desktop.
+          setStartExpanded(true);
+        }
         if (from === "alert") {
           trackIntent("alert_clicked", {
             spot_id: found.id,
@@ -346,6 +357,9 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   function handleSelect(spot: Spot, source: SpotViewedSource = "list") {
     setSelected(spot);
+    // In-app selections open at the peek height; only a shared-link arrival
+    // opens expanded (item 9).
+    setStartExpanded(false);
     if (alertBanner && alertBanner.spotId !== spot.id) setAlertBanner(null);
     trackIntent("spot_viewed", {
       spot_id: spot.id,
@@ -582,6 +596,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             onClose={deselect}
             onSelect={handleSelect}
             allSpots={ALL_SPOTS}
+            startExpanded={startExpanded}
             isFavorite={selected ? favorites.has(selected.id) : false}
             onToggleFavorite={toggleFavorite}
           />

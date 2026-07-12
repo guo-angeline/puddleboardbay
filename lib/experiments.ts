@@ -86,6 +86,18 @@ export function getVariant<N extends ExperimentName>(name: N): VariantOf<N> {
 }
 
 /**
+ * Default-ON kill switch (NOT an A/B, no variants, no exposure). Returns true
+ * unless a PostHog boolean flag of this key is explicitly `false`. Lets a change
+ * ship to 100% and be flipped off in PostHog without a deploy, per the
+ * low-traffic monitored-rollout rule (D2/D3/D6). Fail-open: while flags are still
+ * loading (or PostHog is uninitialized) it returns true, which is correct for a
+ * monitored 100% rollout. Create the flag set to false to disable.
+ */
+export function killSwitchOn(flag: string): boolean {
+  return posthog.getFeatureFlag(flag) !== false;
+}
+
+/**
  * Reactive variant for rendering. `ready` is false until flags load — render
  * control until then so a flash-of-control isn't mis-counted as exposure. Call
  * `logExposure()` from a useEffect inside the rendered variant branch.

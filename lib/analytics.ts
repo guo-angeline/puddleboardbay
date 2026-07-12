@@ -23,7 +23,7 @@ import type { Paddleability } from "@/lib/conditions";
  */
 
 /** Where a spot_viewed open originated, for funnel segmentation. */
-export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related";
+export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related" | "share";
 
 /**
  * SYSTEM / availability events. Auto-fire on data settling. Emit via

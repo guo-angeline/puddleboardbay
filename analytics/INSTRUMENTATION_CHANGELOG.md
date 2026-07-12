@@ -14,7 +14,11 @@ without touching this file.
 
 ---
 
-## 2026-07-10 (item 24, follow-up): Confirm leak now segmentable by channel (props-changed, person properties)
+## 2026-07-11 (item 9): spot_viewed source gains "share" (props-changed)
+
+The `Share` button's deep link now carries `from=share` (`/spot/<id>?from=share`), and `HomeClient` maps that arrival's `spot_viewed` to `source: "share"` instead of `source: "deeplink"`. `SpotViewedSource` in `lib/analytics.ts` gained the `"share"` value. This lets share-originated arrivals be counted separately from other direct-URL ("deeplink") arrivals, so we can see whether the item-9 expanded-sheet landing drives conditions views / saves. No new event; only the source value of the existing `spot_viewed`. The item-9 UI behavior (open the mobile sheet at full height for `from=share` arrivals) sits behind a default-ON kill switch, the PostHog flag `share-expand-sheet` (create it set to `false` to disable, no deploy needed); it is not an A/B.
+
+**Comparability:** from 2026-07-11, `spot_viewed` `source: "deeplink"` DROPS the share-originated arrivals it previously absorbed (they now read `source: "share"`); the two together equal the old deeplink total. Any deeplink-source trend across this date must sum `deeplink + share` to stay continuous. Brand-new `"share"` value, no prior series. Share volume is tiny today (1 user / 3 events in the last window), so expect near-zero share counts until sharing grows.
 
 On a successful email capture submit, `handleEmailSubmit` in `InstallPrompt.tsx` now also calls `setPersona({ email_submit_platform: platform, email_submit_trigger: submitTrigger })` right after the existing `setPersona({ email_captured: true })`. `email_capture_confirmed` itself still carries only `{ watched_count }` (no event prop change), but these durable person properties survive the confirm redirect on the same device, so the confirm event can now be split by `email_submit_platform` (desktop / standalone / etc.) and `email_submit_trigger` (including the `push_denied` rescue) in PostHog without any cross-request plumbing.
 
