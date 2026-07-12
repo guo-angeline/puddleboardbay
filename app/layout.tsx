@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 
 const TITLE = "Paddle to Water: Paddleboard & Kayak Spots in the Bay Area";
 const DESCRIPTION =
-  `Find the best stand-up paddleboard and SUP launch spots across the SF Bay Area and Northern California. ${SPOT_COUNT} spots covering South Bay, East Bay, North Bay, Peninsula, San Francisco, Sacramento, the Sierra, the Central Valley, and the Central Coast, with maps, launch fees, and conditions.`;
+  `Find stand-up paddleboard and kayak launch spots across the SF Bay Area and Northern California. ${SPOT_COUNT} spots with maps, launch fees, and live conditions.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

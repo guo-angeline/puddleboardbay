@@ -54,12 +54,12 @@ export function composeConfirmEmail(confirmToken: string, token: string): EmailM
     `<p style="font-size:16px;font-weight:600;margin:0 0 8px">Confirm your alerts</p>
      <p style="font-size:14px;line-height:1.5;margin:0 0 12px">You asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle.</p>
      <a href="${url}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">Confirm alerts</a>
-     <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:16px 0 0">One email a day at most, only when conditions are actually good. Unsubscribe any time in one tap.</p>
+     <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:16px 0 0">One email a day at most, only when a spot's good to paddle. Unsubscribe any time in one tap.</p>
      <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:8px 0 0">Didn't sign up? Ignore this email and nothing happens.</p>`,
     unsubscribeUrl(token),
     "Confirm to start getting paddle alerts for your spots."
   );
-  const text = `Confirm your Paddle to Water alerts.\n\nYou asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle:\n${url}\n\nOne email a day at most, only when conditions are actually good. Unsubscribe any time in one tap.\n\nDidn't sign up? Ignore this email and nothing happens.`;
+  const text = `Confirm your Paddle to Water alerts.\n\nYou asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle:\n${url}\n\nOne email a day at most, only when a spot's good to paddle. Unsubscribe any time in one tap.\n\nDidn't sign up? Ignore this email and nothing happens.`;
   return { subject, html, text };
 }
 

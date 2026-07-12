@@ -96,7 +96,7 @@ export default function SpotList({
       {savedSpots.length === 0 && onToggleFavorite && mainSpots.length > 0 && (
         <p className="px-4 pt-2.5 pb-1 text-[11px] text-[--muted]">
           {isStandalone ? (
-            <>Re-save your spots here to get calm-window alerts. Saves from Safari don&rsquo;t carry into the installed app.</>
+            <>Watch your spots again here to get alerts. The installed app starts fresh, so anything you watched in Safari isn&rsquo;t here yet.</>
           ) : (
             <>Tap <span style={{ color: "#E23B54" }}>♥</span> to watch a spot&rsquo;s conditions.</>
           )}

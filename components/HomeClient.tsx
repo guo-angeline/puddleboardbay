@@ -432,7 +432,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               type="text"
               value={filters.search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search spots, towns…"
+              placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
               className="w-52 rounded-lg border border-gray-200 bg-white pl-8 pr-7 py-1.5 text-xs text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
             />
@@ -621,7 +621,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           className="fixed left-1/2 -translate-x-1/2 z-[1600] rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)", background: "#0B2A47", maxWidth: "calc(100% - 32px)" }}
         >
-          Email alerts on. We&rsquo;ll ping you when your spots are calm.
+          Email alerts on. We&rsquo;ll ping you when your spots are good to paddle.
         </div>
       )}
     </div>

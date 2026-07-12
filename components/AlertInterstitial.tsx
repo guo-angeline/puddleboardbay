@@ -65,7 +65,7 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   const canRemind = nextWindow != null && fireMs != null;
 
   const title = day ? `${spot.water} looks good ${day}` : `${spot.water} has a good window`;
-  const subline = range ? `Calm window ${range}.` : `${windowLabel}.`;
+  const subline = range ? `Good window ${range}.` : `${windowLabel}.`;
 
   function handleDismiss() {
     trackIntent("alert_interstitial_result", { spot_id: spot.id, outcome: "dismissed" });
