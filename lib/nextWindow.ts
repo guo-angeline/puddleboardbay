@@ -87,5 +87,5 @@ export function formatNextWindow(w: GoodWindow): string {
 
 /** Quiet settled line when no calm window exists within the horizon. Pure. */
 export function noWindowLine(horizonDays: number = DEFAULT_HORIZON_DAYS): string {
-  return `No calm window in the next ${horizonDays} days.`;
+  return `No good window in the next ${horizonDays} days.`;
 }

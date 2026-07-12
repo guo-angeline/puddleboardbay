@@ -59,7 +59,7 @@ export function composeAlert(
   const tokenParam = token ? `&t=${encodeURIComponent(token)}` : "";
   return {
     title: "Good paddling ahead",
-    body: `${first.label} looks calm at ${first.spotName}${tail}.`,
+    body: `${first.spotName} looks good ${first.label}${tail}.`,
     url: `/?spot=${first.spotId}&from=alert&window=${encodeURIComponent(first.label)}${tokenParam}`,
   };
 }

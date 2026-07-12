@@ -97,7 +97,7 @@ export default function DisclaimerPage() {
             <p style={pStyle}>
               Map pin coordinates are approximate and may not precisely reflect the exact
               launch point. Pins may be offset from the actual water access due to
-              geocoding limitations. Use the &ldquo;Get Directions&rdquo; link in each
+              geocoding limitations. Use the &ldquo;Get directions&rdquo; link in each
               spot for navigation, and confirm the launch area on arrival.
             </p>
           </section>

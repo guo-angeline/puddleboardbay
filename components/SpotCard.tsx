@@ -80,7 +80,7 @@ export default function SpotCard({ spot, selected, onClick, distance, isFavorite
           {onToggleFavorite && (
             <button
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(spot.id); }}
-              aria-label={isFavorite ? "Stop watching" : "Watch spot"}
+              aria-label={isFavorite ? "Stop watching this spot" : "Watch this spot"}
               aria-pressed={isFavorite}
               // 40px touch target (was a ~16px glyph nobody could hit or notice);
               // negative margin keeps the row height. Full opacity so it reads as

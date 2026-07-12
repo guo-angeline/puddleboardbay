@@ -42,7 +42,7 @@ describe("formatNextWindow", () => {
 
 describe("noWindowLine", () => {
   it("renders the horizon days into a quiet settled line", () => {
-    expect(noWindowLine(3)).toBe("No calm window in the next 3 days.");
+    expect(noWindowLine(3)).toBe("No good window in the next 3 days.");
   });
 });
 

@@ -441,7 +441,6 @@ export default function InstallPrompt() {
   const iosSteps = (
     <div style={{ flex: 1, minWidth: 0 }}>
       <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Add to your home screen for push</p>
-      <p style={{ ...muted, marginTop: 2 }}>Then open it from there to turn on alerts.</p>
       <ol style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
         <li>
           Tap the Share icon{" "}
@@ -464,8 +463,8 @@ export default function InstallPrompt() {
   if (result === "granted") {
     body = (
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>You are set.</p>
-        <p style={muted}>We will ping you when your spots look good to paddle.</p>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>You&rsquo;re set.</p>
+        <p style={muted}>We&rsquo;ll ping you when your spots are good to paddle.</p>
       </div>
     );
   } else if (emailResult === "pending") {
@@ -475,7 +474,7 @@ export default function InstallPrompt() {
     body = (
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Check your inbox.</p>
-        <p style={muted}>Tap the confirm link and you are set. We will email when your spots are calm.</p>
+        <p style={muted}>Tap the confirm link and you&rsquo;re set. We&rsquo;ll email you when your spots are good to paddle.</p>
         <p style={muted}>{RESEND_SPAM_LINE}</p>
         {(() => {
           const resendDisabled =
@@ -502,21 +501,21 @@ export default function InstallPrompt() {
     );
   } else if (platform === "desktop") {
     // Desktop leads with email: install is near-useless, desktop push rarely seen.
-    body = emailForm("Get calm-window alerts by email.", "Watch a spot, we will email you when it is good to paddle.");
+    body = emailForm("Get paddle alerts by email.", "Watch a spot and we'll email you when it's good to paddle.");
   } else if (platform === "ios") {
     // iOS Safari leads with email (install converts ~1%); push is the demoted option.
     body = altChannel
       ? iosSteps
       : emailForm(
-          "Get pinged when your spots are calm.",
-          "One email when a spot you are watching has a calm window.",
+          "Get an email when your spots are good to paddle.",
+          "One email when a spot you watch has a good window.",
           <button onClick={() => setAltChannel(true)} style={linkBtn}>Prefer push? Add to Home Screen</button>
         );
   } else if (platform === "standalone") {
     // Installed: push is the primary channel. If notifications were hard-denied,
     // rescue with email instead of the old browser-settings dead end.
     body = result === "denied"
-      ? emailForm("Notifications are off. Get alerts by email instead.", "We will email you when a watched spot looks good.")
+      ? emailForm("Notifications are off. Get alerts by email instead.", "We'll email you when a watched spot is good to paddle.")
       : (
         <>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -525,7 +524,7 @@ export default function InstallPrompt() {
                 ? `Get a heads-up when ${spotName} is good to paddle`
                 : "Turn on alerts for the spots you watch"}
             </p>
-            <p style={muted}>Turn on alerts and we will notify you when conditions look good.</p>
+            <p style={muted}>Turn on alerts and we&rsquo;ll ping you when a spot&rsquo;s good to paddle.</p>
           </div>
           <button onClick={handleEnable} disabled={enabling} style={primaryBtn}>
             {enabling ? "Enabling..." : "Enable alerts"}
@@ -538,7 +537,7 @@ export default function InstallPrompt() {
     body = altChannel
       ? emailForm(
           "Get alerts by email.",
-          "One email when a spot you watch has a calm window.",
+          "One email when a spot you watch has a good window.",
           <button onClick={() => setAltChannel(false)} style={linkBtn}>Install the app instead</button>
         )
       : (

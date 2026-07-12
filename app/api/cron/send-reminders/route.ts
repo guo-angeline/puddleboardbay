@@ -65,7 +65,7 @@ export async function GET(req: Request) {
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         {
           title: "Time to launch",
-          body: `${name} has a calm window right now. Go while it lasts.`,
+          body: `${name} looks good right now. Go while it lasts.`,
           url: `/?spot=${r.spot_id}&from=alert${tokenParam}`,
         }
       );

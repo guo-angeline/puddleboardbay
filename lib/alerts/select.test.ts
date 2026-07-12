@@ -30,7 +30,7 @@ describe("selectAlertSpots", () => {
 describe("composeAlert", () => {
   it("names the spot for a single good window", () => {
     const { body, url } = composeAlert([sw(2, "Foster City Lagoons", "2026-07-04", "Saturday")]);
-    expect(body).toBe("Saturday looks calm at Foster City Lagoons.");
+    expect(body).toBe("Foster City Lagoons looks good Saturday.");
     expect(url).toBe("/?spot=2&from=alert&window=Saturday");
   });
 
@@ -54,7 +54,7 @@ describe("composeAlert", () => {
       sw(2, "Foster City Lagoons", "2026-07-04", "Saturday"),
       sw(3, "Coyote Lake", "2026-07-04", "Saturday"),
     ]);
-    expect(body).toBe("Saturday looks calm at Foster City Lagoons +1 more.");
+    expect(body).toBe("Foster City Lagoons looks good Saturday +1 more.");
   });
 
   it("throws when given no spots", () => {

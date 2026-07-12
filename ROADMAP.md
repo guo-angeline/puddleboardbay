@@ -285,9 +285,11 @@ Attempts 2026-07-09 in the `app/globals.css` shell, none cleared it on-device: (
 - Rollout: monitored 100% behind a kill-switch flag with guardrails (`spot_viewed`, `conditions_loaded`), per the D2/D3/D6 low-traffic precedent, not an A/B.
 - Net-new vs item 3 (first-time landing bounce), item 8 (calmer alternative when blown out), and item 20 (per-spot next-window): this targets returners with view history, not first-timers or a single open drawer.
 
-## 28. [proposed] Copy consistency pass: finish the calm -> good-to-paddle migration + de-stiffen the enrollment card
+## 28. [done] 2026-07-12 Copy consistency pass: finish the calm -> good-to-paddle migration + de-stiffen the enrollment card
 
-*(From the 2026-07-11 editor-agent review of all user-facing writing.)*
+*(From the 2026-07-11 editor-agent review of all user-facing writing. Shipped 2026-07-12.)*
+
+**Shipped 2026-07-12.** Copy-only pass across 11 surfaces. Unified the alert promise to "good to paddle / good window" (push body, launch-reminder push, InstallPrompt desktop/iOS/Android/pending, confirm toast, SpotList nudge, NextGoodWindowPanel + `lib/nextWindow.ts`, AlertInterstitial subline), reserving "Calm" for the wind scale (untouched). De-stiffened InstallPrompt with contractions. Standardized on "Watch" vocab + aligned aria-labels. "Get Directions" -> "Get directions" (+ disclaimer ref). Trimmed the meta description (~300 -> ~155 chars, dropped the "paddleboard and SUP" redundancy). Search placeholder unified. Confirm email hedge tightened. Kept the safety disclaimer as-is (editor confirmed it reads human). 107 tests, lint, build green; em-dash scan + alert-promise "calm"-leak sweep both clean. Note: also fixed a "calm window" leak in the PROTECTED `send-reminders` cron, TEXT ONLY, no send behavior changed.
 
 Item 27 moved the ALERT EMAIL to a "good to paddle" promise but did not propagate: the app still tells users at enrollment "we'll email you when your spots are **calm**", then sends an email that says "**good to paddle**". Same event, two names, sitting on the conversion path. Reserve "Calm" for the wind-scale label only (Calm/Breezy/Windy in ConditionsPanel/ConditionsBadge, DO NOT touch); use "good to paddle" / "good window" everywhere the app names the alert trigger or promise. Second theme: `InstallPrompt.tsx` (the biggest conversion surface) never uses contractions ("We will", "You are", "it is") so it reads robotic, while emails/toasts/interstitial all contract.
 

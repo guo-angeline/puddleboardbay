@@ -350,7 +350,7 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
                 className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-medium border transition-colors hover:bg-gray-50"
                 style={{ borderColor: "var(--border)", color: "var(--dark)" }}
               >
-                Get Directions
+                Get directions
               </a>
               <a
                 href={photosUrl}
