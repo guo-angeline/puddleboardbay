@@ -219,15 +219,19 @@ The vision's signature promise is a redirect, not a wind number: "Crissy is blow
 
 Acceptance: in the drawer, when the selected spot is not calm near-term, show up to 2 nearest calm/soonest-calm spots as tap-throughs; reuse the SAME `evaluateGoodWindow` as the cron/item 2 so nothing disagrees; scope candidate fetch to nearest-K + cache (no unbounded NWS fan-out); A/B flag (control shows nothing); new `alt_suggested_shown`/`alt_clicked` intent events with `spot_id`+`region` and a changelog entry. Decision to settle first: the "not good enough to recommend" threshold must equal the calm-window definition, or the app contradicts itself.
 
-## 9. [proposed] Conditions-first share: make the one working acquisition channel demo the wedge
+## 9. [proposed] Shared-link arrivals open the full spot card on mobile (conditions + CTAs visible)
 
-*(Proposed by the studio 2026-07-05. Advisory: acquisition, not retention; sequence BELOW proving the alert loop, do not pull ahead.)*
+*(Re-scoped 2026-07-11 by the owner from the original "conditions-first share" idea. Now a concrete mobile bottom-sheet behavior, not an OG/landing-copy change. Has a retention angle, not pure acquisition, see below.)*
 
-Growth is 82% direct/word-of-mouth; Google sent 10 users and the 140 SEO pages are not ranking yet (`reports/analytics-2026-06-27.md`). Shares are the real distribution, but Share was used by 1 user / 3 events, and a shared link lands on a generic view that buries the differentiator. Per-spot OG images already exist (`app/spot/[id]/opengraph-image.tsx`). Make a shared deep-link open the recipient straight onto that spot's conditions view, so every share demos the one thing only we do.
+Growth is ~82% word-of-mouth (Google sent 10 users; the 140 SEO pages are not ranking, `reports/analytics-2026-06-27.md`), so shares are the real distribution, but Share was used by 1 user / 3 events. Today a shared link opens the mobile bottom sheet at PARTIAL height: the card is cut off mid "Looking ahead" and NONE of the CTA buttons show (owner screenshots 2026-07-11). A first-time recipient (no context) sees a truncated card, no conditions payoff, and no visible Watch/Share/Directions actions. Change: a shared-link arrival on mobile opens the sheet EXPANDED to full height, so the conditions view (wind + next calm window) AND the CTA row are completely visible without the recipient having to discover the drag. This also surfaces "Watch this spot" (the enrollment on-ramp) to every shared arrival, so it feeds the retention loop, not just acquisition.
 
-Acceptance: Share produces a deep link that opens directly on the spot's conditions section; recipient arrivals attributable via `spot_viewed` `source: "deeplink"`; A/B flag (control keeps today's share); changelog entry for any prop change. Note: OG images are build-time static and can't cheaply embed live conditions, so the value is the landing behavior, not a live-conditions card. Advisory: sequence after the ~2026-07-15 retention read.
+Acceptance:
+- On mobile, an arrival that opens a spot from a shared/organic deep link initializes the bottom sheet at full/expanded height instead of partial. Tag the Share deep link `from=share` and gate the expand on that (do NOT expand for `from=alert` / `from=email` arrivals: they carry the item-1 interstitial and force-expanding underneath it layers badly). Desktop is unaffected (the sidebar drawer is already fully visible).
+- The existing partial-height drag + dismiss (X / drag-down) still work, so the recipient can reach the map from the expanded state.
+- Attribution: recipient arrivals already carry `spot_viewed` `source: "deeplink"`; add the `from=share` marker (and an `INSTRUMENTATION_CHANGELOG.md` entry for the prop) so share arrivals are separable from other deep-links.
+- Rollout: monitored 100% behind a kill-switch flag with guardrails (`conditions_viewed` / `favorite_toggled` from a deeplink source, `spot_sheet_dismissed`), NOT a powered A/B (D2/D3/D6 low-traffic reality).
 
-*(A third idea considered, inline paddleability dots on the list/pins, overlaps parked item 3 and should be folded there, not opened separately.)*
+Caveat: share volume is tiny today (1 user / 3 events), so the immediate lift is modest; the win is a better first impression for any shared arrival and a cleaner on-ramp as sharing grows. Cheap to build (reuses the existing draggable sheet). The old inline-paddleability-dots idea stays folded into parked item 3.
 
 ## 12. [proposed] (lower priority) Persistent bottom "dead band" on iOS mobile web / installed PWA
 
