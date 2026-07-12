@@ -87,6 +87,44 @@ Person-based retention (`retention_w1.sql`, DAU) is censored past ~7 days on iOS
   Exists from 2026-07-09. This is the server-side twin of PostHog
   `alert_clicked`, and more complete (same-origin, not ad-blocked).
 
+### Cross-channel enrollment funnel (unified, item 25)
+One window snapshot of the whole loop across BOTH channels. Spans two stores
+with no shared per-person key, so it follows the email_confirm_funnel.sql
+pattern: a Supabase PRIMARY block (rate of record for enrolled to returned) plus
+a commented PostHog companion for the shown to grant/confirm exposure Supabase
+cannot see. Never chain one rate across the seam. See `queries/enrollment_return_funnel.sql`.
+- **Enrolled (push):** a `push_subscriptions` row created in the window. Every
+  row is already a completed grant + successful subscribe, so push enrollment is
+  single-step.
+- **Enrolled (email):** an `email_subscriptions` row created in the window with
+  `confirmed_at` set (double opt-in complete). Email enrollment is two-step; the
+  submitted-but-unconfirmed rows are the email_confirm_funnel.sql leak, excluded
+  here. Same cohort key (`created_at`) and owner-email exclusion as that query.
+- **Enrollments (combined):** push enrolled + email enrolled. Counts
+  SUBSCRIPTIONS, not people: a human enrolled in both channels is counted twice.
+  An upper bound on distinct enrolled people.
+- **Distinct enrolled persons (est.):** combined enrollments minus the `anon_id`
+  overlap (the only cross-store dedup signal). Best-effort floor-ish estimate,
+  not exact: a both-channel human under a null or mismatched `anon_id` still
+  double-counts. Never report as a clean person count.
+- **Reachable enrolled:** enrolled and still accepting alerts as of window end.
+  Push: `disabled_at` unset or later than `:to` (reuses Reachable-audience
+  retention). Email: `enabled` and `unsub_at` unset or later than `:to`. A
+  reachability ceiling, lags true churn (same caveat as
+  reachable_audience_retention.sql).
+- **Active-returned enrolled:** enrolled with at least one open (`alert_opens` /
+  `email_opens`) in the window (reuses Active subscriber retention). ITP-proof.
+  Confounded by send frequency and downward-biased for late-in-window enrollees
+  (little time to be sent an alert); read it beside Reachable enrolled.
+- **Enrolled-cohort return rate:** Active-returned enrolled divided by enrolled,
+  per channel and combined. Denominator is enrollments (subscriptions), not
+  distinct persons. Below ~5 enrolled the `biggest_leak` flag is the actionable
+  output, not the percentage.
+- **Owner contamination (push side):** the push Supabase tables carry no
+  documented owner key, so owner rows cannot be filtered from any push metric
+  yet (this query and the two existing push retention queries). Read push numbers
+  as owner-inclusive at single-digit N until D9 supplies a push owner key.
+
 ## Identity — what a "user" is (read before any retention claim)
 There is no login. A "person" is a device+browser storage scope
 (`localStorage+cookie`), which has three consequences:
