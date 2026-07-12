@@ -16,7 +16,6 @@ import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/l
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 import { reportEmailOpen } from "@/lib/email/client";
-import { killSwitchOn } from "@/lib/experiments";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -118,7 +117,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         const from = params.get("from");
         const source: SpotViewedSource =
           from === "alert" ? "alert" : from === "share" ? "share" : "deeplink";
-        if (from === "share" && killSwitchOn("share-expand-sheet")) {
+        if (from === "share") {
           // Shared-link arrival: open the mobile sheet at full height so the
           // conditions view and the CTA row are visible without a drag (item 9).
           // SpotDrawer reads this once on mount; harmless on desktop.
