@@ -58,6 +58,18 @@ async function checkViewport(browser, viewport) {
     const disclaimerVisible = await disclaimerLink.isVisible().catch(() => false);
     record(`${prefix} Disclaimer link visible`, disclaimerVisible);
 
+    // Wait for the map to actually render before checking occlusion: MapView
+    // loads via dynamic(ssr:false) after hydration, so if we probe
+    // elementFromPoint before the map exists, nothing can occlude the legend
+    // yet and a broken build would false-pass. This wait must happen first.
+    try {
+      await page.waitForSelector(".leaflet-overlay-pane canvas", { timeout: 15000 });
+    } catch (err) {
+      record(`${prefix} one-canvas contract`, false, `overlay-pane canvas never appeared: ${err.message}`);
+      await context.close();
+      return;
+    }
+
     const box = await legend.boundingBox();
     if (!box) {
       record(`${prefix} occlusion check (elementFromPoint)`, false, "legend has no bounding box");
@@ -78,13 +90,6 @@ async function checkViewport(browser, viewport) {
       );
     }
 
-    try {
-      await page.waitForSelector(".leaflet-overlay-pane canvas", { timeout: 15000 });
-    } catch (err) {
-      record(`${prefix} one-canvas contract`, false, `overlay-pane canvas never appeared: ${err.message}`);
-      await context.close();
-      return;
-    }
     const canvasCount = await page.evaluate(
       () => document.querySelectorAll(".leaflet-overlay-pane canvas").length
     );
