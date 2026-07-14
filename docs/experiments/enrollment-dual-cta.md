@@ -1,65 +1,90 @@
 # Experiment: enrollment_dual_cta
 
 ## Hypothesis
-Showing push and email at equal visual weight (full-width push button, "or"
-divider, inline email row) instead of email-primary-with-push-buried raises
-the enrollment result rate, because push-capable users currently have to
-notice a small secondary link instead of an equally prominent choice.
+Presenting push and email at equal visual weight in the enrollment card will
+raise the push opt-in grant rate, because today's card leads with email and
+buries push as small print, so push-capable users default into the weaker
+channel instead of choosing deliberately.
 
 ## Flag & variants
 - PostHog flag key: `enrollment-dual-cta`
-- Variants: `control` (today's single-lead card: push-led on
-  standalone/Android, email-led on desktop/iOS Safari), `treatment` (equal-
-  weight push + "or" + email dual-CTA card on the three mobile surfaces;
-  desktop stays the control card in both arms). `control` is `variants[0]`,
-  the live default so the mid-July retention read is not disturbed.
+- Variants: `control` (current single-lead enrollment card: email-led on
+  desktop/iOS Safari, install-led with a "Prefer email?" link on Android,
+  push-only on standalone), `treatment` (equal-weight full-width push button,
+  an "or" divider, and the inline email form, both at equal visual weight, on
+  the three mobile surfaces where push is possible: standalone not
+  push-denied, Android, and iOS Safari). `control` is `variants[0]`.
+- Desktop renders the unchanged email-led card in both variants; the dual-CTA
+  layout is mobile-only.
 
 ## Exposure
 - Exposure event: `experiment_exposed` (`experiment: "enrollment_dual_cta"`).
-- Logged for BOTH arms from a single `useEffect` in `InstallPrompt.tsx` gated
-  on the shared `dualEligible` computation (visible, a mobile platform,
-  flags ready, not already granted, not mid email-pending, not the
-  push-denied rescue): a user is exposed once the card would actually render
-  a channel choice, whichever arm they're bucketed into. This mirrors the
-  `next_good_window` symmetric pattern (both arms exposed at one shared
-  render point) rather than the retired `alert_interstitial` bug (exposure
-  gated behind "is treatment", which left control with no counterfactual
-  cohort).
+- **Symmetric pattern (the corrected pattern, see
+  `docs/experiments/next-good-window.md` and the `alert_interstitial` fix):
+  `experiment_exposed` is logged for BOTH arms**, at the single trigger point
+  where the enrollment card renders on a dual-eligible mobile surface with
+  feature flags ready. It is NOT gated behind "is treatment". The anti-pattern
+  this avoids: if exposure only fires when the treatment UI renders, control
+  never gets an `experiment_exposed` row, so there is no counterfactual
+  exposed cohort and the primary metric is uncomputable, that was the
+  `alert_interstitial` exposure bug. Both arms already render the enrollment
+  card on the same eligible surfaces, so both arms can be exposed at the same
+  point even though only treatment shows the dual-CTA layout. The component
+  calls `logExposure()` from a `useEffect` inside the rendered branch.
 
 ## Primary metric (exactly one)
-- Event: `alert_optin_result` (`result: "granted"`), rate among
-  `experiment_exposed` (`experiment: "enrollment_dual_cta"`) users who saw a
-  push-capable surface (standalone/android exposures; iOS counts the
-  Add-to-Home-Screen step, not `alert_optin_result` directly, so iOS reads
-  lean on the guardrails below rather than this primary).
-- Definition: push grant rate, treatment vs control, among exposed users on
-  standalone/android. Link the query:
-  `analytics/queries/experiment_enrollment_dual_cta.sql` (to be added at
-  read time).
+- Event: `alert_optin_result` with `result: "granted"`.
+- Definition: rate of `alert_optin_result` (`result: "granted"`) per exposed
+  user in the same session (`experiment_exposed`,
+  `experiment: "enrollment_dual_cta"`), treatment vs control. Direction:
+  increase. Link the query:
+  `analytics/queries/experiment_enrollment_dual_cta.sql`.
+- **iOS caveat, directional only:** on iOS Safari, tapping "push" in
+  treatment does not grant push in-session, it leads through Add to Home
+  Screen; the actual permission grant happens later, out of page, and surfaces
+  as a `standalone_relaunch`-triggered `alert_optin_result` after the user
+  reopens the installed PWA. That later event cannot be joined back to the iOS
+  exposure because the iOS Safari browser context and the installed-PWA
+  context are different PostHog person ids (the same iOS PWA/browser
+  identity split noted in `analytics/INSTRUMENTATION_CHANGELOG.md`). iOS
+  exposures are therefore excluded from the in-session primary metric and
+  read as directional-only signal, not part of the powered comparison.
 
 ## Guardrails (must not regress)
-- `email_capture_submitted`: the equal-weight email row must not convert
-  worse than the current email-led/email-primary layout on iOS/desktop-
-  adjacent flows; a drop here would mean the dual layout cannibalizes email
-  without a compensating push gain.
-- `alert_optin_dismissed`: dismiss rate must not rise, i.e. the denser
-  two-channel card should not read as more cluttered or pushier than the
-  single-lead control.
+- `email_capture_submitted` per exposed user, treatment vs control: the
+  dual-CTA layout must not cannibalize email signups by making push look
+  like the only real option.
+- `alert_optin_dismissed` per exposed user, treatment vs control: two
+  equal-weight asks side by side risk choice paralysis, watch for a higher
+  dismiss rate than the single-lead control.
+- Monitored (not gating): combined-enrollment-per-exposed
+  (`alert_optin_result:granted` OR `email_capture_submitted`, either channel)
+  should not drop versus control, i.e. the redesign should not shrink total
+  enrollment while shifting its mix.
+- Monitored (not gating): submit-path reliability,
+  `email_capture_failed{source:"submit"}` and `alert_subscribe_failed`,
+  must not regress, the equal-weight layout should not introduce a new
+  failure mode on either submit path.
 
 ## Decision rule
-- Minimum runtime: 14 days (novelty-effect floor, per the project's other
-  experiments).
-- Minimum exposed users: enough per variant to detect a meaningful lift in
-  the push grant rate at the site's traffic (~14 new users/day per
-  ROADMAP.md); given the low-traffic precedent set by `next_good_window`,
-  treat any read before ~150-200 exposed users per variant as directional
-  only, not a ship decision.
-- Ship treatment if the push grant rate (primary) beats control with no
-  guardrail regression beyond 2pp. Otherwise keep control. Owner flips the
-  flag after the mid-July retention read closes so this experiment does not
-  contaminate that read.
+- **This is a guarded rollout with a kill switch, not a powered
+  significance test.** At measured volume (~1 enrollment card shown per 8
+  days, ex-owner), detecting a doubling of the current ~1% grant rate needs
+  roughly 2,313 exposed users per arm, which at this traffic is on the order
+  of 9 to 18 years. No minimum-runtime / minimum-exposed-count target is set
+  because none is reachable in a useful window.
+- The flag defaults to `control` (the current card ships to 100% of traffic)
+  until the owner explicitly flips it post-read. Treatment is watched via the
+  guardrails above for a regression, not evaluated for a lift.
+- Ship rule: none, this experiment does not resolve to a ship/no-ship call
+  on the primary metric. Keep `control` live; use the flag only to gate a
+  monitored, reversible rollout of `treatment` if the owner decides to widen
+  exposure, watching guardrails for regression at each step.
+- iOS is directional-only and effectively excluded from the in-session
+  primary (see Exposure/Primary above), so any read leans on Android and
+  standalone exposures for the primary metric.
 
 ## Result (fill in at the end)
 - Exposed users / variant, primary metric per variant, guardrail readings,
-  decision, and a one-line note for `analytics/INSTRUMENTATION_CHANGELOG.md`
-  if any event changed.
+  decision, and a one-line note for `analytics/INSTRUMENTATION_CHANGELOG.md` if
+  any event changed.
