@@ -64,11 +64,13 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - Sourcing must be rights-clean and attributed (owner photos, CC-licensed with attribution, or a licensed API); no scraping. This is the hard part: 140 spots, so propose the sourcing plan + effort estimate as a decision before building.
 - New user-facing surface: ships behind a flag or staged tranche per the major-update directive.
 
-## 32. [proposed] Enrollment window: make the push CTA as prominent as email
+## 32. [in-progress] 2026-07-14T12:05:00-07:00 Enrollment window: make the push CTA as prominent as email
 
 **Why:** Owner call 2026-07-13: after tapping "Watch this spot", the enrollment window leads with the email field and buries push. Owner wants the push option presented at equal visual weight so push-capable users are not funneled into email by default.
 
-**Acceptance (to be reconciled before promoting):**
+**Approved design (owner, 2026-07-14):** Layout = "both channels visible at once" (a full-width push button, an "or" divider, and the inline email field/button, both at equal visual weight, no disclosure tap). Scope = mobile surfaces only: installed PWA, Android, and iOS Safari each show the dual equal-weight choice; on iOS the push button honestly reads as "Add to Home Screen for push" (that is the real step). Desktop stays email-led (desktop push is unreliable). Existing states preserved (granted success, email pending + resend, denied-to-email rescue, all triggers). Ships behind a lib/experiments.ts flag with the CURRENT card as the live control so the mid-July retention read is not disturbed; owner flips to the new card after the read.
+
+**Acceptance (reconciled 2026-07-14):**
 - On platforms where push is possible (installed PWA, Android, desktop with permission), the enrollment card (`InstallPrompt.tsx`) presents push and email at equal prominence (equal-weight buttons or side-by-side choice), not email-primary with push as small print.
 - Note the tension with item 23's per-platform channel matrix (email was deliberately made the lead on desktop/iOS Safari because push there needs an install first); resolve the matrix vs equal-prominence question explicitly in the design step, escalate to a decision if they can't both hold.
 - Enrollment funnel events (`alert_optin_shown` `channel` prop, `alert_optin_result`, `email_capture_submitted`) must keep working so the mid-July funnel read stays comparable; changelog entry for any prop/semantics change. Changed core flow: behind a flag or explicit owner exception per the D3 precedent.
