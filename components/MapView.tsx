@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_COLOR } from "@/lib/types";
@@ -82,9 +82,14 @@ export default function MapView({ spots, selected, onSelect, userLocation, fitTo
       center={BAY_CENTER}
       zoom={9}
       className="h-full w-full isolate"
-      zoomControl={true}
+      zoomControl={false}
       preferCanvas={true}
     >
+      {/* Zoom control on the right (owner request, item 33). Top-right is clear
+          of the bottom-left legend, the mobile bottom sheet, and the desktop
+          drawer (a sibling panel to the right of the map, not an overlay). */}
+      <ZoomControl position="topright" />
+
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
