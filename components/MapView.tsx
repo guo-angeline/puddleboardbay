@@ -81,7 +81,7 @@ export default function MapView({ spots, selected, onSelect, userLocation, fitTo
     <MapContainer
       center={BAY_CENTER}
       zoom={9}
-      className="h-full w-full"
+      className="h-full w-full isolate"
       zoomControl={true}
       preferCanvas={true}
     >
