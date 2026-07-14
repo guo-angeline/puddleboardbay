@@ -29,9 +29,11 @@ export function unsubscribeUrl(token: string): string {
 // Deep link the app opens from an alert email. `from=email` distinguishes it from
 // push (`from=alert`) so the push interstitial does not show; `t` is the durable
 // subscription token that rides the link so the open-ping works after ITP wipes
-// client storage (mirrors the push token flow).
-export function emailOpenUrl(spotId: number, token: string): string {
-  return `${SITE_URL}/?spot=${spotId}&from=email&t=${encodeURIComponent(token)}`;
+// client storage (mirrors the push token flow). `v` is the copy-variant index so
+// email_alert_opened can segment clicks by wording.
+export function emailOpenUrl(spotId: number, token: string, variant?: number): string {
+  const v = variant === undefined ? "" : `&v=${variant}`;
+  return `${SITE_URL}/?spot=${spotId}&from=email&t=${encodeURIComponent(token)}${v}`;
 }
 
 function shell(bodyHtml: string, unsubUrl: string, preheader: string): string {
@@ -101,6 +103,130 @@ export interface AlertEmailInput {
   notes?: string; // put-in details from the spot
   extras: AlertExtra[]; // additional good spots beyond the first, already selected
   token: string;
+  variant?: number; // 0-6 copy rotation index (alertVariantForDay); defaults to 0, the original wording
+}
+
+// ── Copy rotation (owner request 2026-07-13: same paragraph every day is boring) ──
+// Seven wording sets, same facts, rotated by UTC day so consecutive daily emails
+// never repeat. Variant 0 is the original copy. Editor-written 2026-07-13.
+// Placeholders: {spot} {weekday} {hours} {lengthHours} {wind} {count}.
+
+interface AlertVariant {
+  name: string;
+  subjectSingle: string;
+  subjectMultiSameDay: string;
+  subjectMultiSoon: string;
+  headline: string;
+  bodyNoWind: string;
+  bodyWithWind: string;
+  cta: string;
+  preheaderNoWind: string;
+  preheaderWithWind: string;
+}
+
+export const ALERT_VARIANTS: readonly AlertVariant[] = [
+  {
+    name: "baseline",
+    subjectSingle: "{spot} is good to paddle {weekday}",
+    subjectMultiSameDay: "{count} spots good to paddle {weekday}",
+    subjectMultiSoon: "{count} spots good to paddle soon",
+    headline: "{spot} is good to paddle {weekday}, {hours}.",
+    bodyNoWind: "That's about a {lengthHours}-hour window.",
+    bodyWithWind: "That's about a {lengthHours}-hour window, with wind topping out at {wind} mph.",
+    cta: "See the forecast",
+    preheaderNoWind: "{hours}, about a {lengthHours}-hour window.",
+    preheaderWithWind: "{hours}, about a {lengthHours}-hour window, with wind topping out at {wind} mph.",
+  },
+  {
+    name: "plain-report",
+    subjectSingle: "Calm window: {spot}, {weekday}",
+    subjectMultiSameDay: "Calm windows {weekday} at {count} spots",
+    subjectMultiSoon: "Calm windows ahead at {count} spots",
+    headline: "{spot}: calm {weekday}, {hours}.",
+    bodyNoWind: "About {lengthHours} hours of calm.",
+    bodyWithWind: "About {lengthHours} hours of calm; wind peaks at {wind} mph.",
+    cta: "Check conditions",
+    preheaderNoWind: "Calm {weekday} {hours}, about {lengthHours} hours.",
+    preheaderWithWind: "Calm {weekday} {hours}, about {lengthHours} hours; wind peaks at {wind} mph.",
+  },
+  {
+    name: "friendly-local",
+    subjectSingle: "{weekday} looks good at {spot}",
+    subjectMultiSameDay: "{weekday} looks good at {count} of your spots",
+    subjectMultiSoon: "{count} of your spots look good soon",
+    headline: "Good news: {spot} looks calm {weekday}, {hours}.",
+    bodyNoWind: "You've got a {lengthHours}-hour stretch of calm water.",
+    bodyWithWind: "You've got a {lengthHours}-hour stretch of calm water, with wind no higher than {wind} mph.",
+    cta: "Plan your paddle",
+    preheaderNoWind: "Calm water {hours}, a {lengthHours}-hour stretch.",
+    preheaderWithWind: "Calm water {hours}, a {lengthHours}-hour stretch, wind no higher than {wind} mph.",
+  },
+  {
+    name: "water-first",
+    subjectSingle: "Calm water at {spot} {weekday} 🌊",
+    subjectMultiSameDay: "Calm water {weekday} at {count} spots",
+    subjectMultiSoon: "Calm water coming at {count} spots",
+    headline: "Calm water at {spot} {weekday}, {hours}.",
+    bodyNoWind: "Roughly {lengthHours} hours of it.",
+    bodyWithWind: "Roughly {lengthHours} hours of it, and wind stays at or below {wind} mph.",
+    cta: "See the window",
+    preheaderNoWind: "{weekday} {hours}: roughly {lengthHours} hours of calm water.",
+    preheaderWithWind: "{weekday} {hours}: roughly {lengthHours} hours of calm water, wind at or below {wind} mph.",
+  },
+  {
+    name: "window-scarcity",
+    subjectSingle: "{spot} has a window {weekday}",
+    subjectMultiSameDay: "{count} spots have windows {weekday}",
+    subjectMultiSoon: "{count} spots have windows coming up",
+    headline: "Your window at {spot}: {weekday}, {hours}.",
+    bodyNoWind: "You get about {lengthHours} hours before it closes.",
+    bodyWithWind: "You get about {lengthHours} hours before it closes, wind up to {wind} mph.",
+    cta: "See when to go",
+    preheaderNoWind: "Your window: {weekday} {hours}, about {lengthHours} hours.",
+    preheaderWithWind: "Your window: {weekday} {hours}, about {lengthHours} hours, wind up to {wind} mph.",
+  },
+  {
+    name: "weather-nerd",
+    subjectSingle: "Forecast: calm at {spot} {weekday}",
+    subjectMultiSameDay: "Forecast: {count} spots calm {weekday}",
+    subjectMultiSoon: "Forecast: calm at {count} spots soon",
+    headline: "Forecast says {spot} is calm {weekday}, {hours}.",
+    bodyNoWind: "A {lengthHours}-hour calm stretch.",
+    bodyWithWind: "A {lengthHours}-hour calm stretch, peak wind {wind} mph.",
+    cta: "See the numbers",
+    preheaderNoWind: "{weekday} {hours}, a {lengthHours}-hour calm stretch.",
+    preheaderWithWind: "{weekday} {hours}, a {lengthHours}-hour calm stretch, peak wind {wind} mph.",
+  },
+  {
+    name: "pencil-it-in",
+    subjectSingle: "Pencil in {spot} for {weekday}",
+    subjectMultiSameDay: "Pencil in {weekday}: {count} spots look calm",
+    subjectMultiSoon: "{count} spots worth penciling in",
+    headline: "Pencil it in: {spot}, {weekday}, {hours}.",
+    bodyNoWind: "That's a {lengthHours}-hour window to work with.",
+    bodyWithWind: "That's a {lengthHours}-hour window to work with, with wind maxing out at {wind} mph.",
+    cta: "See spot details",
+    preheaderNoWind: "{weekday} {hours} is yours: a {lengthHours}-hour window.",
+    preheaderWithWind: "{weekday} {hours} is yours: a {lengthHours}-hour window, wind maxing out at {wind} mph.",
+  },
+];
+
+export const ALERT_VARIANT_COUNT = ALERT_VARIANTS.length;
+
+/**
+ * Deterministic day-over-day rotation. Not a plain day mod 7: with exactly 7
+ * variants that would pin each weekday to one wording forever (every Saturday
+ * email identical, and weekday perfectly confounded with variant in analytics).
+ * Adding the week number shifts the weekday->variant mapping by one each week;
+ * consecutive days still always differ (delta is 1, or 2 at a week boundary).
+ */
+export function alertVariantForDay(nowMs: number): number {
+  const day = Math.floor(nowMs / 86_400_000);
+  return (day + Math.floor(day / 7)) % ALERT_VARIANT_COUNT;
+}
+
+function fill(template: string, vals: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => String(vals[k] ?? ""));
 }
 
 // Name up to this many extra spots before collapsing the rest into "and N more".
@@ -116,26 +242,26 @@ function extrasLine(extras: AlertEmailInput["extras"]): string {
 }
 
 export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
-  const { spotName, spotId, windowKey, startHour, endHour, maxWindMph, notes, extras, token } = input;
-  const openUrl = emailOpenUrl(spotId, token);
+  const { spotName, spotId, windowKey, startHour, endHour, maxWindMph, notes, extras, token, variant } = input;
+  const v = ALERT_VARIANTS[((variant ?? 0) % ALERT_VARIANT_COUNT + ALERT_VARIANT_COUNT) % ALERT_VARIANT_COUNT];
+  const openUrl = emailOpenUrl(spotId, token, variant);
   const weekday = weekdayFromKey(windowKey);
   const hours = formatHourRange(startHour, endHour);
   const lengthHours = endHour - startHour;
   const count = extras.length + 1;
+  const vals = { spot: spotName, weekday, hours, lengthHours, wind: maxWindMph ?? 0, count };
 
   // Only claim a shared weekday in the multi-spot subject when every spot really
   // is good that same day; extras can fall on different days in the 3-day horizon.
   const allSameDay = extras.every((e) => e.windowKey === windowKey);
-  const subject =
-    count > 1
-      ? allSameDay
-        ? `${count} spots good to paddle ${weekday}`
-        : `${count} spots good to paddle soon`
-      : `${spotName} is good to paddle ${weekday}`;
+  const subject = fill(
+    count > 1 ? (allSameDay ? v.subjectMultiSameDay : v.subjectMultiSoon) : v.subjectSingle,
+    vals
+  );
 
-  const windText = maxWindMph ? `, with wind topping out at ${maxWindMph} mph` : "";
-  const lengthLine = `That's about a ${lengthHours}-hour window${windText}.`;
-  const preheader = `${hours}, about a ${lengthHours}-hour window${windText}.`;
+  const headline = fill(v.headline, vals);
+  const lengthLine = fill(maxWindMph ? v.bodyWithWind : v.bodyNoWind, vals);
+  const preheader = fill(maxWindMph ? v.preheaderWithWind : v.preheaderNoWind, vals);
 
   const extrasHtml = extras.length
     ? `<p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(extrasLine(extras))}</p>`
@@ -145,16 +271,16 @@ export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
     : "";
 
   const html = shell(
-    `<p style="font-size:16px;font-weight:600;margin:0 0 8px">${escapeHtml(spotName)} is good to paddle ${escapeHtml(weekday)}, ${escapeHtml(hours)}.</p>
+    `<p style="font-size:16px;font-weight:600;margin:0 0 8px">${escapeHtml(headline)}</p>
      <p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(lengthLine)}</p>
      ${extrasHtml}
      ${notesHtml}
-     <a href="${openUrl}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">See the forecast</a>`,
+     <a href="${openUrl}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">${escapeHtml(v.cta)}</a>`,
     unsubscribeUrl(token),
     preheader
   );
 
-  const text = `${spotName} is good to paddle ${weekday}, ${hours}.\n\n${lengthLine}\n${extras.length ? `\n${extrasLine(extras)}\n` : ""}${notes ? `\n${notes}\n` : ""}\nSee the forecast: ${openUrl}`;
+  const text = `${headline}\n\n${lengthLine}\n${extras.length ? `\n${extrasLine(extras)}\n` : ""}${notes ? `\n${notes}\n` : ""}\n${v.cta}: ${openUrl}`;
   return { subject, html, text };
 }
 

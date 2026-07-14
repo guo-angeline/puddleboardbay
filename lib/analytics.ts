@@ -212,7 +212,9 @@ interface EventPropMap {
   // failures only, never resend failures.
   email_capture_failed: { status: number | null; source: "submit" | "resend" };
   email_capture_confirmed: { watched_count: number };
-  email_alert_opened: { spot_id: number };
+  // `variant` is the email copy-rotation index (0-6, lib/email/templates.ts
+  // ALERT_VARIANTS) that rode the deep link as `v`; absent on pre-rotation links.
+  email_alert_opened: { spot_id: number; variant?: number };
   // Mirrors email_capture_submitted so the resend and submit funnels segment
   // the same way.
   email_confirm_resend_clicked: {

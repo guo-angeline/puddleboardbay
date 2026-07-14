@@ -8,6 +8,8 @@ import {
   formatHour,
   formatHourRange,
   weekdayFromKey,
+  alertVariantForDay,
+  ALERT_VARIANT_COUNT,
   POSTAL_ADDRESS,
 } from "./templates";
 
@@ -159,5 +161,107 @@ describe("composeAlertEmail", () => {
     expect(msg.html).toContain("/api/email/unsubscribe?t=tok7");
     expect(msg.html).not.toContain("—");
     expect(msg.text).not.toContain("—");
+  });
+});
+
+describe("copy rotation", () => {
+  const base = {
+    spotName: "Richardson Bay",
+    spotId: 7,
+    windowKey: "2026-07-11", // Saturday
+    startHour: 7,
+    endHour: 10,
+    maxWindMph: 6,
+    extras: [],
+    token: "tok7",
+  };
+  const DAY_MS = 86_400_000;
+
+  it("has exactly 7 variants and variant 0 is the original wording", () => {
+    expect(ALERT_VARIANT_COUNT).toBe(7);
+    const original = composeAlertEmail(base);
+    const explicit = composeAlertEmail({ ...base, variant: 0 });
+    expect(explicit.subject).toBe("Richardson Bay is good to paddle Saturday");
+    expect(explicit.text).toContain("about a 3-hour window, with wind topping out at 6 mph");
+    // omitting variant defaults to the same message apart from the v= URL tag
+    expect(original.subject).toBe(explicit.subject);
+  });
+
+  it("alertVariantForDay is stable within a day and never repeats on consecutive days", () => {
+    const t0 = Date.UTC(2026, 6, 13, 2, 0, 0);
+    expect(alertVariantForDay(t0)).toBe(alertVariantForDay(t0 + 20 * 3_600_000));
+    for (let d = 0; d < 60; d++) {
+      const today = alertVariantForDay(t0 + d * DAY_MS);
+      const tomorrow = alertVariantForDay(t0 + (d + 1) * DAY_MS);
+      expect(today).toBeGreaterThanOrEqual(0);
+      expect(today).toBeLessThan(ALERT_VARIANT_COUNT);
+      expect(tomorrow).not.toBe(today);
+    }
+  });
+
+  it("does not pin a weekday to one wording (the mapping shifts week over week)", () => {
+    const t0 = Date.UTC(2026, 6, 13, 2, 0, 0);
+    expect(alertVariantForDay(t0 + 7 * DAY_MS)).not.toBe(alertVariantForDay(t0));
+  });
+
+  it("every variant carries the facts: spot+weekday+hours in the message, window length, wind when present", () => {
+    for (let v = 0; v < ALERT_VARIANT_COUNT; v++) {
+      const msg = composeAlertEmail({ ...base, variant: v });
+      expect(msg.subject).toContain("Richardson Bay");
+      expect(msg.text).toContain("Richardson Bay");
+      expect(msg.text).toContain("Saturday");
+      expect(msg.text).toContain("7 to 10am");
+      expect(msg.text).toContain("3");
+      expect(msg.text).toContain("6 mph");
+      expect(msg.html).toContain("Saturday");
+      expect(msg.html).toContain("7 to 10am");
+    }
+  });
+
+  it("every variant drops wind cleanly when absent and uses no em dashes or unfilled placeholders", () => {
+    for (let v = 0; v < ALERT_VARIANT_COUNT; v++) {
+      const noWind = composeAlertEmail({ ...base, maxWindMph: undefined, variant: v });
+      for (const s of [noWind.subject, noWind.html, noWind.text]) {
+        expect(s).not.toMatch(/mph/);
+        expect(s).not.toContain("—");
+        expect(s).not.toMatch(/\{\w+\}/);
+      }
+      const withWind = composeAlertEmail({ ...base, variant: v });
+      expect(withWind.subject).not.toMatch(/\{\w+\}/);
+      expect(withWind.html).not.toMatch(/\{\w+\}/);
+    }
+  });
+
+  it("every variant fills the multi-spot subjects with the count", () => {
+    const extras = [{ name: "Foster City Lagoons", windowKey: "2026-07-11", startHour: 8, endHour: 11 }];
+    const extrasOtherDay = [{ name: "Shoreline Lake", windowKey: "2026-07-12", startHour: 9, endHour: 13 }];
+    for (let v = 0; v < ALERT_VARIANT_COUNT; v++) {
+      expect(composeAlertEmail({ ...base, extras, variant: v }).subject).toContain("2");
+      expect(composeAlertEmail({ ...base, extras: extrasOtherDay, variant: v }).subject).toContain("2");
+      // same-day subject may name the weekday; cross-day subject must not claim one
+      expect(composeAlertEmail({ ...base, extras: extrasOtherDay, variant: v }).subject).not.toContain("Saturday");
+    }
+  });
+
+  it("tags the deep link with the variant index so clicks segment by wording", () => {
+    const msg = composeAlertEmail({ ...base, variant: 4 });
+    expect(msg.html).toContain("&v=4");
+    expect(msg.text).toContain("&v=4");
+    expect(emailOpenUrl(7, "tok")).not.toContain("&v=");
+  });
+
+  it("out-of-range variant indexes wrap instead of crashing", () => {
+    expect(composeAlertEmail({ ...base, variant: 7 }).subject).toBe(
+      composeAlertEmail({ ...base, variant: 0 }).subject
+    );
+    expect(() => composeAlertEmail({ ...base, variant: -1 })).not.toThrow();
+  });
+
+  it("subjects stay deliverability-safe: under 65 chars with a long spot name, no all-caps words", () => {
+    for (let v = 0; v < ALERT_VARIANT_COUNT; v++) {
+      const msg = composeAlertEmail({ ...base, spotName: "Redwood City Marina Launch", variant: v });
+      expect(msg.subject.length).toBeLessThan(65);
+      expect(msg.subject).not.toMatch(/\b[A-Z]{4,}\b/);
+    }
   });
 });

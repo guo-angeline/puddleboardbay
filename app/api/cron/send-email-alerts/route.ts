@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { findGoodWindow, type GoodWindow } from "@/lib/alerts/conditions-window";
 import { selectAlertSpots, sentKey, type SpotWindow } from "@/lib/alerts/select";
-import { composeAlertEmail } from "@/lib/email/templates";
+import { composeAlertEmail, alertVariantForDay } from "@/lib/email/templates";
 import { sendEmail, emailAlertsEnabled } from "@/lib/email/sender";
 import spotsData from "@/data/spots.json";
 import type { Spot } from "@/lib/types";
@@ -91,6 +91,9 @@ export async function GET(req: Request) {
   // 3. Per sub: pick, send ONE email for the soonest spot, log, respect the cap.
   let emailsSent = 0;
   let failed = 0;
+  // Copy rotation: one wording per UTC send day, shared by every email that day
+  // so day-over-day emails to the same subscriber never repeat.
+  const variant = alertVariantForDay(nowMs);
   const planned: { email_subscription_id: string; spots: number[] }[] = [];
   for (const sub of subs ?? []) {
     const watchedIds = watchedBySub.get(sub.id) ?? [];
@@ -116,6 +119,7 @@ export async function GET(req: Request) {
         endHour: p.endHour ?? 0,
       })),
       token: sub.token,
+      variant,
     });
     const result = await sendEmail(sub.email, msg, sub.token);
     if (result.ok) {

@@ -14,7 +14,11 @@ without touching this file.
 
 ---
 
-## 2026-07-11 (item 9): spot_viewed source gains "share" (props-changed)
+## 2026-07-13: email_alert_opened gains `variant`; alert email copy now rotates daily (props-changed)
+
+The daily alert email rotates through 7 editor-written wording sets (`ALERT_VARIANTS` in `lib/email/templates.ts`, deterministic rotation via `alertVariantForDay`: UTC day plus week number, mod 7, so the weekday->variant mapping shifts by one each week instead of pinning each weekday to one wording; variant 0 is the original copy). Owner request 2026-07-13: the same paragraph every day was boring. The email deep link now carries `v=<0-6>`, and `HomeClient` forwards it as an optional `variant` prop on the existing `email_alert_opened` INTENT event so clicks can be segmented by wording. No new event; the server `email_opens` ledger is unchanged and remains the durable return signal.
+
+**Comparability:** `email_alert_opened` totals are continuous; only the new optional `variant` dimension starts 2026-07-13 (clicks on emails sent before then, or on links without `v`, have no `variant`). The bigger caveat is behavioral, not instrumentation: from 2026-07-13 the email CREATIVE varies by day, so any open/click-rate trend across this date compares different copy. Weekday and variant decorrelate only across weeks (the mapping shifts weekly), so short-window per-variant reads are still weekday-confounded; at current volume (single-digit sends/day) per-variant comparisons need several weeks of accumulation. This is a rotation for freshness, not a powered A/B test.
 
 The `Share` button's deep link now carries `from=share` (`/spot/<id>?from=share`), and `HomeClient` maps that arrival's `spot_viewed` to `source: "share"` instead of `source: "deeplink"`. `SpotViewedSource` in `lib/analytics.ts` gained the `"share"` value. This lets share-originated arrivals be counted separately from other direct-URL ("deeplink") arrivals, so we can see whether the item-9 expanded-sheet landing drives conditions views / saves. No new event; only the source value of the existing `spot_viewed`. The item-9 UI behavior (open the mobile sheet at full height for `from=share` arrivals) ships flagless: a client-side mount-time kill switch would fail open for first-time share recipients (flags load after first paint), so rollback is revert + redeploy, and monitoring is this `source: "share"` count plus the existing `spot_sheet_dismissed` / `conditions_loaded` guardrails.
 

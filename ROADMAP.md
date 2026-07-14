@@ -36,6 +36,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-13 [done] Alert email copy rotation: 7 editor-written wording sets, deterministic day-over-day rotation (no weekday pinning), variant tagged on the deep link + email_alert_opened for per-wording reads (60396cf, deployed)
 - **Retention epic: conditions alerts (Stages A to D), shipped + live 2026-06-29.** Save a spot, install the app, get a capped daily web push when a watched spot has a calm window in the next 1 to 3 days. Stage A (Your Spots ranked by conditions), B (install/opt-in + service worker + push subscription), C (Supabase store + `/api/alerts/subscribe`), D (Vercel Cron watcher that sends). Spec: `docs/superpowers/specs/2026-06-27-retention-hook-design.md`; plans under `docs/superpowers/plans/2026-06-27-retention-hook-stage-{a,b,c,d}.md`.
   - **Unproven, watch the data before building more retention/premium:** opt-in grant rate (`alert_optin_result`), `alert_clicked`, and whether alerted users beat the 13 to 17% W1 baseline. As of 2026-07-01: 1 granted subscription (iOS standalone, 2026-06-30). **Re-check the save -> opt-in -> push -> return funnel around 2026-07-15 to 2026-07-22**; if saves are still ~2 users/week, fix the landing bounce (item 3) before iterating on alerts.
   - **Evaluator redesigned 2026-07-02:** the original day-period evaluator required the whole 6am to 6pm forecast max wind <= 8 mph, which never happens in SF Bay summer, so alerts could never fire. It now uses the NWS hourly forecast and alerts on >= 2 consecutive calm daytime hours (calm mornings count).
@@ -44,6 +45,55 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - **Mobile UX conversion pass, shipped 2026-06 (branch `mobile-ux-fixes`, PRs #1 and #2).** Fixed the blockers from the 4-agent mobile audit: install banner no longer covers the drawer and dismissal persists in localStorage, Bay-default map with non-destructive pin selection, 44px save heart with first-run nudge, favorites hydration fix, map-tab empty state, place-name-first short search, partial-height draggable sheet, region-pill peek hint. Source docs (ux-mobile-findings.md, IMPROVEMENT-PLAN.md) retired 2026-07-02; still-open leftovers are backlog item 7.
 - 2026-07-09 [done] Spot sheet: removed the "Report an issue" button (item 10). Dropped the low-traffic report link + its FeedbackModal wiring from the spot sheet; issue reports still route through the header Feedback button. Also fixed the disclaimer copy that pointed at the removed link and cleaned two em dashes there (house style). Verified live (sheet DOM + disclaimer). Merge `322b43b` (+ follow-ups `1a35fe8`, `05e3796`), deployed.
 - 2026-07-09 [done] Spot sheet: re-weighted the CTAs for Save-first, Share-second (item 11). Save is now the full-width filled-azure primary (retention target), Share the outlined secondary (virality target), Get Directions + Photos demoted to a neutral row; saved state stays the soft-pink confirmed treatment. Shipped straight to 100%, NO A/B flag, per owner direction (DECISIONS.md D3, explicit exception to the flag policy: ~14 users/day can't power a test). Existing `favorite_toggled` / `spot_action` events unchanged; comparability note added (save/share rates rise, directions fall, as a layout effect from 2026-07-09, not organic). Verified live on prod (`/?spot=1`): Save filled primary, Share outlined secondary, Get Directions + Photos demoted. Deployed.
+
+---
+
+## Owner items, added 2026-07-13 (board-directed; the two [ready] items are queued top-most on purpose)
+
+## 29. [ready] Remove the emojis (dogs, waves, etc.) from the spot list
+
+**Why:** Owner call 2026-07-13: the emoji glyphs on list rows are not intuitive; a reader can't tell what a dog or a wave icon is asserting about a spot without guessing. The information should be carried by labeled text/badges or dropped from the row.
+
+**Acceptance:**
+- No emoji glyphs render in spot list rows (desktop list panel and mobile list tab).
+- Any load-bearing fact an emoji was carrying (e.g. dog policy, water type) either already exists as a labeled element (difficulty badge, fee text) or gets a short text label; nothing informative silently disappears without the owner seeing a before/after note in the briefing.
+- Check the spot drawer/sheet for the same glyphs while in there; if present, flag in the briefing but do not expand scope without an owner OK.
+- Copy/UI-only, no behavior change; small fix, exempt from the A/B flag rule. No new events needed; note the change date in `analytics/INSTRUMENTATION_CHANGELOG.md` only if any tracked element is removed.
+
+## 30. [ready] Fix the map legend not displaying
+
+**Why:** Owner report 2026-07-13: the legend (pin-color key, inlined in `components/HomeClient.tsx`) is not displaying on the map. Without it, the difficulty color coding (flatwater teal / bay azure / river rust, `DIFFICULTY_COLOR` in `lib/types.ts`) is unreadable to new users.
+
+**Acceptance:**
+- Reproduce first and record where it fails (desktop, mobile map tab, installed PWA; check z-index vs Leaflet panes, the 2026-07-08 Meltwater theme pass, and any conditional rendering) before fixing.
+- Legend renders on desktop and mobile map views with the current difficulty colors; verify live on prod after deploy, not just locally.
+- Bugfix, exempt from the A/B flag rule. Add a regression check if the failure mode is testable cheaply.
+
+## 31. [proposed] A picture for each spot
+
+**Why:** Owner idea 2026-07-13. Spot cards/sheets are text-only; a photo is the highest-impact visual upgrade for browse appeal and shared-link CTR.
+
+**Acceptance (to be sized before promoting):**
+- Every spot (or a defined first tranche) shows a photo on the drawer/sheet without hurting load performance (lazy-load, sized derivatives).
+- Sourcing must be rights-clean and attributed (owner photos, CC-licensed with attribution, or a licensed API); no scraping. This is the hard part: 140 spots, so propose the sourcing plan + effort estimate as a decision before building.
+- New user-facing surface: ships behind a flag or staged tranche per the major-update directive.
+
+## 32. [proposed] Enrollment window: make the push CTA as prominent as email
+
+**Why:** Owner call 2026-07-13: after tapping "Watch this spot", the enrollment window leads with the email field and buries push. Owner wants the push option presented at equal visual weight so push-capable users are not funneled into email by default.
+
+**Acceptance (to be reconciled before promoting):**
+- On platforms where push is possible (installed PWA, Android, desktop with permission), the enrollment card (`InstallPrompt.tsx`) presents push and email at equal prominence (equal-weight buttons or side-by-side choice), not email-primary with push as small print.
+- Note the tension with item 23's per-platform channel matrix (email was deliberately made the lead on desktop/iOS Safari because push there needs an install first); resolve the matrix vs equal-prominence question explicitly in the design step, escalate to a decision if they can't both hold.
+- Enrollment funnel events (`alert_optin_shown` `channel` prop, `alert_optin_result`, `email_capture_submitted`) must keep working so the mid-July funnel read stays comparable; changelog entry for any prop/semantics change. Changed core flow: behind a flag or explicit owner exception per the D3 precedent.
+
+## 33. [proposed] Move the map zoom +/- control to the right side
+
+**Why:** Owner call 2026-07-13: the +/- control sits top-left over the map; owner wants it on the right.
+
+**Acceptance:**
+- Leaflet zoom control renders on the right (`zoomControl` position, `MapView`), on desktop and mobile, not overlapped by the drawer (desktop right sidebar) or the mobile bottom sheet / legend at any viewport; verify with the drawer open.
+- One-line UI change, exempt from the A/B flag rule.
 
 ---
 

@@ -140,7 +140,12 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           // Email twin of the alert-open path. Same durable, ITP-proof return
           // signal via the token that rode the email deep link. See
           // /api/email/opened. No interstitial (that is push-only, from=alert).
-          trackIntent("email_alert_opened", { spot_id: found.id });
+          // `v` is the email copy-variant index (0-6 rotation, lib/email/templates.ts).
+          const v = params.get("v");
+          trackIntent("email_alert_opened", {
+            spot_id: found.id,
+            ...(v !== null && /^\d+$/.test(v) ? { variant: Number(v) } : {}),
+          });
           const token = params.get("t");
           if (token) reportEmailOpen(token, found.id);
         }
@@ -561,7 +566,6 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               so an over-filtered user would otherwise just see a blank map. */}
           {sortedFiltered.length === 0 && (
             <div className="absolute inset-0 z-[400] flex flex-col items-center justify-center bg-[--bg]/80 backdrop-blur-sm text-center px-4">
-              <p className="text-3xl mb-3">🏄</p>
               <p className="text-[--dark] font-semibold">No spots match your filters</p>
               <button
                 onClick={handleClearAll}
