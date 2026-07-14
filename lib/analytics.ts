@@ -168,15 +168,17 @@ interface EventPropMap {
     // in a session, the core paddle-decision behavior, a bigger pool than savers).
     trigger: "first_save" | "standalone_relaunch" | "manual" | "return_session" | "conditions_interest";
     // Which channel the enrollment card LED with (item 23): push (installable/
-    // installed) vs email (desktop, iOS Safari, or a push-denied rescue).
-    channel: "push" | "email";
+    // installed) vs email (desktop, iOS Safari, or a push-denied rescue), or
+    // "both" when a dual-CTA surface shows push and email at equal weight
+    // (item 32).
+    channel: "push" | "email" | "both";
   };
   // Prompt dismissed (item 15): dismissal is a 14-day snooze, not a permanent
   // kill. `trigger` is which surfacing was dismissed.
   alert_optin_dismissed: {
     platform: "standalone" | "ios" | "android" | "desktop";
     trigger: "first_save" | "standalone_relaunch" | "manual" | "return_session" | "conditions_interest";
-    channel: "push" | "email";
+    channel: "push" | "email" | "both";
   };
   alert_optin_result: {
     platform: "standalone" | "ios" | "android" | "desktop";
