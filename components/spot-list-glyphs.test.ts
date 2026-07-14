@@ -15,7 +15,10 @@ describe("spot list glyph removal", () => {
     expect(spotCardSrc).not.toContain("function Icons");
   });
 
-  it("SpotList.tsx has no 🏄 or 🔔 glyphs but keeps its text and retained ♥ nudge", () => {
+  // Source-containment checks only: the ♥ nudge renders in the !isStandalone
+  // branch and the label assertion guards against deleting the button text,
+  // not against re-adding the 🔔 (the not.toContain above does that).
+  it("SpotList.tsx has no 🏄 or 🔔 glyphs; button label and ♥ nudge remain in source", () => {
     expect(spotListSrc).not.toContain("🏄");
     expect(spotListSrc).not.toContain("🔔");
     expect(spotListSrc).toContain("Turn on alerts");
