@@ -36,6 +36,8 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-14 [done] Item 30: fixed the map legend not displaying (Leaflet tile pane painted over it; the map now owns its stacking context via `isolate` on MapContainer; colors still from DIFFICULTY_LEGEND; committed Playwright regression check) (PR #38, merge 788c811, deployed + prod-verified 10/10)
+- 2026-07-14 [done] Item 29: removed unlabeled emoji glyphs from the spot list (amenity icons, empty-state surfer, alerts-button bell; facts remain as labeled drawer tags; heart toggle kept) (PR #37, merge 88ca3c2, deployed + live-verified)
 - 2026-07-13 [done] Alert email copy rotation: 7 editor-written wording sets, deterministic day-over-day rotation (no weekday pinning), variant tagged on the deep link + email_alert_opened for per-wording reads (60396cf, deployed)
 - **Retention epic: conditions alerts (Stages A to D), shipped + live 2026-06-29.** Save a spot, install the app, get a capped daily web push when a watched spot has a calm window in the next 1 to 3 days. Stage A (Your Spots ranked by conditions), B (install/opt-in + service worker + push subscription), C (Supabase store + `/api/alerts/subscribe`), D (Vercel Cron watcher that sends). Spec: `docs/superpowers/specs/2026-06-27-retention-hook-design.md`; plans under `docs/superpowers/plans/2026-06-27-retention-hook-stage-{a,b,c,d}.md`.
   - **Unproven, watch the data before building more retention/premium:** opt-in grant rate (`alert_optin_result`), `alert_clicked`, and whether alerted users beat the 13 to 17% W1 baseline. As of 2026-07-01: 1 granted subscription (iOS standalone, 2026-06-30). **Re-check the save -> opt-in -> push -> return funnel around 2026-07-15 to 2026-07-22**; if saves are still ~2 users/week, fix the landing bounce (item 3) before iterating on alerts.
@@ -50,24 +52,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-13 (board-directed; the two [ready] items are queued top-most on purpose)
 
-## 29. [ready] Remove the emojis (dogs, waves, etc.) from the spot list
 
-**Why:** Owner call 2026-07-13: the emoji glyphs on list rows are not intuitive; a reader can't tell what a dog or a wave icon is asserting about a spot without guessing. The information should be carried by labeled text/badges or dropped from the row.
-
-**Acceptance:**
-- No emoji glyphs render in spot list rows (desktop list panel and mobile list tab).
-- Any load-bearing fact an emoji was carrying (e.g. dog policy, water type) either already exists as a labeled element (difficulty badge, fee text) or gets a short text label; nothing informative silently disappears without the owner seeing a before/after note in the briefing.
-- Check the spot drawer/sheet for the same glyphs while in there; if present, flag in the briefing but do not expand scope without an owner OK.
-- Copy/UI-only, no behavior change; small fix, exempt from the A/B flag rule. No new events needed; note the change date in `analytics/INSTRUMENTATION_CHANGELOG.md` only if any tracked element is removed.
-
-## 30. [ready] Fix the map legend not displaying
-
-**Why:** Owner report 2026-07-13: the legend (pin-color key, inlined in `components/HomeClient.tsx`) is not displaying on the map. Without it, the difficulty color coding (flatwater teal / bay azure / river rust, `DIFFICULTY_COLOR` in `lib/types.ts`) is unreadable to new users.
-
-**Acceptance:**
-- Reproduce first and record where it fails (desktop, mobile map tab, installed PWA; check z-index vs Leaflet panes, the 2026-07-08 Meltwater theme pass, and any conditional rendering) before fixing.
-- Legend renders on desktop and mobile map views with the current difficulty colors; verify live on prod after deploy, not just locally.
-- Bugfix, exempt from the A/B flag rule. Add a regression check if the failure mode is testable cheaply.
 
 ## 31. [proposed] A picture for each spot
 
