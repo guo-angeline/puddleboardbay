@@ -77,7 +77,6 @@ export default function SpotList({
   if (mainSpots.length === 0 && savedSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-        <p className="text-3xl mb-3">🏄</p>
         <p className="text-[--dark] font-semibold">No spots match your filters</p>
         <button
           onClick={onClearFilters}
@@ -114,7 +113,7 @@ export default function SpotList({
                 onClick={() => window.dispatchEvent(new Event("ptw:enablealerts"))}
                 className="ml-auto text-[11px] font-semibold text-[--accent] hover:opacity-80"
               >
-                🔔 Turn on alerts
+                Turn on alerts
               </button>
             )}
           </div>

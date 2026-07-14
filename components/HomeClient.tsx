@@ -566,7 +566,6 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               so an over-filtered user would otherwise just see a blank map. */}
           {sortedFiltered.length === 0 && (
             <div className="absolute inset-0 z-[400] flex flex-col items-center justify-center bg-[--bg]/80 backdrop-blur-sm text-center px-4">
-              <p className="text-3xl mb-3">🏄</p>
               <p className="text-[--dark] font-semibold">No spots match your filters</p>
               <button
                 onClick={handleClearAll}
