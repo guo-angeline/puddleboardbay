@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { trackIntent, trackSystem, setPersona } from "@/lib/analytics";
 import { enablePushAlerts, readStashedSubscription, getAnonId, type OptInResult } from "@/lib/push";
 import { isValidEmail } from "@/lib/email/validation";
+import { useExperiment } from "@/lib/experiments";
 import {
   RESEND_COOLDOWN_MS,
   RESEND_SPAM_LINE,
@@ -127,6 +128,9 @@ export default function InstallPrompt() {
   // spam the resend endpoint.
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "confirmed" | "failed">("idle");
   const [resendCooling, setResendCooling] = useState(false);
+  // Item 32: dual-CTA experiment (push + email at equal weight on mobile
+  // surfaces). Control is today's single-lead card; see lib/experiments.ts.
+  const dualCta = useExperiment("enrollment_dual_cta");
 
   // Track whether a spot drawer is open. We no longer HIDE for it (that suppressed
   // the prompt at the exact moment it's earned, since the primary "Save this spot"
@@ -259,13 +263,34 @@ export default function InstallPrompt() {
   }, []);
 
   const shownRef = useRef(false);
+
+  // Item 32: shared source of truth for the dual-CTA experiment. Eligible on
+  // the three mobile surfaces (standalone-not-denied, ios, android) once the
+  // card would actually show a channel choice; desktop and the terminal
+  // states (granted, email pending) are excluded either way.
+  const dualEligible =
+    visible &&
+    !!platform &&
+    dualCta.ready &&
+    platform !== "desktop" &&
+    result !== "granted" &&
+    emailResult !== "pending" &&
+    !(platform === "standalone" && result === "denied");
+  const isTreatment = dualEligible && dualCta.variant === "treatment";
+
   useEffect(() => {
     if (!visible) { shownRef.current = false; return; }
-    if (platform && !shownRef.current) {
-      trackIntent("alert_optin_shown", { platform, trigger, channel: leadChannel(platform, result) });
+    if (platform && dualCta.ready && !shownRef.current) {
+      trackIntent("alert_optin_shown", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
       shownRef.current = true;
     }
-  }, [visible, platform, trigger, result]);
+  }, [visible, platform, trigger, result, dualCta.ready, dualCta.variant]);
+
+  // Log exposure for BOTH arms at this shared render point once eligible;
+  // logExposure no-ops until ready and dedupes once per session per variant.
+  useEffect(() => {
+    if (dualEligible) dualCta.logExposure();
+  }, [dualEligible, dualCta]);
 
   function handleDismiss() {
     setVisible(false);
@@ -274,7 +299,7 @@ export default function InstallPrompt() {
     } catch {
       /* private mode */
     }
-    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger, channel: leadChannel(platform, result) });
+    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -396,14 +421,29 @@ export default function InstallPrompt() {
     background: "transparent", border: "none", color: "rgba(255,255,255,0.7)",
     textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, whiteSpace: "nowrap",
   };
+  // Item 32: full-width primary push button for the dual-CTA treatment card.
+  const pushBtn: React.CSSProperties = {
+    background: "#0E6FD1", color: "#fff", border: "none", borderRadius: 8,
+    padding: "12px 16px", fontSize: 14, fontWeight: 600, width: "100%", cursor: "pointer",
+  };
+  // Item 32: "or" divider between the push button and the email row. Uses the
+  // muted 0.72 opacity (not the 0.55 dismiss-glyph opacity) to clear 4.5:1
+  // contrast. Static text, not interactive.
+  const divider = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0" }}>
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }} />
+      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.72)" }}>or</span>
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }} />
+    </div>
+  );
 
-  // Email capture block (item 23). `secondary` is an optional channel toggle
-  // rendered below (iOS: reveal install steps; Android: swap back to install).
-  function emailForm(headline: string, sub: string, secondary?: React.ReactNode) {
+  // Email capture block (item 23). The bare form + inline errors + disclaimer,
+  // no headline/sub: emailForm() wraps this with a headline for the control
+  // cards, and the item-32 treatment branch calls it directly so it doesn't
+  // duplicate the shared headline/subhead rendered above the push button.
+  function emailRow() {
     return (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{headline}</p>
-        <p style={muted}>{sub}</p>
+      <>
         <form onSubmit={handleEmailSubmit} noValidate style={{ display: "flex", gap: 6, marginTop: 8 }}>
           <input
             type="email"
@@ -433,6 +473,18 @@ export default function InstallPrompt() {
           <p style={{ ...muted, color: "#FCA5A5" }}>Something went wrong. Try again.</p>
         )}
         <p style={{ ...muted, fontSize: 11 }}>One email a day, max. Only when a spot you watch looks good. Unsubscribe in one tap.</p>
+      </>
+    );
+  }
+
+  // Email capture block (item 23). `secondary` is an optional channel toggle
+  // rendered below (iOS: reveal install steps; Android: swap back to install).
+  function emailForm(headline: string, sub: string, secondary?: React.ReactNode) {
+    return (
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{headline}</p>
+        <p style={muted}>{sub}</p>
+        {emailRow()}
         {secondary && <div style={{ marginTop: 8 }}>{secondary}</div>}
       </div>
     );
@@ -499,6 +551,54 @@ export default function InstallPrompt() {
         {resendState === "failed" && <p style={{ ...muted, color: "#FCA5A5" }}>{RESEND_FAILED_NOTE}</p>}
       </div>
     );
+  } else if (isTreatment) {
+    // Item 32: dual-CTA treatment. Equal-weight push button, "or" divider,
+    // then the inline email row, in that literal DOM order (tab order =
+    // reading order). Desktop never reaches here (excluded by dualEligible).
+    if (platform === "ios") {
+      body = altChannel
+        ? iosSteps
+        : (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Get alerts when your spots are good to paddle</p>
+            <p style={muted}>Push or email, your call.</p>
+            <button onClick={() => setAltChannel(true)} style={pushBtn}>Add to Home Screen for push</button>
+            {divider}
+            {emailRow()}
+          </div>
+        );
+    } else if (platform === "android") {
+      body = (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
+            {trigger === "first_save"
+              ? `Get alerts when ${spotName} is good to paddle`
+              : "Get alerts when your spots are good to paddle"}
+          </p>
+          <p style={muted}>Push or email, your call. Install for push, or leave your email below.</p>
+          <button onClick={handleInstall} style={pushBtn}>Install</button>
+          {divider}
+          {emailRow()}
+        </div>
+      );
+    } else {
+      // standalone, not push-denied (dualEligible already excludes denied).
+      body = (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
+            {trigger === "first_save"
+              ? `Get a heads-up when ${spotName} is good to paddle`
+              : "Turn on alerts for the spots you watch"}
+          </p>
+          <p style={muted}>{"Push or email, your call. We'll let you know when a spot's good to paddle."}</p>
+          <button onClick={handleEnable} disabled={enabling} style={pushBtn}>
+            {enabling ? "Turning on..." : "Turn on push"}
+          </button>
+          {divider}
+          {emailRow()}
+        </div>
+      );
+    }
   } else if (platform === "desktop") {
     // Desktop leads with email: install is near-useless, desktop push rarely seen.
     body = emailForm("Get paddle alerts by email.", "Watch a spot and we'll email you when it's good to paddle.");

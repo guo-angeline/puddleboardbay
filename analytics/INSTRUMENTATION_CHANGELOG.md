@@ -14,6 +14,46 @@ without touching this file.
 
 ---
 
+## 2026-07-14 (item 32): Dual-CTA enrollment card behind `enrollment_dual_cta`; `alert_optin_shown`/`_dismissed` can emit `channel: "both"` (semantics-changed)
+
+`components/InstallPrompt.tsx` gained a treatment branch for the `enrollment_dual_cta`
+experiment (`lib/experiments.ts`, `flag: "enrollment-dual-cta"`, `variants:
+["control", "treatment"]`, live control-default so the mid-July retention read
+is undisturbed). CONTROL is the exact current single-lead card (email-led on
+desktop/iOS, push-led on Android/standalone); byte-identical logic, only the
+`emailForm`/`emailRow` internals were refactored (no visible or DOM-order
+change). TREATMENT renders, on the three mobile surfaces (standalone-not-denied,
+ios, android) only, an equal-weight push button + "or" divider + the existing
+inline email row; desktop stays the control card in both arms.
+
+`alert_optin_shown` and `alert_optin_dismissed` (`channel` prop, type widened to
+`"push" | "email" | "both"` in the prep commit `264cae6`) now actually emit
+`channel: "both"` when the treatment card renders, in place of the existing
+`leadChannel(platform, result)` value. Exposure (`experiment_exposed`,
+`experiment: "enrollment_dual_cta"`) is logged for BOTH arms from a single
+`useEffect` gated on the shared `dualEligible` computation (mirrors the
+`next_good_window` symmetric-exposure pattern, not the retired
+`alert_interstitial` bug), once `dualCta.ready` and the card would actually
+render a channel choice (excludes desktop, the granted success state, and the
+email-pending state either way). The `alert_optin_shown`/`_dismissed` shown
+effect additionally gates on `dualCta.ready` so it does not fire once with the
+flash-of-control channel value and again with the resolved variant's.
+
+- **Comparability:** `channel: "both"` is only possible from 2026-07-14 forward
+  and only for sessions bucketed into the `enrollment_dual_cta` treatment arm;
+  every session before this date, and every control-arm session after it, keeps
+  emitting the existing `"push"` / `"email"` values with unchanged semantics. Any
+  funnel or channel-mix read spanning this date must segment by
+  `experiment_exposed` (`experiment: "enrollment_dual_cta"`) variant rather than
+  treating `channel` as a single undifferentiated series, the same way the
+  `next_good_window` and `alert_interstitial` experiments require exposure-cohort
+  segmentation. The card-layout change itself (push+email equal weight vs.
+  single-lead) is scoped to the treatment arm only; the production default
+  (control, flag unset or resolved control) is the byte-identical existing card,
+  so `alert_optin_shown`/`_result`/`email_capture_submitted` volumes for the
+  control cohort are unaffected. See `docs/experiments/enrollment-dual-cta.md`
+  for the full hypothesis, primary metric, and decision rule.
+
 ## 2026-07-13: email_alert_opened gains `variant`; alert email copy now rotates daily (props-changed)
 
 The daily alert email rotates through 7 editor-written wording sets (`ALERT_VARIANTS` in `lib/email/templates.ts`, deterministic rotation via `alertVariantForDay`: UTC day plus week number, mod 7, so the weekday->variant mapping shifts by one each week instead of pinning each weekday to one wording; variant 0 is the original copy). Owner request 2026-07-13: the same paragraph every day was boring. The email deep link now carries `v=<0-6>`, and `HomeClient` forwards it as an optional `variant` prop on the existing `email_alert_opened` INTENT event so clicks can be segmented by wording. No new event; the server `email_opens` ledger is unchanged and remains the durable return signal.
