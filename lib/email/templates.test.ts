@@ -165,8 +165,8 @@ describe("composeAlertEmail", () => {
 
   it("includes the launch direction tip in both html and text when the wind qualifies", () => {
     const msg = composeAlertEmail({ ...base, windDirection: "WNW", maxWindMph: 12 });
-    expect(msg.html).toContain("Head out toward the WNW so the wind helps push you back.");
-    expect(msg.text).toContain("Head out toward the WNW so the wind helps push you back.");
+    expect(msg.html).toContain("Head out toward the west-northwest so the wind helps push you back.");
+    expect(msg.text).toContain("Head out toward the west-northwest so the wind helps push you back.");
   });
 
   it("omits the tip cleanly when direction is missing, with no doubled blank line in text", () => {
