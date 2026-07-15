@@ -41,6 +41,23 @@ describe("pre-init event queue", () => {
     });
   });
 
+  it('emits alert_optin_shown with channel "both"', () => {
+    const capture = vi.spyOn(posthog, "capture").mockImplementation(() => undefined);
+
+    trackIntent("alert_optin_shown", { platform: "android", trigger: "first_save", channel: "both" });
+    expect(capture).not.toHaveBeenCalled();
+
+    posthog.__loaded = true;
+    vi.advanceTimersByTime(300);
+
+    expect(capture).toHaveBeenCalledWith("alert_optin_shown", {
+      platform: "android",
+      trigger: "first_save",
+      channel: "both",
+      event_category: "intent",
+    });
+  });
+
   it("delivers queued events in order along with post-init ones", () => {
     const capture = vi.spyOn(posthog, "capture").mockImplementation(() => undefined);
 

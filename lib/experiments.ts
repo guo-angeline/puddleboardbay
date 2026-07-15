@@ -59,6 +59,16 @@ export const EXPERIMENTS = {
     primaryMetric: "spot_action",
     guardrails: ["conditions_loaded", "spot_sheet_dismissed"],
   },
+  // Item 32: control is the current single-lead enrollment card (push-led on
+  // Android/standalone, email-led on iOS/desktop). Treatment is the
+  // equal-weight push + "or" + email dual-CTA card. Defaults to control so
+  // production is undisturbed during the mid-July retention read.
+  enrollment_dual_cta: {
+    flag: "enrollment-dual-cta",
+    variants: ["control", "treatment"],
+    primaryMetric: "alert_optin_result",
+    guardrails: ["email_capture_submitted", "alert_optin_dismissed"],
+  },
 } as const satisfies Record<string, ExperimentDef>;
 
 export type ExperimentName = keyof typeof EXPERIMENTS;

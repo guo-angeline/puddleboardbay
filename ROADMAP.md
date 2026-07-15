@@ -36,6 +36,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-14 [done] Item 33: moved the map zoom +/- control to the top-right (explicit ZoomControl position=topright; clear of legend, mobile sheet, and desktop drawer) (PR #39, merge 5cb6677, deployed + prod-verified)
 - 2026-07-14 [done] Item 30: fixed the map legend not displaying (Leaflet tile pane painted over it; the map now owns its stacking context via `isolate` on MapContainer; colors still from DIFFICULTY_LEGEND; committed Playwright regression check) (PR #38, merge 788c811, deployed + prod-verified 10/10)
 - 2026-07-14 [done] Item 29: removed unlabeled emoji glyphs from the spot list (amenity icons, empty-state surfer, alerts-button bell; facts remain as labeled drawer tags; heart toggle kept) (PR #37, merge 88ca3c2, deployed + live-verified)
 - 2026-07-13 [done] Alert email copy rotation: 7 editor-written wording sets, deterministic day-over-day rotation (no weekday pinning), variant tagged on the deep link + email_alert_opened for per-wording reads (60396cf, deployed)
@@ -63,22 +64,35 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - Sourcing must be rights-clean and attributed (owner photos, CC-licensed with attribution, or a licensed API); no scraping. This is the hard part: 140 spots, so propose the sourcing plan + effort estimate as a decision before building.
 - New user-facing surface: ships behind a flag or staged tranche per the major-update directive.
 
-## 32. [proposed] Enrollment window: make the push CTA as prominent as email
+## 32. [in-progress] 2026-07-14T12:05:00-07:00 Enrollment window: make the push CTA as prominent as email
 
 **Why:** Owner call 2026-07-13: after tapping "Watch this spot", the enrollment window leads with the email field and buries push. Owner wants the push option presented at equal visual weight so push-capable users are not funneled into email by default.
 
-**Acceptance (to be reconciled before promoting):**
+**Approved design (owner, 2026-07-14):** Layout = "both channels visible at once" (a full-width push button, an "or" divider, and the inline email field/button, both at equal visual weight, no disclosure tap). Scope = mobile surfaces only: installed PWA, Android, and iOS Safari each show the dual equal-weight choice; on iOS the push button honestly reads as "Add to Home Screen for push" (that is the real step). Desktop stays email-led (desktop push is unreliable). Existing states preserved (granted success, email pending + resend, denied-to-email rescue, all triggers). Ships behind a lib/experiments.ts flag with the CURRENT card as the live control so the mid-July retention read is not disturbed; owner flips to the new card after the read.
+
+**Acceptance (reconciled 2026-07-14):**
 - On platforms where push is possible (installed PWA, Android, desktop with permission), the enrollment card (`InstallPrompt.tsx`) presents push and email at equal prominence (equal-weight buttons or side-by-side choice), not email-primary with push as small print.
 - Note the tension with item 23's per-platform channel matrix (email was deliberately made the lead on desktop/iOS Safari because push there needs an install first); resolve the matrix vs equal-prominence question explicitly in the design step, escalate to a decision if they can't both hold.
 - Enrollment funnel events (`alert_optin_shown` `channel` prop, `alert_optin_result`, `email_capture_submitted`) must keep working so the mid-July funnel read stays comparable; changelog entry for any prop/semantics change. Changed core flow: behind a flag or explicit owner exception per the D3 precedent.
 
-## 33. [proposed] Move the map zoom +/- control to the right side
 
-**Why:** Owner call 2026-07-13: the +/- control sits top-left over the map; owner wants it on the right.
+## 34. [proposed] Reframe alert copy so it can't read as a safety guarantee (legal gate)
+
+**Why:** Lawyer legal-gate review 2026-07-14. The alerts are the site's one affirmative "conditions are good" representation, which is exactly what a negligent-misrepresentation / failure-to-warn claim would aim at. `send-reminders/route.ts:68` ("looks good right now. Go while it lasts.") is a time-pressured directive to launch now, the most inducement-like line on the site. Cheap fix, meaningfully lowers wrongful-death defense exposure. (The disclaimer half of the lawyer's finding, matching the /disclaimer copy to the conditions+alerts reality, shipped 2026-07-14.)
 
 **Acceptance:**
-- Leaflet zoom control renders on the right (`zoomControl` position, `MapView`), on desktop and mobile, not overlapped by the drawer (desktop right sidebar) or the mobile bottom sheet / legend at any viewport; verify with the drawer open.
-- One-line UI change, exempt from the A/B flag rule.
+- Drop the urgency directive; reframe every alert as informational ("`{spot}` is showing a calm forecast window `{when}`") across `lib/alerts/select.ts`, `app/api/cron/send-reminders/route.ts`, and the email body in `app/api/cron/send-email-alerts/route.ts`.
+- Append a standing safety line to every alert body, the alert interstitial, and the email footer: estimate only, not a safety guarantee, check conditions yourself, wear a life jacket. Same line at enrollment (`InstallPrompt.tsx`) so consent is informed.
+- Copy-only change; verify wording against the house voice (no em dashes) and keep funnel/alert events comparable (changelog entry if any event semantics move). Exempt from the A/B flag rule as a safety/legal copy fix.
+
+## 35. [proposed] Terms of Service + assented assumption-of-risk waiver (legal gate)
+
+**Why:** Lawyer legal-gate review 2026-07-14. The site has a passive `/disclaimer` page but no Terms the user actually assents to. An assented release with an express assumption-of-risk + ordinary-negligence waiver is a contract defense that can knock a weak wrongful-death suit out early and (with an entity) protects the owner's personal assets. Highest-value legal item; the enrollment step is the strongest assent moment.
+
+**Acceptance (to be sized before promoting):**
+- Add `app/terms/page.tsx`: express assumption-of-risk (user accepts inherent risks of paddling including drowning/death), release/waiver of liability for ordinary negligence, AS-IS / no warranties, limitation-of-liability cap, indemnification.
+- Conspicuous assent: persistent footer link plus a one-time "By using this site you agree to the Terms and Disclaimer" acceptance at alert enrollment (`InstallPrompt.tsx`); link beside the existing Disclaimer link in `HomeClient.tsx` / `SpotList.tsx`.
+- **Escalate before shipping:** waiver enforceability for a paddling death and the LLC/insurance decision are California-specific and warrant ~1 hr of licensed-attorney review (CA LLC carries ~$800/yr franchise tax). Draft the ToS/waiver text for the attorney to bless rather than originate; open a DECISIONS.md memo for the owner on entity + insurance.
 
 ---
 

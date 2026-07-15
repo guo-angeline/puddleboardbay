@@ -1,5 +1,12 @@
 # Briefings: the board log
 
+## 2026-07-14 · Shipped item 33 (zoom control to the right)
+What: your item 33, the map +/- zoom control moved from top-left to top-right. Two-line change: zoomControl=false on MapContainer plus an explicit ZoomControl position=topright.
+Verified: in-browser before deploy at 1280px and 390px, including with the spot drawer open (the control sits at the map's right edge, which shrinks with the flex-1 map, so it never lands under the desktop drawer; clear of the bottom-left legend and the mobile bottom sheet too). Post-deploy prod check confirms: control on the right, 10px from the map edge, both buttons live. PR #39, merge 5cb6677. 124 tests + build clean, em-dash scan clean.
+Process: built directly on the main thread rather than via the ship pipeline. This is a genuine one-line UI tweak (owner-directed, A/B-exempt) and the review subagents were rate-limited until 12:30pm PT; a 15-agent pipeline for a control-position change would have been overkill and would have failed on the limit. Full local + prod visual verification stands in for the pipeline's verifier.
+Measurement: no instrumentation change. Small fix.
+Loop: three owner items shipped today (29, 30, 33). Backlog again has no [ready] items; 31 (spot photos, needs a sourcing decision), 32 (push CTA parity, hold for the retention read), 7, 8, 12, 26 remain [proposed]. Loop stops.
+
 ## 2026-07-14 · Shipped item 30 (fix the map legend not displaying)
 What: your item 30 (07-13), the difficulty legend is back on the map. Root cause was a stacking-context bug, not missing code: the legend JSX and its DIFFICULTY_LEGEND colors were always present, but `.leaflet-container` sets no z-index, so Leaflet's internal panes (200 to 1000) competed directly with the sibling legend's z-10 in the shared parent context and the opaque tile pane painted over it. Fix is 2 characters of intent: `isolate` on MapContainer gives the map its own stacking context, trapping Leaflet's z-scale inside it so the legend paints above.
 Verified: reproduced pre-fix (elementFromPoint at the legend center returned the Leaflet canvas), confirmed post-fix it resolves inside the legend. Committed a Playwright regression check (scripts/verify-legend.mjs, desktop + mobile, occlusion + one-canvas contract) and a source-containment test. 124 tests + build clean. PR #38, merge 788c811. Deployed to prod and verified live: 10/10 checks pass at 1280px and 390px on paddletowater.com; pins still clickable, mobile drawer still wins at z-1200, empty-state overlay still wins at z-400.
