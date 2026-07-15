@@ -509,8 +509,6 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       <FilterBar
         filters={filters}
         onChange={handleFilterChange}
-        total={ALL_SPOTS.length}
-        filtered={sortedFiltered.length}
         nearMe={!!userLocation}
         locating={locating}
         geoError={geoError}
@@ -597,8 +595,6 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           <SpotDrawer
             spot={selected}
             onClose={deselect}
-            onSelect={handleSelect}
-            allSpots={ALL_SPOTS}
             startExpanded={startExpanded}
             isFavorite={selected ? favorites.has(selected.id) : false}
             onToggleFavorite={toggleFavorite}

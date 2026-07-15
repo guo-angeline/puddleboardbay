@@ -2,16 +2,13 @@
 
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
 import type { Spot } from "@/lib/types";
-import { DIFFICULTY_LABEL, DIFFICULTY_COLOR } from "@/lib/types";
-import { nearbySpots } from "@/lib/distance";
-import { trackIntent, type SpotViewedSource } from "@/lib/analytics";
+import { DIFFICULTY_LABEL } from "@/lib/types";
+import { trackIntent } from "@/lib/analytics";
 import ConditionsPanel from "@/components/ConditionsPanel";
 
 interface Props {
   spot: Spot | null;
   onClose: () => void;
-  onSelect: (spot: Spot, source?: SpotViewedSource) => void;
-  allSpots: Spot[];
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
   // Item 9: open the mobile sheet at full height instead of the peek height.
@@ -44,7 +41,7 @@ const NOTES_TRUNCATE = 220;
 const PEEK = 0.58; // default resting height
 const FULL = 0.92; // dragged-up / expanded height
 
-export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavorite, onToggleFavorite, startExpanded }: Props) {
+export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite, startExpanded }: Props) {
   const [copied, setCopied] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
 
@@ -130,8 +127,6 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
   if (spot.inspection_required) tags.push("Inspection required");
   if (spot.power_boats === true)  tags.push("Power boats OK");
   if (spot.power_boats === false) tags.push("No power boats");
-
-  const nearby = nearbySpots(spot, allSpots, 3);
 
   // Shared identity for the bottom-of-funnel action events.
   const spotEventProps = {
@@ -287,33 +282,6 @@ export default function SpotDrawer({ spot, onClose, onSelect, allSpots, isFavori
 
           {/* Live tide + wind — the reason to come back. */}
           <ConditionsPanel spot={spot} />
-
-          {/* Nearby spots — desktop sidebar only; map handles discovery on mobile */}
-          {nearby.length > 0 && (
-            <div className="hidden md:block mb-5">
-              <p className="text-xs font-semibold text-[--muted] uppercase tracking-wide mb-2">Nearby</p>
-              <div className="space-y-0.5">
-                {nearby.map(({ spot: s, miles }) => (
-                  <button
-                    key={s.id}
-                    onClick={() => { onClose(); onSelect(s, "related"); }}
-                    className="flex items-center gap-2.5 w-full text-left py-2 px-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ background: DIFFICULTY_COLOR[s.difficulty] }}
-                    />
-                    <span className="flex-1 text-sm text-[--dark] truncate">{s.water}</span>
-                    <span className="text-xs text-[--muted] shrink-0">
-                      {miles < 1
-                        ? `${Math.round(miles * 5280)} ft`
-                        : `${miles.toFixed(1)} mi`}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Actions — hierarchy optimizes for Save (retention) first, Share
               (virality) second; Get Directions + Photos are demoted to a neutral

@@ -100,3 +100,43 @@ header {
   font-size: 13px;
 }
 .leaflet-popup-content { margin: 10px 14px; }
+
+/* Attribution: required by OSM (ODbL) + CARTO terms, so it stays present and
+   reachable — but collapsed to a small info toggle so it's out of the way.
+   Full credit reveals on hover / keyboard focus / tap (:active). */
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: var(--muted);
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  /* font-size:0 hides the bare "©"/"contributors" text nodes that sit directly
+     in the control (no element to target). Restored to 10px when expanded. */
+  font-size: 0;
+  line-height: 1;
+  border-radius: 4px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* Collapsed: show only the ⓘ glyph. */
+.leaflet-control-attribution::before {
+  content: "\24D8"; /* ⓘ */
+  font-size: 12px;
+  padding: 3px 5px;
+  color: var(--muted);
+}
+.leaflet-control-attribution .leaflet-attribution-flag { display: none; }
+.leaflet-control-attribution a { color: var(--accent); }
+/* Expanded on hover / keyboard focus / tap: reveal the full credit,
+   drop the ⓘ, restore text-node font size. */
+.leaflet-control-attribution:hover,
+.leaflet-control-attribution:active,
+.leaflet-control-attribution:focus-within {
+  background: rgba(255, 255, 255, 0.92) !important;
+  font-size: 10px;
+  padding: 0 4px;
+}
+.leaflet-control-attribution:hover::before,
+.leaflet-control-attribution:active::before,
+.leaflet-control-attribution:focus-within::before {
+  content: none;
+}
+.leaflet-control-attribution a { color: var(--accent); }

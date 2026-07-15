@@ -1,5 +1,14 @@
 # Briefings: the board log
 
+## 2026-07-14 · Studio loop stopped: backlog is dry (nothing is [ready])
+No work this iteration. The loop only ships the top-most `[ready]` item, and there are zero `[ready]` items on ROADMAP.md. The "Owner items" header (line 55) says "the two [ready] items are queued top-most on purpose," but items 31 (a photo per spot) and 34 (reframe alert copy, legal gate) are both still `[proposed]`. The promotion edit never landed, so nothing is actionable.
+The backlog is not empty of ideas, it is empty of *promoted* ideas. Strong proposals await your one-word steer (edit the status to `[ready]`):
+  - #31 A picture for each spot (owner idea, highest-impact visual upgrade; gated on a rights-clean sourcing plan for 140 spots, needs a DECISIONS memo before build).
+  - #34 Reframe alert copy so it can't read as a safety guarantee (legal gate, copy-only, exempt from the A/B rule).
+  - #35 Terms of Service + assumption-of-risk waiver (legal gate, escalates to attorney review before ship).
+  - #8 "Go here instead": nearby calmer alternative when your spot is blown out.
+I did not auto-promote anything (only the board promotes) and did not pile on new proposals (the proposed list is already rich; more would bury these). Retention is still the Jul–Sep #1 goal, so #34/#35 (protect the channel legally) or #31 (browse appeal / share CTR) are the on-strategy picks. Loop stopped, no wakeup scheduled.
+
 ## 2026-07-14 · Shipped item 32 (dual-CTA enrollment card, behind a flag)
 What: your item 32, push and email now sit at equal weight in the enrollment card. You approved Option B (both channels visible at once): a full-width push button, an "or" divider, then the inline email row, on the three mobile surfaces (installed PWA, Android, iOS Safari). On iOS the push button honestly reads "Add to Home Screen for push." Desktop is unchanged (email-led, because desktop push is unreliable). Every existing state is preserved: granted success, email "check your inbox" + resend, and the push-denied-to-email rescue.
 Rollout, deliberately safe: it ships behind the `enrollment-dual-cta` experiment flag with CONTROL (the byte-identical current card) as the live production default. Nothing changes for users yet. This keeps the mid-July retention read clean. YOU flip it to treatment in PostHog (100%, or a bucket for a real A/B) once the read is done. Exposure is logged symmetrically for both arms (avoids the one-armed bug that retired alert_interstitial), and `alert_optin_shown.channel` gains "both" on treatment surfaces, with a changelog comparability note; experiment declared in docs/experiments/enrollment-dual-cta.md.

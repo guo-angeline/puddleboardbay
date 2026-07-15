@@ -124,3 +124,28 @@ Options:
 Recommendation: (a). It is the only option that cleans the historical rows and the two existing retention queries, not just item 25. Low effort: one lookup, one paste into `EXCLUDED_PERSONS.md`. This does not block item 25 (which ships with the placeholder and the caveat documented), it just gates trustworthy push numbers.
 
 Answer: a (owner, 2026-07-11): look up the owner's push subscription key and add it to EXCLUDED_PERSONS.md; wire it into enrollment_return_funnel.sql + the two existing push retention queries.
+
+## D10 [OPEN] 2026-07-14 · Item 31 (a photo per spot): pick the sourcing approach
+
+Context: item 31 wants a hero photo on each spot card/sheet. 142 spots, a mix of famous water (Tahoe, Folsom, Fallen Leaf, Pillar Point) and obscure sloughs / boat ramps / creeks. The build is easy; rights-clean sourcing at scale is the hard part, and it forks the whole approach, so it needs your call before I build. Two findings from a feasibility probe today:
+
+- **Google Places Photos (the obvious "just pull a photo" route) cannot be self-hosted.** Google's Places policy bars pre-fetching/caching/storing photo content, and the photo `name` reference expires, so you must re-fetch per view via a live Place Details call. That means a recurring per-view API cost (Place Details with the photos field bills ~$20 / 1,000), a mandatory Google attribution overlay, a hard third-party dependency sitting on the render hot path, and user-submitted photos of variable quality and accuracy. It is an ongoing cost that scales with traffic, on a retention surface we want cheap and fast.
+- **Free + self-hostable CC sources exist but coverage is partial.** A geo-probe of a representative 36-spot sample found 78% have at least one geo-tagged Wikimedia Commons file within 500m and 22% have none; a raw geo-tagged file is not necessarily a usable put-in shot (many are maps, signage, wildlife). Adding Flickr Creative Commons (far denser geo-tagging) lifts the ceiling. Realistic self-hostable yield after human curation, Commons + Flickr CC combined, is on the order of 55-75% of spots. The rest need owner photos or a fallback.
+
+Options:
+- **(a) [recommended] Tiered hybrid, self-hosted + attributed.** Harvest CC-BY / CC-BY-SA / CC0 photos (Wikimedia Commons geosearch + Flickr CC geo-search) matched to each spot's lat/lng, curate by hand (pick the one true put-in/water shot or mark "none", record author + license), self-host sized derivatives. Owner-shot photos fill high-value gaps over time; spots with no clean photo show a tasteful fallback (a static map thumbnail), never a fake or generic stock photo. Ship the curated tranche (the ~55-75% that pass curation) behind the flag; backfill the rest. Rights-clean, zero recurring cost, no render-time dependency. The cost is one-time human curation, not dollars or an ongoing bill.
+- **(b) Google Places Photos live via API.** Fastest to near-100% coverage, zero curation. But the recurring per-view cost, mandatory Google attribution, no self-hosting (re-fetch every view), a third-party dependency on the render path, and variable user-submitted quality, all as documented above. Wrong trade for a high-traffic retention surface.
+- **(c) Owner / crowd photos only.** Cleanest rights, most authentic, best quality. But 142 put-ins is a long field campaign, realistically a slow backfill, not a launch. Best as the (a) gap-filler, not the whole plan.
+- **(d) Generic licensed stock (Unsplash / Pexels).** Free and self-hostable but generic: a stock lake, not THIS launch. Misleads more than it informs (wrong water, wrong put-in). Reject.
+
+Bundled sub-decisions (state a preference or I take the recommendation):
+1. **Fallback for no-photo spots:** static map thumbnail (recommended) vs the current difficulty-gradient card vs nothing.
+2. **Tranche-1 scope:** ship whatever curates clean in one pass, ~55-75% (recommended), vs hold until 100% coverage.
+3. **User-submitted photos later:** defer (recommended; UGC adds moderation + rights liability + a legal gate) vs bring into scope now.
+4. **Attribution UI:** a small "Photo: {author} / {license}" caption under the image (required for CC-BY / BY-SA). Confirm that surface is acceptable.
+
+Effort estimate (option a): harvest script ~0.5 day; manual curation ~142 spots x ~2 min ≈ 5-7 hours (the real cost, a person not code); download + sized webp derivatives + new `photo`/`photo_attribution` fields in spots.json (lat/lng untouched) ~0.5 day; display (hero image on SpotDrawer + SpotCard, lazy-load, srcset, attribution caption, fallback component, behind the flag, plus a dwell-gated `spot_photo_viewed` intent event + INSTRUMENTATION_CHANGELOG entry) ~1 day. Total ~2.5 engineering days + ~1 day curation for the first tranche. Option (b) would be ~1.5 build days at near-100% coverage but carries the recurring cost and dependency above.
+
+Recommendation: (a). It is the only path that is rights-clean, carries no recurring cost, and keeps the render path dependency-free, in exchange for one-time human curation. Ship the curated tranche behind the flag, map-thumbnail fallback for the rest, owner and (later, if approved) user photos backfill. Per the major-update directive this ships flag-gated; per D2/D3 reality (~14 users/day) it is a monitored rollout with guardrails, not a powered A/B.
+
+Answer: 

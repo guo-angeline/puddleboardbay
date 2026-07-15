@@ -54,7 +54,15 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-13 (board-directed; the two [ready] items are queued top-most on purpose)
 
+## 36. [in-progress] 2026-07-15T00:00:00Z Launch-direction suggestion (paddle out against the wind, ride it home)
 
+**Why:** Owner idea 2026-07-14. On a there-and-back SUP paddle, the smart move is to head out into the wind so the tired return leg is downwind. We already have wind direction in the conditions payload, so we can turn it into a one-line "which way to head out" tip at the exact moments the user is about to launch: the post-click interstitial and the alert email.
+
+**Acceptance:**
+- Add a launch-direction line to the alert interstitial (shown after tapping an email/push alert) and to the alert email body, derived from the forecast wind direction at the window: "Head out toward the {upwind compass direction} so the wind pushes you back on the way in."
+- Phrase as a general tip, not a safety instruction; keep the safety framing consistent with item 34 (informational, not a guarantee).
+- No em dashes; house voice. Log the interstitial view/interaction if a new surface is added, and add an `analytics/INSTRUMENTATION_CHANGELOG.md` entry if any event changes.
+- Size the wind-to-heading logic before building (compass math + how to word it when wind is light/variable).
 
 ## 31. [proposed] A picture for each spot
 
@@ -64,6 +72,8 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - Every spot (or a defined first tranche) shows a photo on the drawer/sheet without hurting load performance (lazy-load, sized derivatives).
 - Sourcing must be rights-clean and attributed (owner photos, CC-licensed with attribution, or a licensed API); no scraping. This is the hard part: 140 spots, so propose the sourcing plan + effort estimate as a decision before building.
 - New user-facing surface: ships behind a flag or staged tranche per the major-update directive.
+
+**Sourcing plan sized 2026-07-14 (studio); decision open at DECISIONS.md D10.** Feasibility probe found: Google Places Photos can't be self-hosted (ToS bars caching, photo names expire, so re-fetch + pay per view + a render-path dependency); free self-hostable CC sources (Wikimedia Commons + Flickr CC) cover ~55-75% of spots after human curation (36-spot probe: 78% have a geo-tagged Commons file within 500m, 22% none). Recommended path (D10 option a): tiered hybrid, harvest + curate CC-BY/BY-SA/CC0 photos self-hosted with attribution, static-map-thumbnail fallback for gaps, owner photos backfill, ship the curated tranche behind the flag. Effort ~2.5 eng days + ~1 day curation. **Blocked on D10** before build (which sourcing approach, fallback treatment, tranche scope, UGC defer). Stays `[proposed]` until the owner answers D10 and promotes to `[ready]`.
 
 
 ## 34. [proposed] Reframe alert copy so it can't read as a safety guarantee (legal gate)
@@ -247,6 +257,15 @@ Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces 
 - Geolocation-denied recovery: guidance lives in a `title` tooltip invisible on touch; show an inline toast.
 - Map zoom controls are 30px (HIG minimum 44) and far from the thumb.
 - Empty-state copy says "filters" when search caused it, and "Clear filters" silently also clears search.
+
+## 37. [ready] Visual polish pass: search/feedback alignment, mobile chrome color, PWA footer gap
+
+Owner-flagged 2026-07-14. Three small UI-professionalism fixes, sized before working:
+- Align the search bar and the feedback section to the same width/height so they read as one deliberate system, not two mismatched widgets.
+- Make the mobile browser chrome (address-bar tint via `theme-color` / `themeColor` meta + `manifest` `theme_color`) match the app's azure main color so the top bar is consistent with the UI, not a jarring default.
+- Remove the empty footer/dead-band space at the bottom of the installed mobile PWA (likely the item-12 iOS safe-area band; confirm whether this supersedes or overlaps item 12 before building).
+
+Pure visual/CSS polish, no new user-facing surface, so exempt from the A/B-flag rule. Verify on device at 390px + installed PWA, not just desktop.
 
 ---
 

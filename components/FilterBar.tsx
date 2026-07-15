@@ -12,8 +12,6 @@ export interface Filters {
 interface Props {
   filters: Filters;
   onChange: (f: Filters) => void;
-  total: number;
-  filtered: number;
   nearMe?: boolean;
   locating?: boolean;
   geoError?: boolean;
@@ -46,7 +44,7 @@ const NEAR_INACTIVE: React.CSSProperties = { background: "#E3EEFA", color: "#0B4
 const NEAR_ERROR:    React.CSSProperties = { background: "#FEE9E0", color: "#CC5528" };
 
 export default function FilterBar({
-  filters, onChange, total, filtered,
+  filters, onChange,
   nearMe, locating, geoError, onToggleNearMe, onClearAll,
 }: Props) {
   const pillLg = "px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap";
@@ -123,20 +121,17 @@ export default function FilterBar({
         )}
       </div>
 
-      {/* Count + clear */}
-      <div className="flex items-center gap-2">
-        {hasActiveFilters(filters, nearMe) && (
+      {/* Clear all — only when a filter is active, so the default header stays compact */}
+      {hasActiveFilters(filters, nearMe) && (
+        <div className="flex">
           <button
             onClick={() => onClearAll ? onClearAll() : onChange(EMPTY_FILTERS)}
-            className="text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors"
+            className="ml-auto text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors"
           >
             Clear all
           </button>
-        )}
-        <span className="ml-auto text-xs text-[--muted]">
-          {filtered === total ? `${total} spots` : `${filtered} of ${total}`}
-        </span>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
