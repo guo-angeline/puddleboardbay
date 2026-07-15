@@ -36,6 +36,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-15 [done] Item 36: launch-direction tip ("Head out toward the {expanded compass words} so the wind helps push you back") on the alert interstitial and the alert email body. Threads NWS wind direction (sampled at the calm run's peak-wind hour, matching `maxWindMph`) through the shared `evaluateGoodWindow` so both surfaces agree; pure `launchDirectionTip` helper with a 16-point abbreviation-to-words lookup, omitting the tip below 5 mph or when direction is variable/absent. Informational tip, not a safety instruction (item-34 framing intact). Shipped experiment-EXEMPT at 100% per **D11** (additive copy on existing surfaces; single-digit audience can't power an A/B); guardrail is `launch_tip_shown` on `alert_interstitial_shown` (now fires once after the window resolves, with an unmount-fallback so a fast dismiss can't drop the impression). Live-verified: interstitial rendered "Head out toward the northwest..." on real NWS data, 156 unit tests, no console errors desktop/mobile. Branch `studio/launch-direction-suggestion`, deployed. NOTE: the same deploy also carried the owner's pre-existing uncommitted WIP (FilterBar spot-count removed; Leaflet attribution collapsed to an info toggle in globals.css), now live and revertible.
 - 2026-07-14 [done, FLAG OFF] Item 32: dual-CTA enrollment card (push + email at equal weight on installed/Android/iOS; iOS push = "Add to Home Screen"; desktop unchanged). Owner-approved Option B. Shipped behind the `enrollment-dual-cta` experiment flag, CONTROL is the live default so the retention read is undisturbed; OWNER FLIPS to treatment (100% or a bucket) in PostHog after the read. (PR #40, merge e95fc2c, deployed; treatment verified in-browser iOS+Android)
 - 2026-07-14 [done] Item 33: moved the map zoom +/- control to the top-right (explicit ZoomControl position=topright; clear of legend, mobile sheet, and desktop drawer) (PR #39, merge 5cb6677, deployed + prod-verified)
 - 2026-07-14 [done] Item 30: fixed the map legend not displaying (Leaflet tile pane painted over it; the map now owns its stacking context via `isolate` on MapContainer; colors still from DIFFICULTY_LEGEND; committed Playwright regression check) (PR #38, merge 788c811, deployed + prod-verified 10/10)
@@ -54,15 +55,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-13 (board-directed; the two [ready] items are queued top-most on purpose)
 
-## 36. [in-progress] 2026-07-15T00:00:00Z Launch-direction suggestion (paddle out against the wind, ride it home)
-
-**Why:** Owner idea 2026-07-14. On a there-and-back SUP paddle, the smart move is to head out into the wind so the tired return leg is downwind. We already have wind direction in the conditions payload, so we can turn it into a one-line "which way to head out" tip at the exact moments the user is about to launch: the post-click interstitial and the alert email.
-
-**Acceptance:**
-- Add a launch-direction line to the alert interstitial (shown after tapping an email/push alert) and to the alert email body, derived from the forecast wind direction at the window: "Head out toward the {upwind compass direction} so the wind pushes you back on the way in."
-- Phrase as a general tip, not a safety instruction; keep the safety framing consistent with item 34 (informational, not a guarantee).
-- No em dashes; house voice. Log the interstitial view/interaction if a new surface is added, and add an `analytics/INSTRUMENTATION_CHANGELOG.md` entry if any event changes.
-- Size the wind-to-heading logic before building (compass math + how to word it when wind is light/variable).
+(Item 36 launch-direction tip shipped 2026-07-15, see Shipped. Item 37 visual-polish pass is the next [ready], below.)
 
 ## 31. [proposed] A picture for each spot
 

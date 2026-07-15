@@ -149,3 +149,11 @@ Effort estimate (option a): harvest script ~0.5 day; manual curation ~142 spots 
 Recommendation: (a). It is the only path that is rights-clean, carries no recurring cost, and keeps the render path dependency-free, in exchange for one-time human curation. Ship the curated tranche behind the flag, map-thumbnail fallback for the rest, owner and (later, if approved) user photos backfill. Per the major-update directive this ships flag-gated; per D2/D3 reality (~14 users/day) it is a monitored rollout with guardrails, not a powered A/B.
 
 Answer: 
+
+## D11 [RESOLVED] 2026-07-15 · Item 36 (launch-direction tip): A/B flag exemption + copy wording
+
+Context: item 36 adds a one-line "head out against the wind so the return is downwind" tip to two existing surfaces (the alert interstitial and the alert email body). The design+architecture gate escalated because the board directive (2026-07-02) says every major update ships behind an A/B flag, and this brushes that rule. The pipeline judged it exempt: additive informational copy, no new surface and no changed core flow, on an audience of single-digit subscribers where no A/B could ever reach significance. Precedent for the exemption: D2(a) 2026-07-08 (interstitial monitored 100%) and the CTA-reweight 100% rollout 2026-07-09. A secondary open choice was whether the wind direction reads as the raw compass abbreviation ("toward the WNW", matching ConditionsPanel) or expanded words ("toward the west-northwest").
+
+Options: (a) ship experiment-exempt at 100% with a `has_launch_tip` guardrail prop; (b) declare a flag and run monitored 100%; (c) powered A/B arm.
+
+Answer: (a) ship experiment-exempt at 100% (owner, 2026-07-15), with a boolean guardrail prop on the existing events as the segment. (Shipped as `launch_tip_shown` on `alert_interstitial_shown`, the clearer name; `has_launch_tip` in this memo was shorthand. See analytics/INSTRUMENTATION_CHANGELOG.md 2026-07-15.) Copy: use the expanded compass words ("toward the west-northwest"), not the abbreviation, for friendliness to non-sailors, which requires a 16-point abbreviation-to-words lookup. This entry records the deliberate flag exemption so a later audit does not read it as a bypassed directive.
