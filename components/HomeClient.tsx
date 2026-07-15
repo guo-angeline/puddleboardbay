@@ -439,7 +439,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
-              className="w-52 rounded-lg border border-gray-200 bg-white pl-8 pr-7 py-1.5 text-xs text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+              className="w-52 rounded-lg border border-[--border] bg-white pl-8 pr-7 py-1.5 text-xs text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
             />
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
             {filters.search && (
@@ -458,7 +458,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             onClick={() => setSearchOpen((o) => !o)}
             aria-label={searchOpen ? "Close search" : "Open search"}
             aria-expanded={searchOpen}
-            className="md:hidden text-base px-2 py-1.5 rounded-lg border border-gray-200 text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors"
+            className="md:hidden text-base px-2 py-1.5 rounded-lg border border-[--border] text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors"
           >
             🔍
           </button>
@@ -483,7 +483,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
-              className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-7 py-2 text-base text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+              className="w-full rounded-lg border border-[--border] bg-white pl-8 pr-7 py-2 text-base text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
             />
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
             {filters.search && (
