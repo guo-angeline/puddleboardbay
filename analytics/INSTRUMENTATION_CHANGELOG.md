@@ -14,6 +14,29 @@ without touching this file.
 
 ---
 
+## 2026-07-15 (item 36): `alert_interstitial_shown` gains `launch_tip_shown`; emit moved off the mount effect (props-changed)
+
+`alert_interstitial_shown` (`lib/analytics.ts` `EventPropMap`) gains a required
+`launch_tip_shown: boolean`, set from whether the interstitial rendered the new
+launch-direction tip line (`launchDirectionTip(window.windDirection,
+window.maxWindMph) !== null`). No new event name, `spot_id` is unchanged.
+
+Fixed alongside: the event used to fire from a bare mount effect, before the
+window had resolved, so it always shipped without the tip signal and could not
+distinguish "no window yet" from "window resolved with no qualifying tip" from
+"window resolved with a tip". It now fires once (guarded by a ref) inside the
+window-resolving effect, after `getNextWindow` settles, on both the
+window-found and no-window/failed branches (the interstitial renders either
+way, so the event still fires on both).
+
+- **Comparability:** `launch_tip_shown` exists only from 2026-07-15 forward;
+  earlier rows have no such prop. The emit-timing fix also shifts the event's
+  fire point by roughly one network round trip (the `getNextWindow` fetch),
+  so `alert_interstitial_shown` timestamps from 2026-07-15 on land slightly
+  later relative to component mount than before. Volume and the existing
+  `spot_id` semantics are unchanged: the event still fires exactly once per
+  interstitial render, regardless of whether a window or tip was found.
+
 ## 2026-07-14 (item 32): Dual-CTA enrollment card behind `enrollment_dual_cta`; `alert_optin_shown`/`_dismissed` can emit `channel: "both"` (semantics-changed)
 
 `components/InstallPrompt.tsx` gained a treatment branch for the `enrollment_dual_cta`

@@ -184,7 +184,7 @@ interface EventPropMap {
     platform: "standalone" | "ios" | "android" | "desktop";
     result: "granted" | "denied" | "unsupported";
   };
-  alert_interstitial_shown: { spot_id: number };
+  alert_interstitial_shown: { spot_id: number; launch_tip_shown: boolean };
   alert_interstitial_result: { spot_id: number; outcome: "dismissed" | "reminder" };
   next_window_viewed: {
     spot_id: number;

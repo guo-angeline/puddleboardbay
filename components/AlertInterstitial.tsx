@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Spot } from "@/lib/types";
 import type { GoodWindow } from "@/lib/alerts/conditions-window";
 import { trackIntent } from "@/lib/analytics";
 import { getNextWindow, windowDay, windowRange } from "@/lib/nextWindow";
+import { launchDirectionTip } from "@/lib/launchDirection";
 
 interface Props {
   spot: Spot;
@@ -38,9 +39,10 @@ function reminderFireMs(w: GoodWindow, nowMs: number): number | null {
  * HomeClient, so this renders unconditionally.
  */
 export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Props) {
-  useEffect(() => {
-    trackIntent("alert_interstitial_shown", { spot_id: spot.id });
-  }, [spot.id]);
+  // Guards the shown event to a single fire per mount: the window-resolving
+  // effect below can only settle once, but the guard keeps this reliable even
+  // if that ever changes (e.g. a retry).
+  const shownFired = useRef(false);
 
   // Resolve the window and compute the fire time together in the effect (Date.now
   // is impure, so it must not run during render). fireMs is null when the launch
@@ -49,7 +51,14 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   useEffect(() => {
     let alive = true;
     getNextWindow(spot.id, spot.lat, spot.lng).then((r) => {
-      if (alive && r.ok && r.window) setWin({ window: r.window, fireMs: reminderFireMs(r.window, Date.now()) });
+      if (!alive) return;
+      if (r.ok && r.window) setWin({ window: r.window, fireMs: reminderFireMs(r.window, Date.now()) });
+      if (!shownFired.current) {
+        shownFired.current = true;
+        const launchTipShown =
+          r.ok && !!r.window && launchDirectionTip(r.window.windDirection, r.window.maxWindMph) !== null;
+        trackIntent("alert_interstitial_shown", { spot_id: spot.id, launch_tip_shown: launchTipShown });
+      }
     });
     return () => {
       alive = false;
@@ -63,6 +72,7 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
   const day = nextWindow ? windowDay(nextWindow) : null;
   const range = nextWindow ? windowRange(nextWindow) : null;
   const canRemind = nextWindow != null && fireMs != null;
+  const tip = nextWindow ? launchDirectionTip(nextWindow.windDirection, nextWindow.maxWindMph) : null;
 
   const title = day ? `${spot.water} looks good ${day}` : `${spot.water} has a good window`;
   const subline = range ? `Good window ${range}.` : `${windowLabel}.`;
@@ -114,6 +124,7 @@ export default function AlertInterstitial({ spot, windowLabel, onDismiss }: Prop
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wide">A spot you watch</p>
             <p className="font-['Newsreader'] text-white text-base font-bold leading-tight mt-0.5">{title}</p>
             <p className="text-white/85 text-sm mt-0.5">{subline}</p>
+            {tip && <p className="text-white/85 text-sm mt-0.5">{tip}</p>}
           </div>
           <button
             onClick={handleDismiss}
