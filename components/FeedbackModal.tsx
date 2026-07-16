@@ -52,12 +52,12 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="font-['Newsreader'] text-lg font-bold text-[--dark]">
+          <h2 className="font-['Newsreader'] text-lg font-bold text-(--dark)">
             Get in touch
           </h2>
           <button
             onClick={onClose}
-            className="text-[--muted] hover:text-[--dark] transition-colors text-xl leading-none"
+            className="text-(--muted) hover:text-(--dark) transition-colors text-xl leading-none"
             aria-label="Close"
           >
             ×
@@ -67,11 +67,11 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
         {status === "success" ? (
           <div className="px-6 py-10 text-center">
             <div className="text-4xl mb-3">🏄</div>
-            <p className="font-semibold text-[--dark]">Thanks for reaching out!</p>
-            <p className="text-sm text-[--muted] mt-1">I&apos;ll get back to you soon.</p>
+            <p className="font-semibold text-(--dark)">Thanks for reaching out!</p>
+            <p className="text-sm text-(--muted) mt-1">I&apos;ll get back to you soon.</p>
             <button
               onClick={onClose}
-              className="mt-6 px-5 py-2 rounded-lg bg-[--accent] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="mt-6 px-5 py-2 rounded-lg bg-(--accent) text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Close
             </button>
@@ -80,7 +80,7 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             {/* Type */}
             <div>
-              <label className="block text-xs font-semibold text-[--muted] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-(--muted) uppercase tracking-wide mb-1.5">
                 Type
               </label>
               <div className="flex gap-2">
@@ -108,8 +108,8 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
 
             {/* Message */}
             <div>
-              <label className="block text-xs font-semibold text-[--muted] uppercase tracking-wide mb-1.5">
-                Message <span className="text-[--accent]">*</span>
+              <label className="block text-xs font-semibold text-(--muted) uppercase tracking-wide mb-1.5">
+                Message <span className="text-(--accent)">*</span>
               </label>
               <textarea
                 required
@@ -123,13 +123,13 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
                     ? "What's wrong? Which spot?"
                     : "What's on your mind?"
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent] resize-none"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent) resize-none"
               />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-[--muted] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-(--muted) uppercase tracking-wide mb-1.5">
                 Your email <span className="text-gray-400 font-normal">(optional, for replies)</span>
               </label>
               <input
@@ -137,7 +137,7 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
               />
             </div>
 

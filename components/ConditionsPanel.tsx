@@ -136,7 +136,7 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
       className="mb-4 rounded-xl border border-gray-200 bg-white p-3.5"
     >
       <div className="flex items-center justify-between mb-2.5">
-        <p className="text-xs font-semibold text-[--muted] uppercase tracking-wide">
+        <p className="text-xs font-semibold text-(--muted) uppercase tracking-wide">
           Conditions today
         </p>
         {!loading && data && !data.failed ? (
@@ -151,7 +151,7 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
       {loading && <Skeleton />}
 
       {!loading && data && data.failed && (
-        <p className="text-sm text-[--muted]">
+        <p className="text-sm text-(--muted)">
           Live conditions are unavailable right now. Check back before you head out.
         </p>
       )}
@@ -176,7 +176,7 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
                 </div>
               )}
               <div className="flex items-baseline gap-2">
-                <span className="text-base font-semibold text-[--dark]">
+                <span className="text-base font-semibold text-(--dark)">
                   {data.wind.speedMax === 0 ? (
                     "Wind calm"
                   ) : (
@@ -190,15 +190,15 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
                   )}
                 </span>
                 {data.wind.direction && (
-                  <span className="text-sm text-[--muted]">from {data.wind.direction}</span>
+                  <span className="text-sm text-(--muted)">from {data.wind.direction}</span>
                 )}
               </div>
-              <p className="text-xs text-[--muted] mt-0.5">
+              <p className="text-xs text-(--muted) mt-0.5">
                 {data.wind.periodName}: {data.wind.shortForecast}
               </p>
             </div>
           ) : (
-            <p className="text-xs text-[--muted]">Wind forecast unavailable.</p>
+            <p className="text-xs text-(--muted)">Wind forecast unavailable.</p>
           )}
 
           {/* Tides */}
@@ -207,19 +207,19 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {data.tide.next.length > 0 ? (
                   data.tide.next.slice(0, 2).map((t) => (
-                    <span key={t.time} className="text-sm text-[--dark]">
+                    <span key={t.time} className="text-sm text-(--dark)">
                       <span className="font-semibold">
                         {t.type === "H" ? "High" : "Low"}
                       </span>{" "}
                       {formatTideTime(t.time)}
                       {isNextDay(t.time) && (
-                        <span className="text-[--muted]"> tomorrow</span>
+                        <span className="text-(--muted)"> tomorrow</span>
                       )}
-                      <span className="text-[--muted]"> &middot; {t.heightFt.toFixed(1)} ft</span>
+                      <span className="text-(--muted)"> &middot; {t.heightFt.toFixed(1)} ft</span>
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-[--muted]">No more tide changes today.</span>
+                  <span className="text-sm text-(--muted)">No more tide changes today.</span>
                 )}
               </div>
               <p className="text-xs text-gray-400 mt-1">
@@ -227,7 +227,7 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
               </p>
             </div>
           ) : spot.tide_sensitive ? (
-            <p className="text-xs text-[--muted] border-t border-gray-100 pt-2.5">
+            <p className="text-xs text-(--muted) border-t border-gray-100 pt-2.5">
               No tide station near this spot.
             </p>
           ) : null}

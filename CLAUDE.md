@@ -53,7 +53,7 @@ The palette is the **Meltwater** design system (glacial-pale base, deep-azure in
 - Core vars: `--bg` `#EEF5FB` (canvas), `--accent` `#0E6FD1` (azure), `--dark` `#0B2A47` (ink primary), `--muted` `#6E8598` (ink tertiary), `--border` `#DCE7F0` (hairline). Extended tokens (`--flatwater`/`--ocean`/`--river` + `-ink`/`-fill`, `--calm`/`--free`/`--wind-alert` + `-fill`, `--saved`, `--ink-2`, etc.) are also defined.
 - Map pin colors and difficulty badge colors are **not** CSS variables — they are hardcoded in `lib/types.ts` (`DIFFICULTY_COLOR`: flatwater teal `#12A5B0`, bay/ocean azure `#0E6FD1`, river rust `#E06636`) and inlined in the legend in `components/HomeClient.tsx`. Update both if changing difficulty colors. Several components also carry inline tint maps (FilterBar `DIFF_PALETTE`, SpotDrawer `DIFF_STYLES`, ConditionsBadge/Panel status colors) that must be kept in sync with the tokens.
 - The PWA `theme_color`/`background_color` (`app/manifest.ts`) and `themeColor` meta (`app/layout.tsx`) are azure `#0E6FD1` / ink `#0B2A47`. The favicon, app icons, and OG share images were intentionally left on the prior art in this pass.
-- Tailwind v4 is used. CSS variable syntax in class names: `bg-[--accent]`, `text-[--muted]`, `border-[--border]`, etc.
+- Tailwind v4 is used. CSS variable syntax in class names: `bg-(--accent)`, `text-(--muted)`, `border-(--border)`, etc. Note: the bracket form (`bg-[--accent]`) compiles to invalid CSS in Tailwind v4.3.0, use the parens form.
 
 ### Fonts
 

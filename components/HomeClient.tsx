@@ -420,17 +420,17 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <header className="shrink-0 px-4 py-3 border-b border-gray-200 bg-[--bg] flex items-center justify-between">
+      <header className="shrink-0 px-4 py-3 border-b border-gray-200 bg-(--bg) flex items-center justify-between">
         <button
           type="button"
           onClick={goHome}
-          className="font-['Newsreader'] text-xl font-bold text-[--dark] rounded-sm hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]"
+          className="font-['Newsreader'] text-xl font-bold text-(--dark) rounded-sm hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
           aria-label="Paddle to Water, return home"
         >
           Paddle to Water
         </button>
         <div className="flex items-center gap-2 md:gap-3">
-          <span className="hidden lg:inline text-xs text-[--muted]">Paddleboard &amp; kayak spots across the Bay Area</span>
+          <span className="hidden lg:inline text-xs text-(--muted)">Paddleboard &amp; kayak spots across the Bay Area</span>
 
           {/* Desktop inline search */}
           <div className="relative hidden md:block">
@@ -440,14 +440,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
-              className="w-52 rounded-lg border border-(--border) bg-white pl-8 pr-7 py-1.5 text-xs text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+              className="w-52 rounded-lg border border-(--border) bg-white pl-8 pr-7 py-1.5 text-xs text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
             />
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
             {filters.search && (
               <button
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[--dark] text-sm leading-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-(--dark) text-sm leading-none"
               >
                 ✕
               </button>
@@ -459,7 +459,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             onClick={() => setSearchOpen((o) => !o)}
             aria-label={searchOpen ? "Close search" : "Open search"}
             aria-expanded={searchOpen}
-            className="md:hidden text-base px-2 py-1.5 rounded-lg border border-(--border) text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors"
+            className="md:hidden text-base px-2 py-1.5 rounded-lg border border-(--border) text-(--muted) hover:border-(--accent) hover:text-(--dark) transition-colors"
           >
             🔍
           </button>
@@ -475,7 +475,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
       {/* Mobile expanded search bar */}
       {searchOpen && (
-        <div className="md:hidden shrink-0 px-4 py-2 border-b border-gray-200 bg-[--bg] flex items-center gap-2">
+        <div className="md:hidden shrink-0 px-4 py-2 border-b border-gray-200 bg-(--bg) flex items-center gap-2">
           <div className="relative flex-1">
             <input
               type="text"
@@ -484,14 +484,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
-              className="w-full rounded-lg border border-(--border) bg-white pl-8 pr-7 py-2 text-base text-[--dark] placeholder-gray-400 focus:outline-none focus:border-[--accent]"
+              className="w-full rounded-lg border border-(--border) bg-white pl-8 pr-7 py-2 text-base text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
             />
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
             {filters.search && (
               <button
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[--dark]"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-(--dark)"
               >
                 ✕
               </button>
@@ -499,7 +499,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           </div>
           <button
             onClick={() => setSearchOpen(false)}
-            className="shrink-0 text-xs font-medium text-[--muted] hover:text-[--dark] transition-colors"
+            className="shrink-0 text-xs font-medium text-(--muted) hover:text-(--dark) transition-colors"
           >
             Close
           </button>
@@ -524,8 +524,8 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             key={tab}
             className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors ${
               activeTab === tab
-                ? "text-[--accent] border-b-2 border-[--accent]"
-                : "text-[--muted]"
+                ? "text-(--accent) border-b-2 border-(--accent)"
+                : "text-(--muted)"
             }`}
             onClick={() => { setActiveTab(tab); trackIntent("view_switched", { view: tab }); }}
           >
@@ -538,7 +538,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* List panel */}
         <div
-          className={`flex flex-col w-full md:w-80 md:shrink-0 bg-[--bg] border-r border-gray-200 border-l-4 border-l-[--accent] md:flex
+          className={`flex flex-col w-full md:w-80 md:shrink-0 bg-(--bg) border-r border-gray-200 border-l-4 border-l-(--accent) md:flex
             ${activeTab === "list" ? "flex" : "hidden md:flex"}`}
         >
           <SpotList
@@ -564,11 +564,11 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           {/* Empty state — the List has one, but the map is the default mobile tab,
               so an over-filtered user would otherwise just see a blank map. */}
           {sortedFiltered.length === 0 && (
-            <div className="absolute inset-0 z-[400] flex flex-col items-center justify-center bg-[--bg]/80 backdrop-blur-sm text-center px-4">
-              <p className="text-[--dark] font-semibold">No spots match your filters</p>
+            <div className="absolute inset-0 z-[400] flex flex-col items-center justify-center bg-(--bg)/80 backdrop-blur-sm text-center px-4">
+              <p className="text-(--dark) font-semibold">No spots match your filters</p>
               <button
                 onClick={handleClearAll}
-                className="mt-3 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors bg-white"
+                className="mt-3 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-(--muted) hover:border-(--accent) hover:text-(--dark) transition-colors bg-white"
               >
                 Clear filters
               </button>

@@ -210,10 +210,10 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
-              <h2 className="font-['Newsreader'] text-xl font-bold text-[--dark] leading-tight">
+              <h2 className="font-['Newsreader'] text-xl font-bold text-(--dark) leading-tight">
                 {spot.water}
               </h2>
-              <p className="text-sm text-[--muted] mt-1">{spot.city} &middot; {spot.region}</p>
+              <p className="text-sm text-(--muted) mt-1">{spot.city} &middot; {spot.region}</p>
             </div>
             <button
               onClick={onClose}
@@ -272,7 +272,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
               {spot.notes.length > NOTES_TRUNCATE && (
                 <button
                   onClick={() => setNotesExpanded((v) => !v)}
-                  className="md:hidden mt-1 text-sm font-medium text-[--accent] hover:opacity-80 transition-opacity"
+                  className="md:hidden mt-1 text-sm font-medium text-(--accent) hover:opacity-80 transition-opacity"
                 >
                   {notesExpanded ? "Read less" : "Read more"}
                 </button>

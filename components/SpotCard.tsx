@@ -43,16 +43,16 @@ export default function SpotCard({ spot, selected, onClick, distance, isFavorite
         }
       }}
       className={`w-full cursor-pointer text-left px-4 py-3.5 border-b border-gray-100 transition-colors hover:bg-white ${
-        selected ? "bg-white border-l-4 border-l-[--accent] pl-3" : ""
+        selected ? "bg-white border-l-4 border-l-(--accent) pl-3" : ""
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[--dark] text-sm leading-snug truncate">{spot.water}</p>
-          <p className="text-xs text-[--muted] mt-0.5">
+          <p className="font-semibold text-(--dark) text-sm leading-snug truncate">{spot.water}</p>
+          <p className="text-xs text-(--muted) mt-0.5">
             {spot.city}
             {distance !== undefined
-              ? <> &middot; <span className="font-medium text-[--accent]">{formatDistance(distance)}</span></>
+              ? <> &middot; <span className="font-medium text-(--accent)">{formatDistance(distance)}</span></>
               : <> &middot; {spot.region}</>}
           </p>
           {conditionsBadge && <div className="mt-1.5">{conditionsBadge}</div>}

@@ -81,13 +81,13 @@ export default function NextGoodWindowPanel({ spot }: { spot: Spot }) {
         appeared ? "opacity-100" : "opacity-0"
       }`}
     >
-      <p className="text-xs font-semibold text-[--muted] uppercase tracking-wide mb-1">Looking ahead</p>
+      <p className="text-xs font-semibold text-(--muted) uppercase tracking-wide mb-1">Looking ahead</p>
       {result.window ? (
-        <p className="text-sm text-[--dark]">
-          Next good window: <span className="font-semibold text-[--accent]">{formatNextWindow(result.window)}</span>
+        <p className="text-sm text-(--dark)">
+          Next good window: <span className="font-semibold text-(--accent)">{formatNextWindow(result.window)}</span>
         </p>
       ) : (
-        <p className="text-sm text-[--muted]">{noWindowLine(DEFAULT_HORIZON_DAYS)}</p>
+        <p className="text-sm text-(--muted)">{noWindowLine(DEFAULT_HORIZON_DAYS)}</p>
       )}
     </div>
   );

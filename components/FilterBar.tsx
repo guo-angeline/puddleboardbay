@@ -63,7 +63,7 @@ export default function FilterBar({
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-[--bg] border-b border-[--border] px-4 py-3 space-y-2">
+    <div className="sticky top-0 z-10 bg-(--bg) border-b border-(--border) px-4 py-3 space-y-2">
       {/* Row 1 — region (outlined, larger) */}
       <div className="-mr-4 overflow-hidden md:mr-0 md:overflow-visible">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none pr-4 md:pr-0">
@@ -126,7 +126,7 @@ export default function FilterBar({
         <div className="flex">
           <button
             onClick={() => onClearAll ? onClearAll() : onChange(EMPTY_FILTERS)}
-            className="ml-auto text-xs text-[--muted] underline underline-offset-2 hover:text-[--dark] transition-colors"
+            className="ml-auto text-xs text-(--muted) underline underline-offset-2 hover:text-(--dark) transition-colors"
           >
             Clear all
           </button>
