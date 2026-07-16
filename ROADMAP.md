@@ -106,6 +106,8 @@ The decimal-count screen that produced the original 11-spot list **was a weak he
 | 76 | Brisbane Marina Ramp | **UNRESOLVED, ramp may not exist.** See below | n/a |
 | 79 | Coyote Creek Tidal Launch | **UNRESOLVED, SAFETY + LEGAL. See below** | n/a |
 
+**HIDDEN IN PRODUCTION 2026-07-16** (owner direction, in chat): spots 76 and 79 are now withheld from every surface via a new `hidden` field, filtered at a single chokepoint (`lib/spots.ts`). Records and notes are retained for repair, not deleted. Disposition (permanent delist vs. repair) is tracked at **DECISIONS.md D14**, still open. Note the filter had to be a chokepoint rather than a UI filter: nine files read `data/spots.json`, two of them the alert crons, so a UI-only filter would have left push and email still sending people to a withheld spot. A test now fails if any feature file imports `data/spots.json` directly.
+
 **Item 79 is the most serious finding in this audit and it is not a coordinate problem.** The pin reverse-geocodes to the Nimitz Freeway, but no repair exists: no designated public put-in on Coyote Creek off McCarthy Blvd could be found in FWS, Santa Clara Valley Water, City of Milpitas, County Parks, or SF Bay Water Trail sources; OSM has no slipway within 6km. The likely provenance is that 1425 N. McCarthy Blvd is a **hiking/biking trailhead**, and the single documented paddle from it is a permit-only Ducks Unlimited trip into a normally-closed section of Don Edwards NWR whose own trip report tells readers not to paddle there on their own, calling it unsafe, illegal, and disruptive to wildlife. Search-engine AI summaries have laundered that post into "kayak launch point," stripping the permit and the warning. Corroborating that the record is not sourced from reality: our notes claim a March-August heron closure; the real closure is February-September for the endangered California Ridgway's rail. Wrong months, wrong species. **Recommend delist or hide, do not repair. Route through the `lawyer` gate** (closed-refuge + endangered-species exposure, alongside items 34/35).
 
 **Item 76 may not exist either.** The City of Brisbane's own Marina page lists no launch ramp; DBW types it "Marina" not "Launch"; the 19-page SFBAMA launch guide never mentions Brisbane or Sierra Point; it is not a Water Trail trailhead; OSM maps no slipway at Sierra Point. Our stored coordinate is **byte-identical** to an unsourced fishing.org entry that itself asserts no physical ramp, and it lands on the Sierra Point Parkway roadway. Owner action: call the harbormaster (650-583-6975), drop a pin from personal knowledge, or delist.
@@ -122,7 +124,9 @@ The decimal-count screen that produced the original 11-spot list **was a weak he
 - Note: this is pin correctness, NOT optimizing directions-clicks as a conversion (owner removed that goal 2026-07-02; see memory `get-directions-not-a-goal`).
 - Blocks item 45 (do not expand coverage through a pipeline that produced 11km errors) and gates item 39 for the affected spots.
 
-## 41. [proposed] Rotating one-line pro-tip in each alert email
+## 41. [done] 2026-07-16 Rotating one-line pro-tip in each alert email
+
+**Shipped 2026-07-16 at 100%** (A/B exempt, D11 precedent: additive copy on an existing surface). Reuses the 2026-07-13 `alertVariantForDay` rotation with a fixed day offset so the tip pool does not always pair with the same wording variant; deep link carries `pt=<index>`, forwarded as an optional `tip_index` on the existing `email_alert_opened`. **Shipped with 5 tips, not 7:** two candidates were flagged unverified by the implementer and CUT rather than shipped as unconfirmed technique advice to real paddlers (owner call). Both are recoverable from git if a source confirms them, and the rotation is pool-size-agnostic so adding one back is a one-line change.
 
 **Why:** Owner idea 2026-07-16. Cheapest item on this list and it slots straight into the existing email creative rotation (shipped 2026-07-13, deterministic day-over-day variant rotation). Gives the email a reason to be opened beyond the window itself.
 
@@ -132,7 +136,9 @@ The decimal-count screen that produced the original 11-spot list **was a weak he
 - Tips must be technically accurate; owner or a source verifies each before it ships.
 - Copy-only on an existing surface: A/B exempt per the D11 precedent (single-digit audience cannot power a test).
 
-## 42. [in-progress] 2026-07-16 Spot sheet opens full-screen instead of half-screen
+## 42. [done] 2026-07-16 Spot sheet opens full-screen instead of half-screen
+
+**Shipped 2026-07-16 at 100%, NO A/B flag, per owner direction (D13).** Built behind `spot_sheet_full_height` with control live, then the owner directed a straight 100% ship; the flag, its registry entry, and its experiment doc were removed before deploy. Precedent: D2/D3/D6/D11, a single-digit daily audience cannot power a test. Reuses item 9's `startExpanded` prop. Alert/email arrivals stay at peek (they carry the interstitial); share path and desktop unchanged. **Cost recorded honestly: no control arm, so this is not measurable as a lift**, and several mobile series step on 2026-07-16 as a layout effect (see INSTRUMENTATION_CHANGELOG). Rollback is revert + redeploy.
 
 **Why:** Owner idea 2026-07-16. Open question whether the peek height helps (keeps the map visible, cheaper to dismiss) or hurts (truncates the conditions payoff and hides the CTAs).
 

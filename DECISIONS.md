@@ -170,3 +170,30 @@ Answer (owner, 2026-07-15):
 - Part 1 (search/Feedback alignment) proceeds normally: match height + radius + border token, keep natural widths (search is an input, Feedback a button, so no literal equal-width).
 
 So this pass ships Part 1 + the Part 3 diagnostic; Part 2 is a confirmed no-change; the Part 3 fix is a fast follow-up gated on an owner screenshot.
+
+## D13 [RESOLVED] 2026-07-16 · Item 42 (full-screen spot sheet): ship at 100%, no A/B
+
+Context: item 42 makes the mobile bottom sheet open at full height (0.92vh) for every spot open instead of the 0.58vh peek. This is a core-flow change to the primary surface, which the board directive (2026-07-02) says must ship behind an A/B flag, never straight to 100%. It was built accordingly: flag `spot-sheet-full-height`, control live by default, dormant until flipped.
+
+Options: (a) ship at 100% with no flag, exempt from the A/B directive; (b) keep the flag and run a monitored 100% with guardrails; (c) run the powered A/B as originally built.
+
+Answer: **(a) merge and deploy at 100%, no A/B test** (owner, 2026-07-16, in chat). The flag, its registry entry, and `docs/experiments/spot-sheet-full-height.md` were removed before deploy; the exposure event was never emitted, so no `experiment_exposed` value exists for it.
+
+Precedent, and why this is not a bypassed directive: D2(a) 2026-07-08 (interstitial converted to monitored 100% because it could never reach significance), the CTA-reweight 100% rollout 2026-07-09 (D3: ~14 users/day cannot power a test), D6, and D11 2026-07-15. The traffic reality that drove all of those is unchanged.
+
+What we give up, recorded honestly: there is no control arm, so the effect of this change is not measurable as a lift. Several mobile series (`spot_action`, `favorite_toggled`, dwell-gated `conditions_viewed`, `spot_sheet_dismissed`) will step on 2026-07-16 as a LAYOUT effect. The only counterfactuals are the pre-2026-07-16 mobile baseline and the `source: "share"` cohort, which has opened full height since 2026-07-11 (item 9) and is therefore not part of the step. See analytics/INSTRUMENTATION_CHANGELOG.md 2026-07-16 (item 42).
+
+Rollback is revert + redeploy, minutes.
+
+## D14 [OPEN] 2026-07-16 · Spots 76 and 79: hidden pending repair or delist
+
+Context: the 2026-07-16 coordinate audit (`reports/coord-audit-2026-07-16.md`) found two records with no confirmable public launch. Both were live. The owner directed "hide both now" in chat on 2026-07-16, and they are now hidden in production via the new `hidden` field (filtered at `lib/spots.ts`; records and notes retained). This memo tracks the disposition, which is still open.
+
+- **79 Coyote Creek Tidal Launch.** No designated public put-in found on Coyote Creek off McCarthy Blvd in FWS, Santa Clara Valley Water, City of Milpitas, County Parks, or SF Bay Water Trail sources; no OSM slipway within 6km; the coordinate reverse-geocodes to the Nimitz Freeway. The matching address is a hiking/biking trailhead; the one documented paddle from it was a permit-only trip into a normally closed section of Don Edwards NWR, whose own trip report tells readers not to paddle there (unsafe, illegal, disruptive to wildlife). Notes cite the wrong closure months (March-August vs. the real February-September) and the wrong species (heron vs. the endangered Ridgway's rail). Likely an AI-summary artifact of that trip report.
+- **76 Brisbane Marina Ramp.** Brisbane's own marina page lists no ramp; DBW types it Marina, not Launch; SFBAMA's launch guide never mentions Brisbane or Sierra Point; not a Water Trail trailhead; no OSM slipway at Sierra Point. Our coordinate is byte-identical to an unsourced fishing.org entry that itself asserts no physical ramp, and lands on a roadway.
+
+Question for the owner:
+1. **79:** delist permanently, or is there a real put-in there you know of? Recommend permanent delist. Also recommend a `lawyer` gate look given the closed-refuge and endangered-species exposure alongside items 34/35.
+2. **76:** call the harbormaster (650-583-6975) to confirm whether a public launch exists, drop a pin from personal knowledge, or delist.
+
+Answer: 

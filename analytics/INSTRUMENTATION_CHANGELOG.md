@@ -14,42 +14,16 @@ without touching this file.
 
 ---
 
-## 2026-07-16 (item 42): Mobile spot sheet full-height open behind `spot_sheet_full_height` (added, dormant)
+## 2026-07-16 (item 42): Mobile spot sheet now opens FULL HEIGHT for every open, at 100%, no flag (behavior-changed)
 
-`components/HomeClient.tsx` gained an experiment branch that generalizes item
-9's shared-link full-height sheet to every other mobile spot open (list/map/
-related/plain-deeplink), behind `lib/experiments.ts` `spot_sheet_full_height`
-(`flag: "spot-sheet-full-height"`, `variants: ["control", "treatment"]`, live
-control-default per the owner's core-flow-change-never-goes-straight-to-100%
-directive). CONTROL is the exact current behavior: the mobile sheet opens at
-the 0.58vh peek for every open except a shared-link arrival, which item 9
-already forces to 0.92vh full height unconditionally and flaglessly.
-TREATMENT opens the sheet at full height for every mobile spot open except a
-shared-link, alert (`from=alert`), or email (`from=email`) arrival; the last
-two stay excluded in both arms, same reason item 9 excluded them (they carry
-the alert interstitial, which layers badly under a force-expanded sheet).
-Desktop (the persistent sidebar) is unaffected in either arm. No new prop was
-added to `SpotDrawer`; the flag decision reuses the existing one-shot
-`startExpanded` prop from item 9.
+**This is a live behavior change on the primary surface, not dormant instrumentation.** An earlier draft of this entry described it as shipping behind a `spot_sheet_full_height` flag with control live. That is superseded: the owner directed it to 100% with no A/B on 2026-07-16 (**D13**), following the D3/D6/D11 precedent that a single-digit daily audience cannot power a test. The flag, its registry entry, and its experiment doc were removed before deploy. **No `experiment_exposed` value was ever emitted for `spot_sheet_full_height`; do not look for one.**
 
-`experiment_exposed` (`experiment: "spot_sheet_full_height"`) is a new value
-of the existing event, logged for BOTH arms (symmetric pattern) at every
-mobile, non-share, non-alert, non-email spot open, via `useExperiment`'s
-`logExposure()` (no-ops until flags are ready, dedupes once per session per
-variant). See `docs/experiments/spot-sheet-full-height.md` for the full
-hypothesis, primary metric (`spot_action` rate per exposed user), and
-guardrails (`spot_sheet_dismissed`, `conditions_loaded`, `favorite_toggled`,
-all pre-existing events, no schema change to any of them).
+`components/HomeClient.tsx`: the mobile bottom sheet now opens at full height (0.92vh) for every mobile spot open (list, map, related, plain deeplink), where it previously opened at the 0.58vh peek. Reuses item 9's one-shot `startExpanded` prop; no new prop on `SpotDrawer`. Unchanged: shared-link arrivals (item 9 already forced full height unconditionally), alert (`from=alert`) and email (`from=email`) arrivals (still peek, because they carry the alert interstitial and a force-expanded sheet layers badly under it), and desktop (persistent sidebar).
 
-- **Comparability:** `experiment_exposed` gains a new `experiment` value from
-  2026-07-16 forward; no prior series for it. The flag ships OFF (control
-  live) in this change, so production behavior, and every other event's rate,
-  is unaffected until the owner flips the flag in PostHog: this entry
-  documents dormant instrumentation, not a live behavior change. Once the
-  owner flips it, segment any `spot_action` / `spot_sheet_dismissed` /
-  `conditions_loaded` / `favorite_toggled` read by `experiment_exposed`
-  (`experiment: "spot_sheet_full_height"`) variant, the same requirement as
-  `enrollment_dual_cta` below.
+No event was added, removed, or renamed. Every event on this surface keeps its schema.
+
+- **Comparability: several existing series step on 2026-07-16 as a LAYOUT effect, not organic behavior.** From this date, mobile users see the conditions view and the whole CTA row without dragging. Expect `spot_action` (directions/share/photos), `favorite_toggled`, and dwell-gated `conditions_viewed` to **rise** on mobile, and `spot_sheet_dismissed` to move in either direction (more content visible can mean faster satisfaction or faster bail). **None of that is users changing behavior; it is the same behavior against a taller sheet.** There is no control arm to compare against, by design, so do not attribute any mobile step-change on or after 2026-07-16 to anything else without ruling this out first. The nearest available counterfactual is the pre-2026-07-16 mobile baseline, and the `source: "share"` cohort, which has been opening full height since 2026-07-11 (item 9) and is therefore NOT part of the step.
+
 ## 2026-07-16 (item 41): `email_alert_opened` gains `tip_index`; alert email now carries a rotating pro-tip (props-changed)
 
 The daily alert email now includes one rotating, one-sentence paddleboard
