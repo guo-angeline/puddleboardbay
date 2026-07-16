@@ -77,10 +77,10 @@ export default function SpotList({
   if (mainSpots.length === 0 && savedSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-        <p className="text-[--dark] font-semibold">No spots match your filters</p>
+        <p className="text-(--dark) font-semibold">No spots match your filters</p>
         <button
           onClick={onClearFilters}
-          className="mt-3 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-[--muted] hover:border-[--accent] hover:text-[--dark] transition-colors"
+          className="mt-3 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-(--muted) hover:border-(--accent) hover:text-(--dark) transition-colors"
         >
           Clear filters
         </button>
@@ -93,7 +93,7 @@ export default function SpotList({
       {/* First-run nudge: the save feature was invisible (0 saves in week 1), so
           tell people it exists. Drops away the moment they save anything. */}
       {savedSpots.length === 0 && onToggleFavorite && mainSpots.length > 0 && (
-        <p className="px-4 pt-2.5 pb-1 text-[11px] text-[--muted]">
+        <p className="px-4 pt-2.5 pb-1 text-[11px] text-(--muted)">
           {isStandalone ? (
             <>Watch your spots again here to get alerts. The installed app starts fresh, so anything you watched in Safari isn&rsquo;t here yet.</>
           ) : (
@@ -106,12 +106,12 @@ export default function SpotList({
       {savedSpots.length > 0 && (
         <div ref={savedSectionRef}>
           <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-[--muted] uppercase tracking-wider">Watching</span>
-            <span className="text-[11px] text-[--muted] opacity-60">({savedSpots.length})</span>
+            <span className="text-[11px] font-semibold text-(--muted) uppercase tracking-wider">Watching</span>
+            <span className="text-[11px] text-(--muted) opacity-60">({savedSpots.length})</span>
             {!alertsOn && (
               <button
                 onClick={() => window.dispatchEvent(new Event("ptw:enablealerts"))}
-                className="ml-auto text-[11px] font-semibold text-[--accent] hover:opacity-80"
+                className="ml-auto text-[11px] font-semibold text-(--accent) hover:opacity-80"
               >
                 Turn on alerts
               </button>
@@ -149,7 +149,7 @@ export default function SpotList({
       ))}
 
       <div className="px-4 py-4 text-center border-t border-gray-100">
-        <a href="/disclaimer" className="text-xs text-[--muted]/60 hover:text-[--muted] transition-colors">
+        <a href="/disclaimer" className="text-xs text-(--muted)/60 hover:text-(--muted) transition-colors">
           Disclaimer
         </a>
       </div>
