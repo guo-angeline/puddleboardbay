@@ -88,16 +88,31 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **The 7-digit premise does not hold, and is corrected here.** Precision is not accuracy. Six decimals is ~11cm; seven is ~1.1cm. No geocoder resolves a launch ramp to the centimeter, so adding a digit to a coordinate that is 40m off the water just makes it precisely wrong. 106 of 142 spots **already** carry 7+ decimals (inherited from the geocoder's float output) and that did not make them correct. The uniform-digit-count goal is dropped; correctness of the point is the goal.
 
-**The real defect, found 2026-07-16.** Eleven spots are too coarse for the pin to be on the launch (trailing zeros are dropped in JSON, so decimal count is a strong hint rather than proof; each needs per-spot verification):
+**AUDITED 2026-07-16. Full report + sources: `reports/coord-audit-2026-07-16.md`. `data/spots.json` untouched, pending owner approval per the house rule.**
 
-| id | Spot | Precision | Implied error |
+The decimal-count screen that produced the original 11-spot list **was a weak heuristic and is superseded by the audit below.** It had a ~36% false-positive rate, it understated both real worst cases, and it missed the most serious defect entirely (which is not a coordinate problem). Do not re-run it; use the two tests in the "systemic finding" note below instead.
+
+| id | Spot | Audited verdict | Real error |
 |---|---|---|---|
-| 38 | Miller Boat Launch, Marshall | 1 dp | ~11km |
-| 88 | Dutch Slough, Oakley | 1 dp | ~11km |
-| 102 | Donner Lake, Truckee | 2 dp | ~1.1km |
-| 45, 48, 76, 79, 84, 96, 104, 112 | China Camp, Nagasawa, Brisbane Marina, Coyote Creek, MLK Shoreline, Lake Merced, Echo Lakes, Morro Bay | 3 dp | ~110m |
+| 38 | Miller Boat Launch, Marshall | **FALSE POSITIVE, leave alone.** Reverse-geocodes to "Miller Boat Launch, Dock"; 14m from OSM slipway node/4878780335 | 14m |
+| 48 | Nagasawa Park, Santa Rosa | **FALSE POSITIVE, leave alone.** 15m from OSM slipway node/5817093285 | 15m |
+| 84 | MLK Jr. Shoreline, Oakland | **FALSE POSITIVE, leave alone.** 32m from OSM slipway node/2427025918, on Doolittle Trail | 32m |
+| 104 | Echo Lakes | **FALSE POSITIVE, leave alone.** 45m from OSM slipway way/1252551204, on the Echo Chalet apron; DBW f/726 | 45m |
+| 88 | Dutch Slough, Oakley | **WRONG FACILITY.** Named/addressed for Viking Harbor (2140), which DBW types Marina, access "Other", no ramp, not public, now for sale as 9-unit residential. Every noted attribute maps to Sunset Harbor (3040). Needs a RENAME, not a silent re-pin | **5.5km** |
+| 102 | Donner Lake, Truckee | Wrong end of the lake. Propose `39.32482, -120.28356` (DBW f/663 + OSM "Donner Lake Launching Facility" polygon). Do NOT snap to the nearest node: it is the members-only Tahoe Donner marina | **3.8km** |
+| 96 | Lake Merced, SF | Lake centroid, and in South Lake while the launch is on North Lake. Propose `37.72574, -122.49872` (OSM slipway way/1309877470; DBW f/492 type "Launch") | **998m** |
+| 45 | China Camp, San Rafael | Optional, ~45m inland of the beach. Launching is legal along the whole beach, so already valid | 45m |
+| 112 | Morro Bay | Optional, Coleman Park centroid but the park is a shoreline strip; water is 22m south | 22m |
+| 76 | Brisbane Marina Ramp | **UNRESOLVED, ramp may not exist.** See below | n/a |
+| 79 | Coyote Creek Tidal Launch | **UNRESOLVED, SAFETY + LEGAL. See below** | n/a |
 
-Miller Boat Launch and Dutch Slough point at open country. Donner is a kilometer out.
+**Item 79 is the most serious finding in this audit and it is not a coordinate problem.** The pin reverse-geocodes to the Nimitz Freeway, but no repair exists: no designated public put-in on Coyote Creek off McCarthy Blvd could be found in FWS, Santa Clara Valley Water, City of Milpitas, County Parks, or SF Bay Water Trail sources; OSM has no slipway within 6km. The likely provenance is that 1425 N. McCarthy Blvd is a **hiking/biking trailhead**, and the single documented paddle from it is a permit-only Ducks Unlimited trip into a normally-closed section of Don Edwards NWR whose own trip report tells readers not to paddle there on their own, calling it unsafe, illegal, and disruptive to wildlife. Search-engine AI summaries have laundered that post into "kayak launch point," stripping the permit and the warning. Corroborating that the record is not sourced from reality: our notes claim a March-August heron closure; the real closure is February-September for the endangered California Ridgway's rail. Wrong months, wrong species. **Recommend delist or hide, do not repair. Route through the `lawyer` gate** (closed-refuge + endangered-species exposure, alongside items 34/35).
+
+**Item 76 may not exist either.** The City of Brisbane's own Marina page lists no launch ramp; DBW types it "Marina" not "Launch"; the 19-page SFBAMA launch guide never mentions Brisbane or Sierra Point; it is not a Water Trail trailhead; OSM maps no slipway at Sierra Point. Our stored coordinate is **byte-identical** to an unsourced fishing.org entry that itself asserts no physical ramp, and it lands on the Sierra Point Parkway roadway. Owner action: call the harbormaster (650-583-6975), drop a pin from personal knowledge, or delist.
+
+**The systemic finding, which matters more than the 11 spots.** Every genuine error is an automated geocode of a street address or a polygon centroid, never an observed put-in. The real defect is provenance, not precision: the pipeline never had a launch coordinate to begin with. Two cheap, automatable screens caught all five real errors with zero false positives, and should replace the decimal heuristic across all 142 spots:
+1. **Does the coordinate reverse-geocode to a road, trail, freeway, or polygon centroid?** Caught 79 (freeway), 88 (regional trail), 96 (lake centroid), 76 (roadway), 102 (wrong-shore road).
+2. **Does an authoritative registry confirm the facility type?** DBW's Marina vs Marina/Launch vs Launch, and Public vs Other, independently flagged 76 and 88.
 
 **Acceptance:**
 - Verify each spot's coordinate sits on the actual put-in (not the park centroid, not the address centroid), starting with the three worst above, then sequenced by traffic (`spot_viewed` counts).
@@ -156,7 +171,7 @@ Miller Boat Launch and Dutch Slough point at open country. Donner is a kilometer
 
 **Acceptance:**
 - New spots flow through the existing pipeline (`raw-data/phase0_geocode.py` to `data/spots.json`), fully enriched (difficulty, fee tri-state, notes, amenities), not just geocoded.
-- **Blocked on item 40.** The audit found the current pipeline shipped 11km errors; do not run 40 more spots through it first and inherit the same defect at scale.
+- **Blocked on item 40, and the 2026-07-16 audit made this block much stronger.** The original reason was imprecision (spots pinned kilometres off). The real reason is worse: the pipeline can emit a **plausible-looking spot that does not exist**, with invented specifics. Item 79 (Coyote Creek) appears to be an AI-summary artifact of a permit-only trip report into a closed wildlife refuge, and its notes carry the wrong closure months and the wrong species. Expanding coverage through this pipeline would scale fabrication, not just imprecision. Do not start 45 until 40 has replaced the geocode-and-trust step with a provenance check (reverse-geocode + registry confirmation of facility type).
 - Notes follow the house rule: evergreen description of the spot, never a reply to whoever reported it.
 - Scope the tranche (which waters, how many) before promoting.
 
