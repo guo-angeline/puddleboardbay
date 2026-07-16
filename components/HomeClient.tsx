@@ -175,10 +175,13 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           // signal via the token that rode the email deep link. See
           // /api/email/opened. No interstitial (that is push-only, from=alert).
           // `v` is the email copy-variant index (0-6 rotation, lib/email/templates.ts).
+          // `pt` is the pro-tip pool index (0-6, TECHNIQUE_TIPS, item 41).
           const v = params.get("v");
+          const pt = params.get("pt");
           trackIntent("email_alert_opened", {
             spot_id: found.id,
             ...(v !== null && /^\d+$/.test(v) ? { variant: Number(v) } : {}),
+            ...(pt !== null && /^\d+$/.test(pt) ? { tip_index: Number(pt) } : {}),
           });
           const token = params.get("t");
           if (token) reportEmailOpen(token, found.id);

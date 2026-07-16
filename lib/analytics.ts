@@ -216,7 +216,9 @@ interface EventPropMap {
   email_capture_confirmed: { watched_count: number };
   // `variant` is the email copy-rotation index (0-6, lib/email/templates.ts
   // ALERT_VARIANTS) that rode the deep link as `v`; absent on pre-rotation links.
-  email_alert_opened: { spot_id: number; variant?: number };
+  // `tip_index` is the pro-tip pool index (0-6, TECHNIQUE_TIPS, item 41) that
+  // rode the deep link as `pt`; absent on links sent before the tip shipped.
+  email_alert_opened: { spot_id: number; variant?: number; tip_index?: number };
   // Mirrors email_capture_submitted so the resend and submit funnels segment
   // the same way.
   email_confirm_resend_clicked: {

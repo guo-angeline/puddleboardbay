@@ -50,6 +50,37 @@ all pre-existing events, no schema change to any of them).
   `conditions_loaded` / `favorite_toggled` read by `experiment_exposed`
   (`experiment: "spot_sheet_full_height"`) variant, the same requirement as
   `enrollment_dual_cta` below.
+## 2026-07-16 (item 41): `email_alert_opened` gains `tip_index`; alert email now carries a rotating pro-tip (props-changed)
+
+The daily alert email now includes one rotating, one-sentence paddleboard
+technique tip (`TECHNIQUE_TIPS` in `lib/email/templates.ts`, 7 editor-written
+sentences, deterministic rotation via `techniqueTipForDay`). Owner request
+2026-07-16: cheapest item on the backlog, reuses the exact copy-rotation
+mechanism shipped 2026-07-13 (`alertVariantForDay`) rather than building a
+second one, offset by a fixed number of days so the tip pool does not always
+pair with the same wording variant. Tips teach skill only, never instruct
+action (no "head out now" / launch urgency / safety guarantee), per item 34's
+inducement-language guardrail on this exact surface; two of the seven tips
+carry a `// VERIFY` code comment flagging a claim that needs owner/source
+confirmation before it should be trusted as accurate.
+
+The email deep link now also carries `pt=<0-6>` (the tip index), and
+`HomeClient` forwards it as an optional `tip_index` prop on the existing
+`email_alert_opened` INTENT event, so opens can be segmented by which tip rode
+along, the same pattern as the existing `variant` prop. No new event.
+
+**A/B exempt** (D11 precedent): copy-only addition to an existing surface,
+single-digit daily audience cannot power a test.
+
+**Comparability:** `email_alert_opened` totals are continuous; only the new
+optional `tip_index` dimension starts 2026-07-16 (opens on emails sent before
+this date, or on links without `pt`, have no `tip_index`). Same caveat as the
+2026-07-13 `variant` rotation: at current send volume (single-digit/day),
+per-tip reads need weeks of accumulation, and this is copy freshness, not a
+powered test.
+
+---
+
 ## 2026-07-15 (item 37 part 3, ROADMAP item 12): Viewport diagnostic added, no PostHog event
 
 **No event added.** Shipped `components/ViewportDiagnostic.tsx`, a device-only

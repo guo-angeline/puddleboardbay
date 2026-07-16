@@ -34,10 +34,17 @@ export function unsubscribeUrl(token: string): string {
 // push (`from=alert`) so the push interstitial does not show; `t` is the durable
 // subscription token that rides the link so the open-ping works after ITP wipes
 // client storage (mirrors the push token flow). `v` is the copy-variant index so
-// email_alert_opened can segment clicks by wording.
-export function emailOpenUrl(spotId: number, token: string, variant?: number): string {
+// email_alert_opened can segment clicks by wording. `pt` is the technique-tip
+// pool index (item 41) so opens can also be segmented by which tip rode along.
+export function emailOpenUrl(
+  spotId: number,
+  token: string,
+  variant?: number,
+  techniqueTipIndex?: number
+): string {
   const v = variant === undefined ? "" : `&v=${variant}`;
-  return `${SITE_URL}/?spot=${spotId}&from=email&t=${encodeURIComponent(token)}${v}`;
+  const pt = techniqueTipIndex === undefined ? "" : `&pt=${techniqueTipIndex}`;
+  return `${SITE_URL}/?spot=${spotId}&from=email&t=${encodeURIComponent(token)}${v}${pt}`;
 }
 
 function shell(bodyHtml: string, unsubUrl: string, preheader: string): string {
@@ -109,6 +116,7 @@ export interface AlertEmailInput {
   extras: AlertExtra[]; // additional good spots beyond the first, already selected
   token: string;
   variant?: number; // 0-6 copy rotation index (alertVariantForDay); defaults to 0, the original wording
+  techniqueTipIndex?: number; // 0-6 pro-tip pool index (techniqueTipForDay); defaults to 0
 }
 
 // ── Copy rotation (owner request 2026-07-13: same paragraph every day is boring) ──
@@ -230,6 +238,41 @@ export function alertVariantForDay(nowMs: number): number {
   return (day + Math.floor(day / 7)) % ALERT_VARIANT_COUNT;
 }
 
+// ── Pro-tip rotation (ROADMAP item 41, owner idea 2026-07-16) ──
+// Seven one-sentence paddleboard TECHNIQUE tips, editor-written. House rule:
+// tips teach skill, they never instruct action (no "head out now", no launch
+// urgency, no safety guarantee): that collides with item 34, which strips
+// inducement language out of these exact emails. Tips marked VERIFY below are
+// general/standard SUP coaching claims the owner or a source must confirm
+// before this ships; do not treat a VERIFY tip as confidently correct.
+export const TECHNIQUE_TIPS: readonly string[] = [
+  "Bending your knees a little and keeping your feet about hip-width apart keeps a board far steadier than standing stiff-legged.",
+  "SUP paddle blades are angled on purpose: tilting the blade forward, away from you, catches more water than tilting it back toward your feet.",
+  "A wide sweep stroke on one side turns the nose without switching hands or paddling on the other side.",
+  "Most of a stroke's power comes from twisting your torso into it, not just pulling with your arms.",
+  "Looking out at the horizon instead of down at your feet is one of the easiest ways to hold your balance.",
+  // VERIFY: the general "don't pull a stroke past your hip" principle is standard
+  // SUP coaching advice, but confirm this exact body-position framing (feet vs.
+  // ankle vs. hip) against a coaching source before shipping.
+  "A stroke does the most work near your feet; pulling it back past your hip mostly lifts water instead of moving the board forward.",
+  // VERIFY: switching cadence and need vary by board type (all-around boards
+  // need more frequent switches than displacement/touring boards with a skeg);
+  // confirm applicability before shipping.
+  "Switching paddle sides every few strokes keeps a board tracking straight without needing a J-stroke.",
+];
+
+export const TECHNIQUE_TIP_COUNT = TECHNIQUE_TIPS.length;
+
+// Reuses alertVariantForDay, the exact rotation algorithm shipped 2026-07-13,
+// instead of building a second one. A fixed day offset decorrelates which tip
+// pairs with which wording variant (both pools happen to be size 7) so the two
+// rotations are not perfectly confounded day over day.
+const TECHNIQUE_TIP_DAY_OFFSET_MS = 3 * 86_400_000;
+
+export function techniqueTipForDay(nowMs: number): number {
+  return alertVariantForDay(nowMs + TECHNIQUE_TIP_DAY_OFFSET_MS) % TECHNIQUE_TIP_COUNT;
+}
+
 function fill(template: string, vals: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, k: string) => String(vals[k] ?? ""));
 }
@@ -247,10 +290,26 @@ function extrasLine(extras: AlertEmailInput["extras"]): string {
 }
 
 export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
-  const { spotName, spotId, windowKey, startHour, endHour, maxWindMph, windDirection, notes, extras, token, variant } =
-    input;
+  const {
+    spotName,
+    spotId,
+    windowKey,
+    startHour,
+    endHour,
+    maxWindMph,
+    windDirection,
+    notes,
+    extras,
+    token,
+    variant,
+    techniqueTipIndex,
+  } = input;
   const v = ALERT_VARIANTS[((variant ?? 0) % ALERT_VARIANT_COUNT + ALERT_VARIANT_COUNT) % ALERT_VARIANT_COUNT];
-  const openUrl = emailOpenUrl(spotId, token, variant);
+  const proTip =
+    TECHNIQUE_TIPS[
+      ((techniqueTipIndex ?? 0) % TECHNIQUE_TIP_COUNT + TECHNIQUE_TIP_COUNT) % TECHNIQUE_TIP_COUNT
+    ];
+  const openUrl = emailOpenUrl(spotId, token, variant, techniqueTipIndex);
   const weekday = weekdayFromKey(windowKey);
   const hours = formatHourRange(startHour, endHour);
   const lengthHours = endHour - startHour;
@@ -270,9 +329,16 @@ export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
   const preheader = fill(maxWindMph ? v.preheaderWithWind : v.preheaderNoWind, vals);
   const tip = launchDirectionTip(windDirection, maxWindMph);
 
+  // Two distinct tips coexist here, do not collapse them into one.
+  // `tip` (item 36) is contextual: it names today's launch direction from the
+  // window's wind, and is omitted below 5 mph or when direction is unknown.
+  // `proTipLine` (item 41) is generic technique that rotates daily and always
+  // renders. Item 36's `tipIncluded` guardrail counts only the former.
   const tipHtml = tip
     ? `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 12px">${escapeHtml(tip)}</p>`
     : "";
+  const proTipLine = `Pro tip: ${proTip}`;
+  const proTipHtml = `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 12px">${escapeHtml(proTipLine)}</p>`;
   const extrasHtml = extras.length
     ? `<p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(extrasLine(extras))}</p>`
     : "";
@@ -284,6 +350,7 @@ export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
     `<p style="font-size:16px;font-weight:600;margin:0 0 8px">${escapeHtml(headline)}</p>
      <p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(lengthLine)}</p>
      ${tipHtml}
+     ${proTipHtml}
      ${extrasHtml}
      ${notesHtml}
      <a href="${openUrl}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">${escapeHtml(v.cta)}</a>`,
@@ -291,7 +358,7 @@ export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
     preheader
   );
 
-  const text = `${headline}\n\n${lengthLine}\n${tip ? `${tip}\n` : ""}${extras.length ? `\n${extrasLine(extras)}\n` : ""}${notes ? `\n${notes}\n` : ""}\n${v.cta}: ${openUrl}`;
+  const text = `${headline}\n\n${lengthLine}\n${tip ? `${tip}\n` : ""}${proTipLine}\n${extras.length ? `\n${extrasLine(extras)}\n` : ""}${notes ? `\n${notes}\n` : ""}\n${v.cta}: ${openUrl}`;
   return { subject, html, text, tipIncluded: tip !== null };
 }
 

@@ -11,6 +11,9 @@ import {
   alertVariantForDay,
   ALERT_VARIANT_COUNT,
   POSTAL_ADDRESS,
+  TECHNIQUE_TIPS,
+  TECHNIQUE_TIP_COUNT,
+  techniqueTipForDay,
 } from "./templates";
 
 describe("url helpers", () => {
@@ -282,5 +285,75 @@ describe("copy rotation", () => {
       expect(msg.subject.length).toBeLessThan(65);
       expect(msg.subject).not.toMatch(/\b[A-Z]{4,}\b/);
     }
+  });
+});
+
+describe("technique tip rotation (item 41)", () => {
+  const base = {
+    spotName: "Richardson Bay",
+    spotId: 7,
+    windowKey: "2026-07-11", // Saturday
+    startHour: 7,
+    endHour: 10,
+    maxWindMph: 6,
+    extras: [],
+    token: "tok7",
+  };
+  const DAY_MS = 86_400_000;
+
+  it("has exactly 7 tips, one per copy-rotation slot", () => {
+    expect(TECHNIQUE_TIP_COUNT).toBe(7);
+    expect(TECHNIQUE_TIPS.length).toBe(TECHNIQUE_TIP_COUNT);
+  });
+
+  it("every tip is a real sentence with no em dash and no unfilled placeholder", () => {
+    for (const tip of TECHNIQUE_TIPS) {
+      expect(tip.length).toBeGreaterThan(20);
+      expect(tip).not.toContain("—");
+      expect(tip).not.toMatch(/\{\w+\}/);
+    }
+  });
+
+  it("no tip instructs an action: no launch/go-now/urgency imperatives", () => {
+    for (const tip of TECHNIQUE_TIPS) {
+      expect(tip).not.toMatch(/\bgo\s+(now|paddle|out)\b/i);
+      expect(tip).not.toMatch(/\bhead out\b/i);
+      expect(tip).not.toMatch(/\blaunch now\b/i);
+      expect(tip).not.toMatch(/\bhurry\b/i);
+    }
+  });
+
+  it("techniqueTipForDay is stable within a day and rotates day over day", () => {
+    const t0 = Date.UTC(2026, 6, 13, 2, 0, 0);
+    expect(techniqueTipForDay(t0)).toBe(techniqueTipForDay(t0 + 20 * 3_600_000));
+    for (let d = 0; d < 60; d++) {
+      const today = techniqueTipForDay(t0 + d * DAY_MS);
+      expect(today).toBeGreaterThanOrEqual(0);
+      expect(today).toBeLessThan(TECHNIQUE_TIP_COUNT);
+    }
+  });
+
+  it("composeAlertEmail includes the tip text (html + text) for a given techniqueTipIndex", () => {
+    const msg = composeAlertEmail({ ...base, techniqueTipIndex: 3 });
+    expect(msg.html).toContain(TECHNIQUE_TIPS[3]);
+    expect(msg.text).toContain(TECHNIQUE_TIPS[3]);
+  });
+
+  it("defaults to tip 0 when techniqueTipIndex is omitted", () => {
+    const msg = composeAlertEmail(base);
+    expect(msg.html).toContain(TECHNIQUE_TIPS[0]);
+    expect(msg.text).toContain(TECHNIQUE_TIPS[0]);
+  });
+
+  it("out-of-range techniqueTipIndex wraps instead of crashing", () => {
+    expect(composeAlertEmail({ ...base, techniqueTipIndex: 7 }).text).toContain(TECHNIQUE_TIPS[0]);
+    expect(() => composeAlertEmail({ ...base, techniqueTipIndex: -1 })).not.toThrow();
+  });
+
+  it("tags the deep link with pt=<index> so opens can be segmented by tip, only when set explicitly", () => {
+    const msg = composeAlertEmail({ ...base, techniqueTipIndex: 5 });
+    expect(msg.html).toContain("&pt=5");
+    expect(msg.text).toContain("&pt=5");
+    expect(emailOpenUrl(7, "tok")).not.toContain("&pt=");
   });
 });
