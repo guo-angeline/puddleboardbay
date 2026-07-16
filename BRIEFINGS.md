@@ -1,5 +1,31 @@
 # Briefings: the board log
 
+## 2026-07-16 · Owner idea batch (items 39-45): 3 shipped, 1 audit, 1 legal gate · SHIPPED + ESCALATIONS
+
+What shipped to prod (three things, all in one deploy): **item 42**, the mobile spot sheet now opens full height for every open instead of the 0.58vh peek, at 100% with no A/B flag per owner direction (D13). **Item 41**, a rotating one-sentence technique pro-tip in each alert email, reusing the 2026-07-13 copy-rotation mechanism. **Spots 79 and 76 hidden**, because the audit could not confirm either has a real public launch.
+
+What did NOT ship: items 39 (paddle score), 43 (reviews), 44 (accounts), 45 (coverage). All blocked on owner decisions, not on effort. Honest ratio for the session: ~210 lines of shipped code, ~480 lines of documentation and research. The value was mostly in what we learned, not what we built.
+
+Evidence: 203 unit tests, lint 0 errors, build clean, 140 spot pages generated (was 142), live sitemap 141 entries. Live-verified on prod at 375px: sheet renders at 0.92 of viewport for a plain open, 0.58 for a `from=alert` arrival (the interstitial exclusion holds), `/spot/79` and `/spot/76` both 404, neither name in either cron bundle, no console errors.
+
+Measure: item 42 has **no control arm by design** (D13), so it is not measurable as a lift. Several mobile series step on 2026-07-16 as a layout effect; the `source: "share"` cohort is the only clean counterfactual since it has opened full height since 2026-07-11. Item 41 adds `tip_index` to the existing `email_alert_opened`. Both recorded in INSTRUMENTATION_CHANGELOG.
+
+Deployed: paddletowater.com, 2026-07-16, home 200. Main pushed to origin; the 33-commit unpushed backlog the board has flagged for days is now zero.
+
+Decisions raised: **D13 resolved** (item 42 at 100%, no A/B; records the exemption and its cost so a later audit does not read it as a bypassed directive). **D14 OPEN**: disposition of spots 79 and 76. Hidden is not decided.
+
+Three findings the owner should know, in order of seriousness:
+
+1. **Spot 79 (Coyote Creek) appears to describe a launch that does not exist**, and this is the session's real headline. No designated public put-in on Coyote Creek off McCarthy Blvd exists in FWS, Santa Clara Valley Water, City of Milpitas, County Parks, or SF Bay Water Trail sources. The one documented paddle from that address was a permit-only trip into a normally closed section of Don Edwards NWR whose own trip report says paddling there is unsafe, illegal, and disruptive to wildlife; AI search summaries laundered it into "kayak launch point". Our notes cite the wrong closure months and the wrong species, which is what proves the record was never sourced from reality. Spot 76 (Brisbane) is the same shape: its coordinate is byte-identical to an unsourced directory entry that itself says there is no ramp. **Implication for item 45: the pipeline can fabricate, not just misplace.**
+
+2. **The site has no privacy policy**, found by the legal gate and unrelated to any of these ideas. It collects emails into Supabase and runs PostHog autocapture. CalOPPA has no revenue or traffic threshold, so "too small to matter" is not a defense. It also hard-blocks item 44: Google OAuth verification requires a published policy URL. CCPA does **not** apply (thresholds nowhere close) and no cookie banner is needed; do not build either.
+
+3. **My own coordinate heuristic was wrong** and I had published it in the roadmap. The decimal-count screen had a ~36% false-positive rate; Miller Boat Launch, which I called "~11km off, pointing at open country", is 14m from the ramp. Corrected in ROADMAP item 40 and CLAUDE.md, which now carries the two screens that actually work.
+
+Limit: item 41 shipped with **5 tips, not 7**. Two were flagged unverified by the implementer and cut rather than ship unconfirmed technique advice to real paddlers; both are recoverable from git. Also: both build agents forked from a stale base 32 commits behind main and had to be rebased, so worktree isolation prevented collisions but did not point anyone at current main.
+
+Next up: **owner decisions are the whole critical path.** D14 (delist 79? call Brisbane's harbormaster on 76?); the item 39 §0.1 blocking conflict (`docs/specs/item-39-paddle-score.md`: may the score be about the water, or only the put-in?); three coordinate repairs ready to apply (88 needs a rename, it is addressed to a private residential marina); the privacy policy (half a day, already required); and three escalations wanting a licensed CA attorney (entity + insurance, waiver enforceability, whether media uploads are wanted at all). Items 43/44 remain the Later-section UGC flywheel arriving ahead of the retention read they were parked behind, which is still unread.
+
 ## 2026-07-15 · Visual polish pass (item 37) · SHIPPED
 What: Header search and Feedback button now read as a matched pair (30px height, 8px radius, token border). Found and fixed the Feedback CTA rendering dark instead of azure. Shipped a ?vh device diagnostic for the iOS bottom dead-band; the fix itself is deferred to an owner screenshot.
 Evidence: 174 unit tests pass, build green, item-37 files lint clean. Live-drove desktop 1280px + mobile 390px: pair dimensions match, Feedback azure on prod (rgb 14,111,209), ?vh diagnostic present with param and absent without, zero console errors.

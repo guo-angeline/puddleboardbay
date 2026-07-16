@@ -106,7 +106,23 @@ Two cron paths run on schedules, but they are triggered by **different** schedul
 
 ## Editing spot data
 
-When updating any spot in `data/spots.json`, be careful not to alter the `lat`/`lng` fields unless you are explicitly correcting coordinates. Coordinates are easy to accidentally overwrite during text edits, and a wrong pin location is hard to notice until someone checks the map. Always verify `lat`/`lng` are unchanged (or intentionally corrected with a verified source) before deploying.
+### Read spots through `lib/spots.ts`, never from `data/spots.json`
+
+`lib/spots.ts` is the single chokepoint. Import `ALL_SPOTS` from it; do **not** `import spotsData from "@/data/spots.json"` in a feature file. Nine files consume spot data and **two of them are the alert crons**, so a filter applied only to the UI would leave push and email still sending people to a spot that has been deliberately withheld. `lib/spots.test.ts` fails the build if any feature file imports the JSON directly. `ALL_SPOTS_INCLUDING_HIDDEN` exists for data tooling and audits only, never for a user-facing surface or an alert send.
+
+### The `hidden` flag
+
+`Spot.hidden` withholds a record from every surface at once: list, map, `/spot/[id]` (including `generateStaticParams`, so no page is built), sitemap, OG images, JSON-LD, and both crons. `hidden_reason` is required alongside it and must say what would un-hide the spot. Records are kept, not deleted, so notes survive for later repair. Set this when a record cannot be **trusted**, not merely when it needs a fix. Un-hiding is an owner decision (see DECISIONS.md D14).
+
+### Coordinates: precision is not accuracy, and provenance is the real problem
+
+When updating any spot, do not alter `lat`/`lng` unless you are explicitly correcting coordinates with a verified source. A wrong pin is hard to notice until someone checks the map. Always verify `lat`/`lng` are unchanged before deploying, **and verify it at the git-diff level, not numerically**: a JSON round-trip (`json.load` then `json.dump`) silently reformats values like `-121.1729010` to `-121.172901`. Those are the same number, so a float comparison reports "nothing changed" while the file churns. Prefer text-level edits to `spots.json` over reserialization; `git diff data/spots.json | grep '"lat"\|"lng"'` should come back empty.
+
+Do not screen coordinate quality by counting decimal places. The 2026-07-16 audit (`reports/coord-audit-2026-07-16.md`) tried it: ~36% false-positive rate (JSON drops trailing zeros, so a "coarse-looking" value is often exact), it understated the two real worst cases, and it missed the worst defect entirely. Two screens caught every real error with zero false positives:
+1. Does the coordinate reverse-geocode to a **road, trail, freeway, or polygon centroid** rather than a put-in?
+2. Does an authoritative registry confirm the **facility type**? CA DBW distinguishes "Marina" from "Marina/Launch" from "Launch", and Public from Other.
+
+**The pipeline can emit a plausible spot that does not exist.** Every genuine error found was an automated geocode of a street address or a park centroid, never an observed put-in, and spot 79 appears to have been an AI-search-summary artifact of a permit-only trip report, complete with invented specifics (wrong closure months, wrong species). Treat `phase0_geocode.py` output as a candidate, not a fact, and confirm the launch exists before adding spots.
 
 When user feedback comes in as a question or personal comment (e.g. "I didn't know SUPs were allowed, where do you put in?"), extract the underlying facts and fold them into the spot's `notes` as general, evergreen description. Never phrase notes as a reply to that person ("Yes, SUPs are allowed", "You put in at..."). The notes are read by every visitor, not the one who sent the feedback. Write what's true about the spot, not an answer to whoever asked.
 
