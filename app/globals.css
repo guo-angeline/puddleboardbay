@@ -3,7 +3,7 @@
 
 /* Meltwater design system (tokens.json): glacial-pale base, deep-azure ink,
    water-type color coding. Original names (--bg/--dark/--muted/--accent/
-   --accent-light/--border) are kept so existing bg-[--accent] etc. classes
+   --accent-light/--border) are kept so existing bg-(--accent) etc. classes
    pick up the new values; the extra tokens are new. */
 :root {
   /* base */
