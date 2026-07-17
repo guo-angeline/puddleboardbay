@@ -123,12 +123,34 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     const id = initialSpotId ?? Number(params.get("spot") || 0);
     if (id) {
       const found = ALL_SPOTS.find((s) => s.id === id);
+      const from = params.get("from");
+      if (from === "email") {
+        // Item 47 legal gate (D18 action 2): the token must never linger in
+        // window.location, where PostHogProvider's $current_url capture (and
+        // browser history) would carry a live unsubscribe key. This runs
+        // BEFORE the `found` check on purpose: ALL_SPOTS filters out hidden
+        // spots (lib/spots.ts), so a spot hidden after the alert/email send
+        // would otherwise leave `t` live in the URL forever. Fire the open
+        // ping, then strip `t` synchronously right after, before
+        // PostHogProvider's own mount effect runs (it renders after
+        // {children} in app/layout.tsx, so its effect fires later in this
+        // same commit). Caching the resolved state is async and does not
+        // block the strip.
+        const token = params.get("t");
+        if (token) {
+          reportEmailOpen(token, found?.id).then((state) => {
+            if (state) cacheEmailSubscriptionState(state);
+          });
+          params.delete("t");
+          const qs = params.toString();
+          window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+        }
+      }
       if (found) {
         // Deferred to an effect on purpose: the spot id comes from window /
         // the URL, so resolving it during render would break SSR hydration.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelected(found);
-        const from = params.get("from");
         const source: SpotViewedSource =
           from === "alert" ? "alert" : from === "share" ? "share" : "deeplink";
         if (from === "share") {
@@ -164,9 +186,9 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           const windowLabel = params.get("window");
           if (windowLabel) setAlertBanner({ spotId: found.id, windowLabel });
         } else if (from === "email") {
-          // Email twin of the alert-open path. Same durable, ITP-proof return
-          // signal via the token that rode the email deep link. See
-          // /api/email/opened. No interstitial (that is push-only, from=alert).
+          // Email twin of the alert-open path. The durable open-ping + `t`
+          // strip (D18 action 2) already ran above, unconditionally on
+          // `found`; this branch is just the resolved-spot analytics.
           // `v` is the email copy-variant index (0-6 rotation, lib/email/templates.ts).
           // `pt` is the pro-tip pool index (0-6, TECHNIQUE_TIPS, item 41).
           const v = params.get("v");
@@ -176,23 +198,6 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             ...(v !== null && /^\d+$/.test(v) ? { variant: Number(v) } : {}),
             ...(pt !== null && /^\d+$/.test(pt) ? { tip_index: Number(pt) } : {}),
           });
-          const token = params.get("t");
-          if (token) {
-            // Item 47 legal gate (D18 action 2): the token must never linger
-            // in window.location, where PostHogProvider's $current_url capture
-            // (and browser history) would carry a live unsubscribe key. Fire
-            // the open ping, then strip `t` synchronously right after, before
-            // PostHogProvider's own mount effect runs (it renders after
-            // {children} in app/layout.tsx, so its effect fires later in this
-            // same commit). Caching the resolved state is async and does not
-            // block the strip.
-            reportEmailOpen(token, found.id).then((state) => {
-              if (state) cacheEmailSubscriptionState(state);
-            });
-            params.delete("t");
-            const qs = params.toString();
-            window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
-          }
         }
         trackIntent("spot_viewed", {
           spot_id: found.id,

@@ -22,7 +22,10 @@ describe("HomeClient wires the email subscription state cache (item 47)", () => 
     const emailBranchIdx = src.indexOf('from === "email"');
     expect(emailBranchIdx).toBeGreaterThan(-1);
     const branchSrc = src.slice(emailBranchIdx);
-    expect(branchSrc).toMatch(/reportEmailOpen\(token,\s*found\.id\)\s*\.then\(\s*\(state\)\s*=>\s*\{/);
+    // found?.id, not found.id: this ping must fire even when the spot didn't
+    // resolve (hidden after the send), see the HomeClient-email-token-strip
+    // regression test for why.
+    expect(branchSrc).toMatch(/reportEmailOpen\(token,\s*found\?\.id\)\s*\.then\(\s*\(state\)\s*=>\s*\{/);
     expect(branchSrc).toContain("cacheEmailSubscriptionState(state)");
   });
 
