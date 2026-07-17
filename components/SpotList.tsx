@@ -148,9 +148,15 @@ export default function SpotList({
         </div>
       ))}
 
-      <div className="px-4 py-4 text-center border-t border-gray-100">
-        <a href="/disclaimer" className="text-xs text-(--muted)/60 hover:text-(--muted) transition-colors">
+      <div className="px-4 py-4 text-center border-t border-gray-100 flex items-center justify-center gap-2">
+        <a href="/disclaimer" className="text-xs text-(--muted) hover:text-(--dark) transition-colors">
           Disclaimer
+        </a>
+        <span className="text-xs text-(--muted)/50" aria-hidden="true">
+          &middot;
+        </span>
+        <a href="/privacy" className="text-xs text-(--muted) hover:text-(--dark) transition-colors">
+          Privacy
         </a>
       </div>
     </div>

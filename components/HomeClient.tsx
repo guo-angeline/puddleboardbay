@@ -610,9 +610,15 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
                 <span className="text-gray-600">{label}</span>
               </div>
             ))}
-            <div className="border-t border-gray-200 mt-0.5 pt-1.5">
-              <a href="/disclaimer" className="text-gray-400 hover:text-gray-600 transition-colors">
+            <div className="border-t border-gray-200 mt-0.5 pt-1.5 flex items-center gap-2">
+              <a href="/disclaimer" className="text-(--muted) hover:text-(--dark) transition-colors">
                 Disclaimer
+              </a>
+              <span className="text-gray-300" aria-hidden="true">
+                &middot;
+              </span>
+              <a href="/privacy" className="text-(--muted) hover:text-(--dark) transition-colors">
+                Privacy
               </a>
             </div>
           </div>
