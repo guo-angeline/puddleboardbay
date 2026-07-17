@@ -230,37 +230,26 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
               <h2 className="font-['Newsreader'] text-xl font-bold text-(--dark) leading-tight">
                 {spot.water}
               </h2>
-              <p className="text-sm text-(--muted) mt-1">{spot.city} &middot; {spot.region}</p>
               {/*
-                Item 39. Deliberately NOT a star row and NOT paired with a count:
-                there is exactly one rater, and any aggregate affordance would
-                read as crowd consensus. The qualifier ships on every instance
-                for that reason, not as decoration.
+                Item 39. The owner's rating renders inline in the subtitle row as
+                a bare "star + number", no qualifier text, in both the drawer and
+                the list (D21, owner-directed 2026-07-17). The lawyer gate returned
+                needs-changes on the bare form (a star+number reads as an aggregate
+                crowd rating under FTC Act Section 5 net impression, worst in the
+                list); the owner shipped it anyway with that finding in front of
+                them and accepted the risk. The sr-only "out of 5" is scale only,
+                so a screen reader does not announce a bare "4.5".
               */}
-              {showOwnerRating && (
-                <p className="flex items-baseline gap-1.5 mt-1.5">
-                  <span aria-hidden className="text-(--accent) text-sm leading-none">&#9733;</span>
-                  <span className="text-sm font-semibold text-(--dark)">
-                    {spot.owner_rating!.toFixed(1)}
-                    <span className="sr-only"> out of 5 on the paddle, rated by one paddler</span>
+              <p className="text-sm text-(--muted) mt-1">
+                {showOwnerRating && (
+                  <span className="font-semibold text-(--dark)">
+                    <span aria-hidden className="text-(--accent)">&#9733;</span> {spot.owner_rating!.toFixed(1)}
+                    <span className="sr-only"> out of 5</span>
+                    {" · "}
                   </span>
-                  {/*
-                    --ink-2 (#42607A), not --muted (#6E8598). This qualifier is the
-                    element carrying the legal weight: it is what makes the number an
-                    opinion about a day out rather than an implied claim that the spot
-                    suits you. --muted renders 3.84:1 on this white panel, under the
-                    4.5:1 AA floor, which put the claim at 14.6:1 and the disclosure
-                    below legibility. --ink-2 is 6.59:1. Do not "harmonize" this back
-                    to --muted to match the line above it.
-
-                    "on the paddle" names the axis. The rating scores the PADDLE, not
-                    the put-in (D15 scoped the cut rubric to the put-in, and the two
-                    correlate at 0.04). Without the axis a bare 5.0 reads as a verdict
-                    on suitability, which is a representation we are not making.
-                  */}
-                  <span className="text-xs text-(--ink-2)">One paddler&rsquo;s take on the paddle</span>
-                </p>
-              )}
+                )}
+                {spot.city} &middot; {spot.region}
+              </p>
             </div>
             <button
               onClick={onClose}

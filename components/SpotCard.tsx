@@ -49,7 +49,18 @@ export default function SpotCard({ spot, selected, onClick, distance, isFavorite
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-(--dark) text-sm leading-snug truncate">{spot.water}</p>
+          {/* Item 39 (D21): owner rating inline in the subtitle, bare star +
+              number, matching the drawer. See SpotDrawer for the lawyer-gate
+              note; the owner accepted the aggregate-read risk. sr-only "out of 5"
+              is scale only. */}
           <p className="text-xs text-(--muted) mt-0.5">
+            {typeof spot.owner_rating === "number" && (
+              <span className="font-semibold text-(--dark)">
+                <span aria-hidden className="text-(--accent)">&#9733;</span> {spot.owner_rating.toFixed(1)}
+                <span className="sr-only"> out of 5</span>
+                {" · "}
+              </span>
+            )}
             {spot.city}
             {distance !== undefined
               ? <> &middot; <span className="font-medium text-(--accent)">{formatDistance(distance)}</span></>

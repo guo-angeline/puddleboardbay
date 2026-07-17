@@ -402,3 +402,15 @@ The owner then asked why the feature needed a PostHog flag at all if it ships at
 Consequences: no control arm, so item 39's lift is not measurable (owner accepted). `spot_action` still carries `owner_rating` + `owner_rating_shown`, so engagement with rated vs unrated spots stays analysable, segmented by region (North Bay discriminates, East Bay does not). No PostHog flag needs creating; the owner's original open action item is void. Changelog: analytics/INSTRUMENTATION_CHANGELOG.md 2026-07-17. `experiment_exposed` for owner_rating never fired in production (the flag was never created), so no series is lost.
 
 Answer: ship at 100%, flag removed in code (owner directive).
+
+## D21 [RESOLVED] 2026-07-17 · Item 39 rating display: compact bare star, in list + drawer, over the lawyer's needs-changes
+
+Owner feedback 2026-07-17: the rating was rendering as a separate line in the drawer only, both against item 39's original acceptance ("inline in the existing subtitle row, no extra row, in both list and spot sheet"). Owner directed: render just "star + number" inline in the subtitle row, in BOTH list and drawer, and remove the "One paddler's take on the paddle" qualifier. Verbatim fallback: "If lawyer is against star, remove star."
+
+Legal gate run before implementing (marketing-claims surface). Verdict: **needs-changes**, not blocked. The lawyer is fine with moving inline and adding the list view, and fine with the star ITSELF, but flagged the fully bare "star + number" as an FTC Act Section 5 net-impression risk: a star+number is the idiom for aggregated crowd reviews, and a dense list of them reads like Yelp/Google, implying a consensus we do not have. Recommended cure: a 2-word first-party signal ("star 4.5 our take"), which was item 39's original format. Ranked fallback: drop the star to a plain number; last, the bare star as-is (the finding).
+
+**Owner chose the bare star anyway** (option "star 4.5, against advice"), shown the finding and the alternatives, and accepts the Section 5 net-impression risk. This is an owner override of a needs-changes (not blocked) finding, on the record so it is not later read as an oversight. Precedent for owner overriding a studio recommendation: D3/D11/D13.
+
+Shipped: "star + number" inline in the subtitle row in SpotDrawer and SpotCard (list view added, which it was missing), no visible qualifier. Kept an sr-only "out of 5" (scale only, so a screen reader does not announce a bare "4.5"; not the removed framing). The lib/spots.test.ts aggregate-framing guard (no "average"/"reviews"/"N ratings") still passes and now also covers SpotCard. Verified in a browser: list shows the inline stars on rated spots and nothing on unrated ones; drawer matches.
+
+Answer: bare star + number, both views, no qualifier (owner override of the lawyer's needs-changes).

@@ -4,7 +4,7 @@ backlog: ROADMAP.md
 test: npm test
 lint: npm run lint
 build: npm run build (must pass before every deploy)
-deploy: vercel --prod --yes (CLI is the ONLY path to production; there is no git integration, a commit without a deploy changes nothing live)
+deploy: vercel --prod --yes (CLI is the ONLY path to production; there is no git integration, a commit without a deploy changes nothing live). After a verified deploy, move the pointer: git tag -f deployed-prod HEAD. The predeploy-gate.py hook diffs deployed-prod against the tree and stops a deploy that touches gated paths (spot lat/lng per D19, push/cron/subscription code, or any path on a Gates: line of an OPEN decision).
 previewDeploy: vercel (non-prod preview URL for verifier checks)
 liveUrl: https://paddletowater.com
 protectedBranches: [main]
