@@ -36,7 +36,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
-- 2026-07-17 [done, NOT DEPLOYED pending owner diff review D19] Item 40: record-accuracy audit. 3 two-source pin moves (64 Del Valle, 65 Jack London Sq, 134 Eden Landing lng-only) + 7 notes-justified tide_sensitive flips (1,25,29,39,41,44,51). Merged (3f9b6a2), 299 tests. Coordinate+tide diff awaits owner review before vercel --prod, because spot data feeds both alert crons. Report: reports/item-40-record-accuracy-2026-07-17.md.
+- 2026-07-17 [done, DEPLOYED] Item 40: record-accuracy audit. 3 two-source pin moves (64 Del Valle, 65 Jack London Sq, 134 Eden Landing lng-only) + 7 notes-justified tide_sensitive flips (1,25,29,39,41,44,51). Merged (3f9b6a2), 299 tests. Coordinate+tide diff awaits owner review before vercel --prod, because spot data feeds both alert crons. Report: reports/item-40-record-accuracy-2026-07-17.md.
 
 - 2026-07-17 [done] Item 48: desktop filter pills no longer stretch to a fifth of the viewport (1ca79a3, deployed). FilterBar row 2 was `grid grid-cols-5` + `w-full` at every width, with no breakpoint: 278px pills on a 1408px bar vs 119px content-sized region pills one row up. Below md unchanged; from md it is a flex of content-sized pills. Row-2 class was duplicated 3x, extracted to `pillSm`. Measured before and after at 1440px and 390px.
 

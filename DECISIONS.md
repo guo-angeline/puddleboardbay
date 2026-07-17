@@ -390,3 +390,5 @@ Q1: the pass commits and merges only edits defensible by two independent sources
 Q2: 70, 54, 84 and 63 are NOT split in this pass. Where a record's own notes already name the launch (65 names the dock half a mile east at Estuary Park), that counts as the second source and the pin moves to it. Where the notes are silent, the pass reports the candidate launches and changes nothing. Record splits (a new spot id enters the sitemap, OG builder, generateStaticParams and both crons) get their own item if the owner wants them.
 
 Defaults confirmed by silence elsewhere: tide pass runs first; the tide screen's own false positives (96, 60) are already corrected in the brief and must not be flipped; no source is called blocked until it has failed via WebFetch AND a POST with a User-Agent.
+
+**DEPLOYED 2026-07-17** after owner review of the coordinate diff. Verified live on paddletowater.com: spot 65 JSON-LD reads the new 37.7901745,-122.2659597; 64 and 134's new coordinates are in the live bundle; old coordinates gone. The 7 tide flips ship with them and now feed the conditions engine and the calm-window push cron. D19 fully closed.
