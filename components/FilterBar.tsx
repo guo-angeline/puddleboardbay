@@ -48,6 +48,13 @@ export default function FilterBar({
   nearMe, locating, geoError, onToggleNearMe, onClearAll,
 }: Props) {
   const pillLg = "px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap";
+  // Row 2 was `grid-cols-5` + `w-full` at every width. That is right on mobile
+  // (5 columns of ~75px) and wrong on desktop, where 5 columns of a 1408px bar
+  // made each pill 278px: an 11px "River" label floating in a quarter-viewport
+  // button, while the region pills right above it stayed content-sized. Below
+  // md the grid stays; from md the row becomes a flex of content-sized pills,
+  // matching pillLg's behaviour one row up.
+  const pillSm = "py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full md:w-auto md:px-3";
 
   function nearMeStyle(): React.CSSProperties {
     if (geoError) return NEAR_ERROR;
@@ -84,14 +91,14 @@ export default function FilterBar({
       </div>
 
       {/* Row 2 — all 5 filters in one row */}
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-5 gap-1 md:flex md:flex-wrap md:gap-2">
         {DIFFICULTIES.map((d) => {
           const { bg, lightBg, color } = DIFF_PALETTE[d];
           const isActive = filters.difficulty === d;
           return (
             <button
               key={d}
-              className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
+              className={pillSm}
               style={isActive ? { background: bg, color: "#fff" } : { background: lightBg, color }}
               onClick={() => onChange({ ...filters, difficulty: isActive ? "" : d })}
             >
@@ -101,7 +108,7 @@ export default function FilterBar({
         })}
 
         <button
-          className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
+          className={pillSm}
           style={filters.freeOnly ? FREE_ACTIVE : FREE_INACTIVE}
           onClick={() => onChange({ ...filters, freeOnly: !filters.freeOnly })}
         >
@@ -110,7 +117,7 @@ export default function FilterBar({
 
         {onToggleNearMe && (
           <button
-            className="py-1 rounded-full text-[11px] font-medium transition-colors cursor-pointer text-center w-full"
+            className={pillSm}
             style={nearMeStyle()}
             onClick={onToggleNearMe}
             disabled={locating}
