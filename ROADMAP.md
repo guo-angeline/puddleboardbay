@@ -63,6 +63,83 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## Owner item, added 2026-07-17 (queued top-most on purpose)
+
+## 54. [ready] Add the spot "Guerneville River Park" (Russian River, owner-rated, custom photos link)
+
+**Owner item, 2026-07-17.** Add a new put-in on the Russian River at Guerneville. This is distinct from the existing spot 33 (Russian River - Johnson's Beach, also Guerneville); it is a separate launch with a dedicated boat ramp. Next free spot id is **150** (current max is 149).
+
+**What the owner supplied (facts, do not embellish beyond them):**
+- Location: `38.5001973, -122.9957117` (this is a verified owner-provided coordinate, so it is a valid `lat`/`lng` source per the coordinate-provenance rule).
+- Owner rating: **4.8** (`owner_rating`, the item-39 hand-entered field, population of one; never render it with a review count or as an average).
+- Owner's experienced description: high water through summer with lake-like tranquility, and a dedicated concrete boat ramp right beside the parking lot.
+
+The "See photos" CTA uses the regular derived Google Maps search URL (`SpotDrawer.tsx:132`), same as every other spot. No custom per-spot photos link.
+
+**Draft notes (evergreen, third-person, per the notes rule; owner to sanity-check):**
+> A dedicated concrete boat ramp drops straight from the parking lot to the water, so the carry is short and easy. Through summer the Russian River here runs high and settles into a lake-like calm, one of the mellower flatwater stretches around Guerneville.
+
+**Field values to confirm at build:** `region: "North Bay"`, `city: "Guerneville"`, `water:` follow the sibling naming convention (`"Russian River - Guerneville River Park"`), `difficulty: "flatwater"` (owner describes lake-like calm, not moving river), `tide_sensitive: false` (upstream freshwater, not tidal), `has_fee`/`power_boats`/`dog_friendly`/`inspection_required`/`rentals_available` left `null`/`false` unless a source confirms otherwise (do not guess).
+
+**Acceptance:**
+- Spot 150 added to `data/spots.json` via a **text-level edit** (do not `json.load`/`json.dump` the file, it reformats every coordinate and churns the diff; verify `git diff data/spots.json | grep '"lat"\|"lng"'` shows only the two new lines). Read through `lib/spots.ts`, never import the JSON directly.
+- `owner_rating: 4.8` renders inline as the bare star+number in list and drawer (matches item 39's D21 treatment).
+- The drawer's Photos CTA is the regular derived Google Maps search URL (no new field, no custom link). Confirm the `spot_action` `action: "photos"` event still fires.
+- A new spot enters the sitemap, OG image builder, `generateStaticParams` (`/spot/150`), JSON-LD, and **both alert crons** (same surface list as item 50). Confirm the spot builds a page and is reachable, and that nothing about it is untrustworthy enough to warrant `hidden`.
+- New user-facing content (a single additive record, not a flagged surface): keep it small; no schema change needed.
+- Verify live after deploy: `/spot/150` renders, rating shows, Photos opens the derived Maps search.
+
+---
+
+## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
+
+## 55. [ready] P0 mobile: tapping a list spot throws `Invalid LatLng (NaN, NaN)` and the conditions panel intermittently fails to render
+
+**Found by the 2026-07-17 verify loop (mobile-priority pass).** On mobile, the Map panel is CSS-hidden (`display:none` via class `hidden`) while the List tab is active, but `MapView` stays mounted (`components/HomeClient.tsx:664`). Tapping a spot in the list changes `selected`, which fires `map.flyTo([spot.lat, spot.lng], ...)` in the `FlyTo` effect (`components/MapView.tsx:21`). Leaflet's `flyTo` derives the target center from the container's pixel size; on a zero-sized (hidden) map that math divides by zero and produces `(NaN, NaN)`, which Leaflet throws as an uncaught exception.
+
+**Measured (390px, fast interaction that mirrors a real tapping user: load, tap List, tap a spot):**
+- `Invalid LatLng object: (NaN, NaN)` uncaught pageerror in **6 of 6** trials.
+- The "Conditions today" panel failed to render in **5 of those 6**. When the error did not fire (deliberate slow interaction with settle delays), conditions rendered fine.
+- Desktop is unaffected (the map is never hidden), 0 errors across all trials.
+- One fast trial left the page wedged (the List control never became tappable again within 30s), so the throw can also brick the view.
+
+**Why it matters (P0):** mobile is the priority surface, and this intermittently blanks the conditions panel, the exact feature retention is betting on, on the primary "browse the list, tap a spot" path. It is timing-dependent, so it does not show in a slow manual click-through. This is almost certainly why item 7D's 5-trial "NaN loop" check came back clean: that check used deliberate (slow) interaction and a different reload-loop hypothesis. This is a distinct, now-reproduced defect, not a re-litigation of 7D.
+
+**Acceptance:**
+- No `Invalid LatLng` / NaN error when opening a spot from the mobile List tab (map hidden), across fast repeated taps.
+- The conditions panel renders reliably on the mobile list-to-spot path (target: not 5/6 failures; verify the same 6-fast-trial harness comes back clean).
+- Likely fix: guard the `FlyTo` / `FitBounds` / `FlyToUser` effects in `MapView.tsx` to no-op when the map has zero size (e.g. `if (!map.getSize().x) return;`), and/or call `map.invalidateSize()` when the Map tab becomes visible. Do NOT unmount the map on tab switch (it would re-init Leaflet and reintroduce the single-canvas-renderer risk documented in CLAUDE.md).
+- Keep the existing non-destructive-selection behaviour (zoom floor 11, no refit on close) intact.
+
+## 52. [ready] Proxy the NOAA tides fetch: it fails intermittently in the browser and silently drops conditions
+
+**Found by the 2026-07-17 end-to-end verify loop.** Tide conditions fetch NOAA CO-OPS directly from the browser (`lib/conditions.ts:164`, fully client-side per the file header). The header comment (`lib/conditions.ts:5`) claims NOAA sends `access-control-allow-origin: *`; it does not do so reliably.
+
+**Evidence (measured live 2026-07-17, `Origin: https://paddletowater.com`):** four back-to-back GETs to the predictions datagetter returned HTTP 200 every time but sent the CORS header on only 2 of 4 (`*`, none, `*`, none). A separate call returned a 504 with no CORS header. When the header is absent the browser blocks the response and `fetch` throws, so `fetchTides` fails and the tide half of the conditions panel silently drops. Reproduced in the local dev run: the browser console logged `Access to fetch at 'api.tidesandcurrents.noaa.gov/...' blocked by CORS policy`. Wind (weather.gov) is unaffected: it sends `access-control-allow-origin: *` on every call.
+
+**Why it matters:** conditions is the retention differentiator and `tide_sensitive` spots depend on this exact call. The failure is intermittent (~half of cold fetches in this sample) and silent, so it does not show up in a normal spot-check and would not have surfaced without the header-level test. It degrades the one feature the roadmap is betting retention on.
+
+**Acceptance:**
+- Tide data reaches the client through a same-origin path so a missing NOAA CORS header can never block it (e.g. a Node route handler `app/api/tides` that fetches NOAA server-side and returns JSON; the app already runs Node server routes, so this composes with the static-page architecture).
+- Add a short timeout + one retry to absorb NOAA's intermittent 504s.
+- Cache server-side (tide predictions for a station+day are stable) to avoid hammering NOAA and to keep the panel fast.
+- Update the stale `lib/conditions.ts:5` comment: NOAA CORS is not dependable; only weather.gov is.
+- Confirm the alert crons (`lib/alerts/conditions-window.ts`) are unaffected (they run server-side already, so no CORS exposure there) and are not accidentally rerouted.
+
+## 53. [ready] Cut "conditions today" loading latency (make it less live)
+
+**Owner item, added 2026-07-17.** The conditions panel is the retention differentiator, and today it is slow to fill because everything is fetched live in the browser on every open. Per `lib/conditions.ts:1`, the app is static with no backend for this path, so each spot open triggers, at runtime: a NOAA CO-OPS tide predictions call, plus a National Weather Service **two-hop** wind lookup (`/points/{lat},{lng}` to resolve a gridpoint, then the gridpoint `/forecast`). That is three sequential external round trips (four counting the NWS redirect) before the panel can show "good to paddle", each subject to a cold third-party API, and the tide hop also intermittently fails on CORS (item 52). Results are cached only per session (module-level Map), so a cold open, the exact case that decides whether a returning user stays, pays full latency every time.
+
+**The lever the owner named: make it less live/real-time.** Conditions do not need per-second freshness. Tide predictions for a station+day are fixed and computable in advance; wind forecasts update a few times an hour, not continuously. So precompute or cache instead of fetching from scratch on every open.
+
+**Acceptance (size before building; overlaps item 52, sequence them together):**
+- A cold "conditions today" open renders tide + wind materially faster than today (set a target, e.g. first paint of the paddleability verdict under ~1s on a warm cache), measured, not asserted.
+- Collapse the NWS two-hop: the `/points` -> gridpoint resolution is stable per spot and can be precomputed at build time (all 140 spots have fixed lat/lng), so runtime does at most one wind call instead of two.
+- Serve conditions through a cached same-origin path (a Node route + short server-side cache), which also fixes the item 52 CORS drop; a single spot's tide/wind payload is tiny and shareable across all users of that spot for the cache window.
+- Keep it honest about freshness: show when the reading was last updated so "less live" never reads as "stale/wrong". Conditions is the trust-critical surface.
+- Add a `conditions_loaded` SYSTEM latency event (or extend the existing one) so the before/after is provable in PostHog, per the analytics rules; changelog entry required.
+- Do not regress the alert crons, which already run server-side, and reuse the same fetch/caching layer if it makes sense rather than forking a second copy.
+
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
 ## 51. [proposed] Marker clustering for dense areas (carved out of item 7, 2026-07-17)
@@ -112,7 +189,41 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 ## Owner items, added 2026-07-16 (eight ideas; 7 and 8 merged into item 40)
 
-**Strategy note, read before promoting any of these.** Items 43 and 44 (reviews, accounts) are the "UGC content flywheel" and "optional sign-in" entries from the **Later** section at the bottom of this file, which says do not promote before retention is proven. The mid-July retention read is due now and unblocked (D9 closed 2026-07-15). Promoting 43/44 ahead of that read is a deliberate bet against this roadmap's own thesis (retention is the bottleneck, UGC needs retained users to generate content). That may be the right call, but it is an owner decision, not a default. Items 39, 40, 41, 42, 45 do not carry this tension and can proceed on their own.
+**Strategy note.** Items 43 and 44 (reviews, accounts) are the "UGC content flywheel" and "optional sign-in" entries from the **Later** section at the bottom of this file, which says do not promote before retention is proven. The mid-July retention read is due now and unblocked (D9 closed 2026-07-15). Promoting 43/44 ahead of that read is a deliberate bet against this roadmap's own thesis (retention is the bottleneck, UGC needs retained users to generate content).
+
+**Owner promoted both to `[ready]` on 2026-07-17, with the tension above understood.** This is the owner exercising the call the note reserves, not a default. Recorded so a later reader does not mistake it for the thesis changing: retention is still the bottleneck; the retention read is still the number that matters. Both items carry a lawyer gate before deploy (43: FTC fake-review rule + UGC moderation + Section 230; 44: personal data + OAuth + privacy-policy update). Items 39, 40, 41, 42, 45 never carried this tension.
+
+## 43. [ready] Real user reviews on a spot (the crowd-sourced half of ratings)
+
+**Promoted by the owner 2026-07-17** (see strategy note above; a bet against the retention-first thesis, made deliberately). This is the UGC ratings/reviews half. Item 39 shipped the owner's own "one paddler's take"; item 43 lets visitors add theirs, which is the SEO-acquisition and content-moat play.
+
+**This is the heaviest legal surface in the backlog. The lawyer gate runs before ANY deploy, not after.** Known constraints already established in this roadmap:
+- **Never a fabricated count** (item 39 scope decision, line 214). The FTC fake-review rule (16 CFR Part 465, in force Oct 2024) carries per-violation civil penalties and reaches exactly this. Real reviews only, real counts only.
+- **Section 230 vs. first-party speech.** A count or list of genuine user reviews is user content (230-protected). An average the site computes and presents is arguably the platform's own speech (D15/§0.1 reasoning). Decide the display so the aggregate does not become an editorial safety verdict on a site that already manages wrongful-death exposure.
+- **UGC moderation + rights.** User submissions need a moderation path, a content policy, and a rights/licensing stance before the first review can post. This is the moderation-liability gate D10-Q3 deferred for photos, now in scope for text.
+- **`aggregateRating` structured data** (item 39 open question, spec §3): do not emit schema.org `aggregateRating` for anything the site itself scored. Only genuine crowd reviews can back a star in search, and only once moderation is real.
+
+**Acceptance:**
+- A signed-in-or-anonymous path to leave a rating (+ optional short text) on a spot, with a moderation queue before it renders publicly. Decide the identity requirement jointly with item 44.
+- The star row is designed **jointly with item 39's "our take" row** (line 221): both occupy the same subtitle real estate; a solo build gets torn out when the other lands.
+- Real aggregate count only; never a bare `(N)` that implies reviewers who do not exist.
+- New intent events for submit / view, with `spot_id`+`region` and an `INSTRUMENTATION_CHANGELOG.md` entry. Rollout flag-gated per the major-update directive.
+- Lawyer gate (data collection, UGC moderation, marketing claims, FTC) returns `clear` before deploy. Likely an `escalate` on the moderation-policy and aggregate-display questions.
+
+## 44. [ready] Optional sign-in to sync spots and alerts across devices
+
+**Promoted by the owner 2026-07-17** (see strategy note above). The retention engine ships anonymous by design; this is the upgrade path, not a replacement. It also gives item 43 a real identity to attach reviews to, so sequence the identity decision across both.
+
+**Legal + analytics landmines, gated before deploy:**
+- **Never call `posthog.identify()` / `reset()`** (CLAUDE.md analytics rule): there is no login today precisely because identify reshuffles experiment buckets. Adding real auth means deciding how account identity maps to the anonymous `anon_id` WITHOUT breaking bucketing or the retention queries that key on `anon_id` (item 25, D9 exclusion).
+- **Personal data + OAuth = privacy-policy update + lawyer gate.** Collecting an email/Google identity changes what the privacy policy must disclose (the D17 policy is fresh; do not silently outdate it). CalOPPA/GDPR-shaped disclosure obligations attach.
+- **Migration, not reset.** An anonymous user who signs in must keep their existing saved spots and push subscription, not start empty. The push tables (Supabase) key on anonymous ids today.
+
+**Acceptance:**
+- Optional Google sign-in (existing anonymous use stays fully functional and is never forced). On sign-in, existing saved spots + push subscription migrate to the account and sync across that user's devices.
+- Analytics identity strategy documented BEFORE build: how account identity composes with `anon_id` without reshuffling experiment buckets or corrupting the retention/exclusion queries.
+- Privacy policy updated to disclose the new data collection; lawyer gate (personal data, privacy, OAuth) returns `clear` before deploy.
+- New intent events for sign-in / sync, with an `INSTRUMENTATION_CHANGELOG.md` entry. Flag-gated per the major-update directive.
 
 ## 39. [done] 2026-07-16 A paddleability score for each spot (editorial, not crowd-sourced)
 
@@ -242,8 +353,8 @@ Acceptance (owner OK needed on one judgment call: extending the calm->good frami
 
 ## Later (after retention is proven) — all [proposed], do not promote before the ~2026-07-15 funnel re-check
 
-- **UGC content flywheel:** ratings, photos, trip logs, user conditions reports. The long-term moat and SEO-acquisition engine, but it needs retained users to generate content first. *(Owner raised the ratings/reviews half early on 2026-07-16; now item 43, with the tension flagged in that section's strategy note. Trip logs + user conditions reports remain here.)*
-- **Optional Google sign-in** to sync push subscriptions and saved spots across devices (the engine ships anonymous; this is the upgrade path). *(Owner raised this early on 2026-07-16; now item 44.)*
+- **UGC content flywheel:** ratings, photos, trip logs, user conditions reports. The long-term moat and SEO-acquisition engine, but it needs retained users to generate content first. *(Ratings/reviews half is now item 43, promoted to `[ready]` by the owner 2026-07-17. Trip logs + user conditions reports remain here.)*
+- **Optional Google sign-in** to sync push subscriptions and saved spots across devices (the engine ships anonymous; this is the upgrade path). *(Now item 44, promoted to `[ready]` by the owner 2026-07-17.)*
 - **PaddlePass premium tier:** alerts + multi-day forecast windows + offline, as the freemium paywall.
 - **Community spot submissions** with admin approval.
 - **Tide-window refinement** in the cron's "good window" evaluator (it ships wind-only).
