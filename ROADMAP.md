@@ -65,13 +65,16 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 Five call sites all inherit the bug (`components/InstallPrompt.tsx:162, 201, 217, 235, 251`): `first_save`, `standalone_relaunch`, `return_session`, and `conditions_interest`.
 
-**This lands hardest on exactly the people it should never hit.** Desktop and iOS Safari *lead with email* (item 23), so email subscribers are the majority of the enrolled population on those platforms, and they are the cohort re-prompted on every visit.
+**Corrected 2026-07-16 (D18): the eligible population is 1, and it is the owner.** The original text here said this "lands hardest" on "the majority of the enrolled population" on desktop/iOS. True as a share, vacuous as a count: `reports/analytics-2026-07-11.md` shows **2 email submits and 0 confirmed in 14 days ex-owner**, so the only confirmed email subscriber is the owner. This repo has a hard rule against overstated stats and that line broke it.
+
+**Why fix it anyway (owner-directed, D18 Q1a):** not for the 1 user. Because every day it lives it inflates `alert_optin_shown` and corrupts the email funnel denominator that the August retention read depends on. Fixing it later means fixing it AND discarding the contaminated window. It is cheap insurance on a measurement, not a user-facing win. **The actual constraint on this cohort growing is D17** (no DMARC published, owner's own confirm test hit Outlook spam), which is still open.
 
 **Second symptom, same cause:** `components/SpotList.tsx:50` drives the "alerts on" indicator off the same push-only read, so an email subscriber is shown alerts as OFF while they are actively receiving emails.
 
 **Acceptance:**
 - An email subscriber is never shown the enrollment prompt again on that device, through any of the four triggers.
-- The SpotList "alerts on" indicator reads true for an email subscriber.
+- The SpotList "alerts on" indicator reads true for an email subscriber. **D18 Q2(c): the "Turn on alerts" button is allowed to hide as a result.** The owner chose this over keeping a relabelled button, knowing it dead-ends push-capable email subscribers (deferred to item 49) and zeroes `trigger:"manual"`. Do not re-open it.
+- **Guardrail moves as a consequence.** With `trigger:"manual"` at zero for this cohort, `enrollment_prompt_suppressed` volume is the ONLY signal that would catch a bad suppression. It is required, not optional: if suppression fires beyond the known confirmed cohort, the suppression is wrong.
 - The email confirm landing (`/?email_confirmed=1`, `components/HomeClient.tsx:100`) is the natural place to persist the state, but **it is not sufficient on its own**: the reported path was a *return* from an alert email (`from=email`, carrying `t=<token>`), not the confirm link. Suppress on that path too, or the bug survives for anyone who confirmed on a different device.
 - Consider whether the server ledger (Supabase `email_subscribers`) should be the source of truth rather than localStorage, given the whole point is a cross-device return. A client-only fix leaves the desktop-confirm/phone-return case broken. Weigh against: the app has no login, and `posthog.identify()` is forbidden (it reshuffles experiment buckets).
 - Decide what happens when someone is subscribed by email and *could* also enable push. Today the dual-CTA card (item 32, `enrollment_dual_cta`) treats them as unenrolled. Re-offering push to an email subscriber may be legitimate; re-offering *email* to an email subscriber is the bug. Do not collapse the two.
@@ -90,6 +93,19 @@ Five call sites all inherit the bug (`components/InstallPrompt.tsx:162, 201, 217
 - Verify at both 1280px and 390px on the rendered surface, not in the code (the `verify` skill drives both).
 - Pure visual polish with no new interaction, so it is exempt from the A/B directive (small fixes and copy tweaks are exempt). No new analytics events.
 - Check against item 37 (visual-polish pass, also `[ready]`): if 37 is still open, these may be the same work and should be merged rather than done twice.
+
+## 49. [proposed] Email subscribers on Android have no path to push
+
+**Created by D18 Q2(c), 2026-07-16.** Item 47 makes the "alerts on" indicator true for email subscribers, which hides the "Turn on alerts" button (`components/SpotList.tsx:111` gates it on `!alertsOn`). That is the only manual enrollment entry point. A push-capable email subscriber, typically on Android, therefore has no route to push at all.
+
+The owner chose this knowingly over a relabelled "Add push" button, to keep the header coherent. This item is the deferral, so the dead end is not forgotten.
+
+**Do not start this before the D17 / email-deliverability constraint is resolved.** The affected cohort is currently zero: there are no confirmed email subscribers except the owner, and none on Android. Building a push-upgrade path for an empty set is the same mistake in the opposite direction.
+
+**Acceptance (when it is worth doing):**
+- A confirmed email subscriber on a push-capable device has a discoverable route to enable push.
+- It never re-offers EMAIL to an email subscriber. That is item 47's bug and must not return.
+- Weigh against the standing "desktop never offers push" invariant (D18 default, E5): this is an Android/installed-PWA question, not a desktop one.
 
 ---
 

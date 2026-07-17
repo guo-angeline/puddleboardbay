@@ -280,3 +280,46 @@ Questions for the owner:
 2. Was DMARC ever actually published? If it was, something removed it. If it was not, the 2026-07-24 "tighten to quarantine" follow-up should become "publish p=none, then tighten".
 
 Answer: 
+
+## D18 [RESOLVED] 2026-07-16 · Item 47 (email subscribers re-prompted forever): ship a fix nobody but you can feel?
+
+Context: 14 escalations from four role agents at the design+architecture gate on item 47. They collapse to two questions for you; the rest the agents already agree on and are folded in as defaults below. The headline is not in the roadmap item: the bug's eligible population is **zero excluding you**. 2 email submits, 0 confirmed in 14 days (reports/analytics-2026-07-11.md), and the only confirmed email subscriber in the ledger is you. D17's finding compounds it: the confirm path that would create more of this cohort is itself broken (owner test landed in Outlook spam, no DMARC published). So the fix is correct, cheap, and unmeasurable on live data until email confirm works and the cohort grows.
+
+Correction owed either way: item 47 says this "lands hardest" on "the majority of the enrolled population" on desktop/iOS. True as a share, vacuous at n≈1, and the repo has a hard rule against overstated stats. The roadmap text gets rewritten to say "affects 1 known subscriber (the owner); matters because it corrupts the funnel denominator before the cohort grows."
+
+**Q1. Ship now, or park until email confirm works?**
+- (a) [recommended] **Ship now at 100%, no A/B.** It is a real defect, the fix is hours not days, and every day it lives it inflates `alert_optin_shown` and poisons the email funnel denominator we will read in August. Fixing it later means fixing it *and* discarding the contaminated window.
+- (b) Park behind D17. Honest about the population, but banks a known-wrong denominator into the one metric the retention thesis rests on.
+
+**Q2. When alerts are on via email, does the "Turn on alerts" button stay?** The agents split, and your own item-47 text ("re-offering push may be legitimate; re-offering email is the bug, do not collapse the two") points at (a).
+- (a) [recommended] **Keep the button for push-capable email subscribers, relabel "Add push"** (E1). Preserves the only manual enrollment path, keeps the two offers distinct, and keeps `trigger:"manual"` alive, which E13 notes is the sole guardrail that would catch a bad suppression. Cost: one new string.
+- (b) Keep button, keep label, re-route the tap to a non-email body (E4). Zero copy, but the label lies while alerts are on.
+- (c) Let it hide (E8). Cleanest header, but it collapses exactly the distinction you said not to collapse, dead-ends Android email subscribers out of push, and zeroes the guardrail.
+
+Defaults if you say nothing (agents agree, sound rationale, folded not asked):
+- **No A/B flag, ship 100%** with guardrails (`alert_optin_shown` by trigger, `enrollment_prompt_suppressed` volume). A control arm here is a decision to keep nagging confirmed subscribers, which is the defect. Precedent D3, D6, D11, D13. Recorded distinction: exempt because it is a **bugfix**, not because traffic is thin. The arithmetic needs only ~5 per arm.
+- **Server ledger is source of truth.** `/api/email/opened` already resolves the token and throws the answer away; return `{known, confirmed}` and cache booleans in localStorage. Never the address. No new `/api/email/status` (anon_id is localStorage too, dies in the same ITP purge, partitioned on iOS per D7). Table is `email_subscriptions`, not `email_subscribers` as item 47 says.
+- **Desktop confirmed subscriber sees a static "You're set."** No push offer, preserving the desktop-never-offers-push invariant (E5).
+- **"Alerts on" shows for push OR email confirmed** (closes a pre-existing gap); pending-unconfirmed re-shows the plain email form rather than persisting a typed address (E6, less PII at rest).
+- **Two residuals accepted and documented, not solved:** a device that never touched an email link and never enrolled locally cannot be recognised (needs identity this app lacks, `posthog.identify()` is hard banned). And a cross-device unsubscribe cannot clear this device's cached flag, so an unsubscribed user may see "alerts on" until the next email open reconciles `known:false`. A TTL would resurrect the exact bug this item kills (E10).
+
+Blocked on: `lawyer` verdict, dispatched separately (E7, E14). No deploy until it returns.
+
+If silent: ship (a)+(a) after the legal gate clears, correct the roadmap stat, continue other items.
+
+Blocks: item 47 (email subscribers re-prompted forever)
+
+Answer: **Q1 (a) ship now at 100%, no flag. Q2 (c) let the button hide.** (2026-07-16, owner.)
+
+**Q2 went against the recommendation and against the owner's own item-47 line, deliberately.** Recorded so it is not re-litigated: the owner was shown that hiding the button dead-ends push-capable email subscribers (an Android email subscriber cannot reach push at all) and zeroes `trigger:"manual"`, which E13 named as the sole guardrail that would catch a bad suppression. They chose it anyway. The choice is defensible on its own terms: hiding does NOT re-offer email to an email subscriber, so the reported bug is fixed, and it is the smallest, most coherent header. What it gives up is the push-upgrade path, which is deferred, not denied.
+
+Two consequences accepted with it:
+- **The push-upgrade dead end is filed as item 49**, so it is deferred rather than forgotten.
+- **`trigger:"manual"` will go to zero for this cohort, so guardrail 2 moves** to `enrollment_prompt_suppressed` volume: if suppression fires beyond the known confirmed cohort, the suppression is wrong. That is now the only signal, so it is required, not optional.
+
+**Legal gate returned `needs-changes`, zero blockers** (verdict 2026-07-16). `{known, confirmed}` approved: the token is a 122-bit CSPRNG value that only ever appears in that address's own email, and a bearer can already DESTROY the subscription via `/api/email/unsubscribe`, so learning "it is confirmed" is strictly less power. Forwarding does not change it (a forward recipient is looking at the email). Referer is already closed by browser defaults (`strict-origin-when-cross-origin`). No enumeration concern. Three required actions folded into item 47:
+1. Ship the `{known, confirmed}` shape. Approved. Note `/api/email/unsubscribe` deliberately never reveals whether a token exists, so `known` breaks that house posture; tokens are unguessable so this is consistency, not risk.
+2. **Strip `t` from the URL after the open ping fires** (`history.replaceState`). The lawyer found the subscription token is currently shipped to PostHog on every email arrival: `emailOpenUrl` (`lib/email/templates.ts:47`) puts it in the URL, `HomeClient` never strips it, and `before_send` scrubs nothing, so `$current_url` carries a live unsubscribe key into a third-party store plus browser history. Pre-existing and NOT caused by item 47, but item 47 is already in this code path. One line.
+3. Widen the privacy policy purpose sentence (`app/privacy/page.tsx:166-168`): reading subscription state to decide whether to render a prompt is arguably a third use beyond "to send you the alert and let you stop it".
+
+D17 was re-confirmed live by the lawyer (`dig MX` and `dig TXT _dmarc` both empty) and re-flagged as a CCPA/CPRA + FTC exposure, since `hello@` is the published channel for access, correction, deletion, AND the COPPA child-report channel. It does not gate item 47. It remains the owner's call and is still unanswered.
