@@ -252,9 +252,20 @@ Analysis: `reports/paddle-score-owner-ratings-2026-07-16.md`. The owner ratings 
 
 Two things this decision does NOT resolve, tracked below: spot 92 (see D14 addendum) and the fact that the ratings were never gated on "have I been here" (see the note in D14).
 
-## D17 [OPEN, reopened] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
+## D17 [RESOLVED] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
 
-**REOPENED 2026-07-17: the DNS half is done, but end-to-end receiving FAILS, so hello@ still does not work.** I marked this RESOLVED on green DNS (MX live, DMARC published, both verified via dig). That was premature. The owner then sent test emails to hello@ from BOTH qiguo1102@live.com AND qiguo1102@gmail.com; neither landed. Both failing identically, including the clean external gmail send, points at the destination: the Email Routing rule forwards hello@ to **qiguo1102@live.com**, and Microsoft (live/outlook/hotmail) aggressively silently-drops forwarded mail (forwarding breaks SPF; Cloudflare SRS-rewrites the envelope but Outlook still black-holes forwards). The Cloudflare Activity Log will confirm (Forwarded = Cloudflare did its job, Microsoft ate it). **Fix: point the destination at a non-Microsoft inbox (the owner's gmail).** Add qiguo1102@gmail.com as a Destination Address, verify it, retarget the hello@ rule to it. Until a test email actually lands, hello@ is not a working contact channel and the privacy policy still promises a remedy it cannot deliver. Do NOT re-close D17 on DNS state alone; close it only when a real message arrives.
+**RESOLVED 2026-07-17, on the real proof: a test email to hello@ landed in the owner's inbox.** hello@paddletowater.com now receives (forwarded to qiguo1102@live.com), and DMARC p=none is published. Both dig-verified; the receiving end confirmed by an actual delivered message, not by DNS status.
+
+Status whipsawed once and the sequence is worth keeping, because it is the lesson: (1) marked RESOLVED on green DNS, which was premature; (2) reopened when two test sends did not land; (3) closed for real when a send arrived. The gap between 1 and 3 was **DNS propagation timing**, not a config fault: the sends were made while the sending servers still cached the pre-MX "no mail here" answer. Never close on DNS green alone, only on a delivered message.
+
+Consequences (unchanged from the DNS work):
+1. The **live privacy policy is now honest** with zero code change: it points at hello@, which works. FTC/CCPA/COPPA "designated contact bounces" exposure closed.
+2. The **alert-email reply-to works** for the first time.
+3. **D17 no longer gates item 44 or item 49** (each keeps its own separate gate).
+
+Two follow-on observables, NOT blockers:
+- **Microsoft forward flakiness.** The forward target is a live.com inbox, and Microsoft is known to occasionally silently-drop forwarded mail. This test landed; if inbound to hello@ ever proves flaky, retarget the Email Routing rule to a non-Microsoft inbox (gmail). Not required while live.com works.
+- **Sending deliverability** (the retention-critical one): whether alert/confirmation emails FROM conditions@alerts land in subscribers' inboxes rather than spam. Different path from receiving. DMARC helps; young-domain reputation is the residual risk. Measured by the confirm rate in the early-August read, 0 of 2 before this.
 
 ---
 
