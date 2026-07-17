@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL } from "@/lib/types";
 import { trackIntent } from "@/lib/analytics";
-import { useExperiment } from "@/lib/experiments";
 import ConditionsPanel from "@/components/ConditionsPanel";
 
 interface Props {
@@ -118,18 +117,13 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Item 39: the owner's own rating, on the 118 spots that carry one.
-  const { variant: ratingVariant, ready: ratingReady, logExposure: logRatingExposure } =
-    useExperiment("owner_rating");
-  // Treatment only counts as seen when a rating actually renders. 24 spots are
-  // deliberately unrated, and a bucketed user who only ever opens those saw
-  // nothing, so they must not dilute the arm.
-  const showOwnerRating =
-    ratingReady && ratingVariant === "treatment" && typeof spot?.owner_rating === "number";
-
-  useEffect(() => {
-    if (showOwnerRating) logRatingExposure();
-  }, [showOwnerRating, logRatingExposure]);
+  // Item 39: the owner's own rating, on the spots that carry one. Shipped at
+  // 100% by owner directive 2026-07-17 (D20), so it renders unconditionally
+  // rather than behind a flag: it is editorial content, and gating it on
+  // PostHog resolving a feature flag would make it vanish for anyone who blocks
+  // analytics. `spot_action` still carries owner_rating + owner_rating_shown,
+  // so engagement with rated spots is still measurable without an experiment.
+  const showOwnerRating = typeof spot?.owner_rating === "number";
 
   if (!spot) return null;
 

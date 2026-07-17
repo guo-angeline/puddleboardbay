@@ -392,3 +392,13 @@ Q2: 70, 54, 84 and 63 are NOT split in this pass. Where a record's own notes alr
 Defaults confirmed by silence elsewhere: tide pass runs first; the tide screen's own false positives (96, 60) are already corrected in the brief and must not be flipped; no source is called blocked until it has failed via WebFetch AND a POST with a User-Agent.
 
 **DEPLOYED 2026-07-17** after owner review of the coordinate diff. Verified live on paddletowater.com: spot 65 JSON-LD reads the new 37.7901745,-122.2659597; 64 and 134's new coordinates are in the live bundle; old coordinates gone. The 7 tide flips ship with them and now feed the conditions engine and the calm-window push cron. D19 fully closed.
+
+## D20 [RESOLVED] 2026-07-17 · Item 39 owner ratings: ship at 100%, no A/B flag
+
+Owner directive 2026-07-17, verbatim intent: do not A/B test the owner ratings; render them to everyone. This is an explicit exception to the board's "every major update behind an A/B flag" directive, consistent with the D3/D11/D13 precedents for owner overrides at this traffic level.
+
+The owner then asked why the feature needed a PostHog flag at all if it ships at 100%. It did not. The flag existed only to satisfy the A/B directive now waived, and gating an editorial content surface on PostHog resolving a feature flag would have silently hidden the ratings from anyone who blocks analytics (the render gate required `ratingReady`, false until PostHog answers). Resolution: removed the `owner-rating` flag and its `owner_rating` entry in `lib/experiments.ts`; `SpotDrawer` now renders the rating unconditionally whenever a spot carries one. Verified in a browser with PostHog NOT loaded: China Camp shows the rating, unrated Alviso shows nothing and never coerces to 0.
+
+Consequences: no control arm, so item 39's lift is not measurable (owner accepted). `spot_action` still carries `owner_rating` + `owner_rating_shown`, so engagement with rated vs unrated spots stays analysable, segmented by region (North Bay discriminates, East Bay does not). No PostHog flag needs creating; the owner's original open action item is void. Changelog: analytics/INSTRUMENTATION_CHANGELOG.md 2026-07-17. `experiment_exposed` for owner_rating never fired in production (the flag was never created), so no series is lost.
+
+Answer: ship at 100%, flag removed in code (owner directive).

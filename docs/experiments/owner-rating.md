@@ -1,5 +1,11 @@
 # Experiment: owner_rating
 
+> **RETIRED AS AN EXPERIMENT 2026-07-17 (D20).** The owner directed item 39's ratings to 100%, so this is no longer an A/B test. The `owner-rating` PostHog flag was never created and is no longer read: the flag entry was removed from `lib/experiments.ts`, and `SpotDrawer` now renders the rating unconditionally whenever a spot has one. Reason: it is editorial content, and gating it on PostHog resolving a feature flag would hide it from anyone who blocks analytics. No control arm, so the lift is not measurable, which the owner accepted. `spot_action` still carries `owner_rating` + `owner_rating_shown`, so engagement with rated spots is still analysable, and the North Bay vs East Bay discrimination note below still matters to any such analysis. The rest of this doc is kept as the historical experiment design.
+
+---
+
+# Experiment: owner_rating (historical)
+
 Item 39. Ships the owner's 117 hand-entered spot ratings into the spot drawer.
 
 ## Hypothesis

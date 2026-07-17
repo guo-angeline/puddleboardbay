@@ -60,6 +60,18 @@ without touching this file.
 
 ---
 
+## 2026-07-17 (item 39, D20): owner-rating experiment removed; ratings render at 100% (semantics-changed)
+
+**No event added or removed.** The `owner-rating` feature flag and its `owner_rating` entry in `lib/experiments.ts` are gone; `SpotDrawer` renders the owner rating unconditionally whenever a spot has one.
+
+Why: the owner directed item 39 to 100% (D20). A flag pinned at 100% is vestigial, and worse, it gated an editorial content surface on PostHog resolving a feature flag, so ratings would silently not render for anyone who blocks analytics.
+
+- **`experiment_exposed` with `experiment="owner_rating"`: this never fired in production** (the flag was never created, so the gate never resolved to treatment and the feature never rendered live). No historical series is lost. From 2026-07-17 the feature renders for everyone and there is no exposure event for it.
+- **`spot_action.owner_rating` and `spot_action.owner_rating_shown` are unchanged and still emitted.** `owner_rating_shown` is now simply "does this spot have a rating" (true whenever the rating renders), since there is no arm to distinguish. Comparability: before 2026-07-17 `owner_rating_shown` could in principle have been false-in-treatment for an unrated spot; in practice, since the feature never rendered live before today, the field is only meaningful from 2026-07-17 forward.
+- **Comparability: item 39 has no A/B readout.** There is no control arm. Analyse engagement with rated vs unrated spots via the `owner_rating` prop, segmented by region (North Bay discriminates, East Bay does not; see docs/experiments/owner-rating.md).
+
+---
+
 ## 2026-07-16 (item 39): `spot_action` gains `owner_rating` + `owner_rating_shown`; new `owner-rating` experiment (props-changed)
 
 **No event added, removed, or renamed.** `spot_action` gains two props, and a new experiment arm starts logging `experiment_exposed` with `experiment: "owner_rating"`.
