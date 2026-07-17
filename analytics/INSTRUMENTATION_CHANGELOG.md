@@ -14,6 +14,16 @@ without touching this file.
 
 ---
 
+## 2026-07-17 (item 7): near_me_toggled outcome path documented as the denied-message impression signal (semantics-note)
+
+**No new event added. `lib/analytics.ts` was not touched.** This is a documentation-only entry: it records that the existing `near_me_toggled` event, with `outcome: "denied"` or `outcome: "unsupported"`, is now ALSO read as the impression signal for the new visible location-denied recovery banner added by the filterbar-denied-message task (Defect A).
+
+`near_me_toggled` already fires at the exact two points that set the geolocation error state: `components/HomeClient.tsx` line 401 (`outcome: "unsupported"`, geolocation API missing) and line 418 (`outcome: "denied"`, permission denied). The banner renders directly off that same error state, so the two are 1:1: every `near_me_toggled` row with `outcome: "denied"` or `outcome: "unsupported"` corresponds to one render of the visible denied message, and there is no render of the message without one of these rows.
+
+- **Comparability: the firing condition of `near_me_toggled` is byte-for-byte unchanged.** It still fires once per Near Me tap that resolves to `denied` or `unsupported`, at the same two call sites, with the same props. No series is discontinuous, no volume shift is expected from this entry, and historical rows already satisfy this reading, no backfill is needed. This entry only changes how an analyst interprets an already-existing outcome value, not what causes it to fire.
+
+---
+
 ## 2026-07-16 (item 47): new SYSTEM event enrollment_prompt_suppressed; alert_optin_shown volume DROPS (added, semantics-changed)
 
 **`enrollment_prompt_suppressed` ADDED, SYSTEM category** (`event_category: "system"`). Props: `trigger` (the trigger that would have fired: `first_save`/`standalone_relaunch`/`manual`/`return_session`/`conditions_interest`), `platform` (`standalone`/`ios`/`android`/`desktop`/`unknown`), `reconciled_this_session` (bool). It records the app declining to render an enrollment prompt because this device is a confirmed email subscriber. It is never engagement, no user action drives it. `reconciled_this_session` tells a fresh server-reconciled suppression (the confirmed flag was just read from `/api/email/opened` this pageload) from one read off an older cache, so it is possible to tell a correctness check from a stale flag later.
