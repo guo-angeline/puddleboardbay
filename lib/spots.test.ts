@@ -210,18 +210,19 @@ describe("coordinate corrections (item 40, 2026-07-17)", () => {
     expect(byId(65).lng).toBe(-122.2659597);
   });
 
-  it("moves 134 (Eden Landing) to the OSM-tagged dock, not the Water Trail's parking pin", () => {
-    // SF Bay Water Trail's Eden Landing page embeds a Google Maps point at
-    // the end of Eden Landing Road (the parking/loading zone the page's own
-    // Directions section describes), 37.6221077,-122.1224849. OSM's leisure=
-    // slipway node "Eden landing Kayak Launch" sits ~390m from that point,
-    // matching the page's own text ("launch facilities are located
-    // approximately 1/4-mile from the primary parking area"). Moving to the
-    // Water Trail's literal pin would reproduce the documented "parking
-    // stored as a put-in" defect (CLAUDE.md); the OSM dock node is used
-    // instead.
-    expect(byId(134).lat).toBe(37.6187041);
-    expect(byId(134).lng).toBe(-122.1237);
+  it("corrects 134 (Eden Landing)'s corrupted longitude to the Water Trail's published value", () => {
+    // Stored lat 37.6221119 already matches the SF Bay Water Trail's own
+    // embedded map coordinate (37.6221077, off by ~0.5m); only the longitude
+    // was corrupted (-122.1246736, ~193m off). The Water Trail page's
+    // Directions link (live-fetched) embeds 37.6221077,-122.1224849 for the
+    // Eden Landing Road end. Nominatim reverse geocode on that exact point
+    // (live-fetched, independent of the Water Trail fetch) confirms
+    // class=amenity, type=parking on Eden Landing Road, matching the
+    // record's own notes ("About 30 free parking spaces sit a quarter mile
+    // away"), the same disclosed-parking pattern already accepted for the
+    // 6-decimal Water Trail block (127/130/132). Latitude is left unchanged.
+    expect(byId(134).lat).toBe(37.6221119);
+    expect(byId(134).lng).toBe(-122.1224849);
   });
 
   it("leaves the 6-decimal Water Trail parking block untouched, e.g. spot 127", () => {
