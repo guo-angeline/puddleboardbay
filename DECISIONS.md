@@ -196,7 +196,7 @@ Question for the owner:
 1. **79:** delist permanently, or is there a real put-in there you know of? Recommend permanent delist. Also recommend a `lawyer` gate look given the closed-refuge and endangered-species exposure alongside items 34/35.
 2. **76:** call the harbormaster (650-583-6975) to confirm whether a public launch exists, drop a pin from personal knowledge, or delist.
 
-Answer: 
+Answer: delist both 79 and 76.
 
 ### Addendum, 2026-07-16: spot 92 joins this memo, and one process fact about 79
 
@@ -252,7 +252,23 @@ Analysis: `reports/paddle-score-owner-ratings-2026-07-16.md`. The owner ratings 
 
 Two things this decision does NOT resolve, tracked below: spot 92 (see D14 addendum) and the fact that the ratings were never gated on "have I been here" (see the note in D14).
 
-## D17 [OPEN] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
+## D17 [RESOLVED] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
+
+**RESOLVED 2026-07-17, on the real proof: a test email to hello@ landed in the owner's inbox.** hello@paddletowater.com now receives (forwarded to qiguo1102@live.com), and DMARC p=none is published. Both dig-verified; the receiving end confirmed by an actual delivered message, not by DNS status.
+
+Status whipsawed once and the sequence is worth keeping, because it is the lesson: (1) marked RESOLVED on green DNS, which was premature; (2) reopened when two test sends did not land; (3) closed for real when a send arrived. The gap between 1 and 3 was **DNS propagation timing**, not a config fault: the sends were made while the sending servers still cached the pre-MX "no mail here" answer. Never close on DNS green alone, only on a delivered message.
+
+Consequences (unchanged from the DNS work):
+1. The **live privacy policy is now honest** with zero code change: it points at hello@, which works. FTC/CCPA/COPPA "designated contact bounces" exposure closed.
+2. The **alert-email reply-to works** for the first time.
+3. **D17 no longer gates item 44 or item 49** (each keeps its own separate gate).
+
+Two follow-on observables, NOT blockers:
+- **Microsoft forward flakiness.** The forward target is a live.com inbox, and Microsoft is known to occasionally silently-drop forwarded mail. This test landed; if inbound to hello@ ever proves flaky, retarget the Email Routing rule to a non-Microsoft inbox (gmail). Not required while live.com works.
+- **Sending deliverability** (the retention-critical one): whether alert/confirmation emails FROM conditions@alerts land in subscribers' inboxes rather than spam. Different path from receiving. DMARC helps; young-domain reputation is the residual risk. Measured by the confirm rate in the early-August read, 0 of 2 before this.
+
+---
+
 
 Context: the privacy policy (item 44 step 1) promises access, correction, and deletion via `hello@paddletowater.com`, which is already the `EMAIL_REPLY_TO` fallback on every alert email. The lawyer gate flagged that a reply-to on a sending domain does not prove inbound mail is configured. It is not. Verified against three resolvers (local, 8.8.8.8, 1.1.1.1) with working controls:
 
@@ -279,7 +295,21 @@ Questions for the owner:
 1. Which contact option? (Recommend (a).) The privacy policy stays undeployed until this is settled, and it is the CalOPPA gap that is live today, so this is worth minutes rather than days.
 2. Was DMARC ever actually published? If it was, something removed it. If it was not, the 2026-07-24 "tighten to quarantine" follow-up should become "publish p=none, then tighten".
 
-Answer: 
+Answer: **(a) Cloudflare Email Routing enabled + DMARC published at p=none.** (2026-07-17, owner, verified.)
+
+Done and independently verified via dig against two resolvers (1.1.1.1 and 8.8.8.8):
+- **Receiving:** MX records `route1/2/3.mx.cloudflare.net` are live, so `hello@paddletowater.com` receives mail (forwarded to the owner's inbox via an Email Routing rule; the Email Routing DNS records are locked to prevent accidental deletion).
+- **DMARC:** `_dmarc.paddletowater.com` now publishes `v=DMARC1; p=none; rua=mailto:hello@paddletowater.com`. This is the "publish, do not tighten" action the standing note called for; there was never a p=none record to tighten.
+- **Sending path untouched:** `conditions@alerts.paddletowater.com` still authenticates (SES/Resend SPF + DKIM intact); the alerts subdomain DKIM aligns under the new root DMARC, so p=none does not, and a later p=quarantine would not, break sends.
+
+Resolves both halves. Consequences:
+1. The **live privacy policy is now honest** with zero code change: it points at hello@, which now works. The FTC/CCPA/COPPA exposure (a designated contact and child-report channel that bounced) is closed.
+2. The **alert-email reply-to works** for the first time.
+3. **D17 no longer gates item 44 or item 49** (each still carries its own separate gate: 44 the retention read, 49 a non-empty confirmed cohort, so neither auto-promotes).
+
+Two follow-on observables, NOT D17 blockers:
+- **Deliverability:** whether confirmations now land in the inbox rather than spam. DMARC plus a monitored reply-to help, but a young sending domain can still be filtered on reputation. Watch the confirm rate; that is the real retention-loop signal.
+- **Tighten to quarantine:** only after the rua reports (now arriving at hello@) show clean alignment for a couple of weeks. Not before.
 
 ## D18 [RESOLVED] 2026-07-16 · Item 47 (email subscribers re-prompted forever): ship a fix nobody but you can feel?
 
@@ -360,3 +390,5 @@ Q1: the pass commits and merges only edits defensible by two independent sources
 Q2: 70, 54, 84 and 63 are NOT split in this pass. Where a record's own notes already name the launch (65 names the dock half a mile east at Estuary Park), that counts as the second source and the pin moves to it. Where the notes are silent, the pass reports the candidate launches and changes nothing. Record splits (a new spot id enters the sitemap, OG builder, generateStaticParams and both crons) get their own item if the owner wants them.
 
 Defaults confirmed by silence elsewhere: tide pass runs first; the tide screen's own false positives (96, 60) are already corrected in the brief and must not be flipped; no source is called blocked until it has failed via WebFetch AND a POST with a User-Agent.
+
+**DEPLOYED 2026-07-17** after owner review of the coordinate diff. Verified live on paddletowater.com: spot 65 JSON-LD reads the new 37.7901745,-122.2659597; 64 and 134's new coordinates are in the live bundle; old coordinates gone. The 7 tide flips ship with them and now feed the conditions engine and the calm-window push cron. D19 fully closed.
