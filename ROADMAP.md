@@ -132,7 +132,7 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Legal gate (marketing claims): the lawyer reviews the framing before deploy.
 - New user-facing surface: flag or staged tranche per the major-update directive.
 
-## 7. [ready] Mobile polish leftovers (deferred from the Jun 2026 mobile UX pass)
+## 7. [in-progress] 2026-07-17T16:23:44Z Mobile polish leftovers (deferred from the Jun 2026 mobile UX pass)
 
 Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces before working it.
 
