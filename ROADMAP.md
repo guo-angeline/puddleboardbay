@@ -36,6 +36,10 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-17 [done, DEPLOYED] Item 55: P0 mobile `Invalid LatLng (NaN)` crash. On mobile the map panel is display:none under the List tab but MapView stays mounted, so a list tap fired `flyTo` on a 0x0 container, throwing NaN and blanking the conditions panel (measured 6/6 NaN, 5/6 conditions failures at 390px). Guarded FlyTo/FitBounds/FlyToUser against zero size + added a ResizeHandler that invalidateSize()s and re-centers when the map reappears; map never unmounts (single-canvas invariant held). Verified live on paddletowater.com: 0/6 NaN, conditions 6/6, desktop clean. Deployed 308d0f1.
+
+- 2026-07-17 [done, DEPLOYED] Item 54: spot 150 "Russian River - Guerneville River Park" (Guerneville, North Bay, flatwater, owner_rating 4.8, owner-supplied verified coordinate). Single additive record via text-level edit, zero coordinate churn; flows to /spot/150, sitemap, OG, JSON-LD, both crons. Verified live: /spot/150 renders with the 4.8 rating and Flatwater. Owner-approved (D22) and prompted the D23 gate fix (new-spot additions no longer trip the coordinate gate). Deployed 308d0f1.
+
 - 2026-07-17 [done, DEPLOYED] Item 7: four mobile-polish fixes. (A) geolocation-denied recovery now a visible inline message with aria-live, not a touch-invisible title tooltip (+ near_me_toggled outcome prop); (B) Leaflet zoom controls enlarged to a 44px HIG tap target, verified 44x44 live; (C) empty-state names search vs filters vs both and scopes the Clear button ("No spots match X" / "Clear search"); (D) the dev reload/NaN loop does NOT reproduce in real dev (5 trials), no speculative fix shipped. 316 tests (17 new), verified live. Marker clustering carved to item 51.
 
 - 2026-07-17 [done, DEPLOYED] Item 40: record-accuracy audit. 3 two-source pin moves (64 Del Valle, 65 Jack London Sq, 134 Eden Landing lng-only) + 7 notes-justified tide_sensitive flips (1,25,29,39,41,44,51). Merged (3f9b6a2), 299 tests. Coordinate+tide diff awaits owner review before vercel --prod, because spot data feeds both alert crons. Report: reports/item-40-record-accuracy-2026-07-17.md.
@@ -65,57 +69,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
-## 54. [blocked(D22)] Add the spot "Guerneville River Park" (Russian River, owner-rated, custom photos link)
-
-**Built and verified on `main` (commit bb65416), deploy gated by D19 coordinate review. Answer D22 to ship it live.**
-
-
-**Owner item, 2026-07-17.** Add a new put-in on the Russian River at Guerneville. This is distinct from the existing spot 33 (Russian River - Johnson's Beach, also Guerneville); it is a separate launch with a dedicated boat ramp. Next free spot id is **150** (current max is 149).
-
-**What the owner supplied (facts, do not embellish beyond them):**
-- Location: `38.5001973, -122.9957117` (this is a verified owner-provided coordinate, so it is a valid `lat`/`lng` source per the coordinate-provenance rule).
-- Owner rating: **4.8** (`owner_rating`, the item-39 hand-entered field, population of one; never render it with a review count or as an average).
-- Owner's experienced description: high water through summer with lake-like tranquility, and a dedicated concrete boat ramp right beside the parking lot.
-
-The "See photos" CTA uses the regular derived Google Maps search URL (`SpotDrawer.tsx:132`), same as every other spot. No custom per-spot photos link.
-
-**Draft notes (evergreen, third-person, per the notes rule; owner to sanity-check):**
-> A dedicated concrete boat ramp drops straight from the parking lot to the water, so the carry is short and easy. Through summer the Russian River here runs high and settles into a lake-like calm, one of the mellower flatwater stretches around Guerneville.
-
-**Field values to confirm at build:** `region: "North Bay"`, `city: "Guerneville"`, `water:` follow the sibling naming convention (`"Russian River - Guerneville River Park"`), `difficulty: "flatwater"` (owner describes lake-like calm, not moving river), `tide_sensitive: false` (upstream freshwater, not tidal), `has_fee`/`power_boats`/`dog_friendly`/`inspection_required`/`rentals_available` left `null`/`false` unless a source confirms otherwise (do not guess).
-
-**Acceptance:**
-- Spot 150 added to `data/spots.json` via a **text-level edit** (do not `json.load`/`json.dump` the file, it reformats every coordinate and churns the diff; verify `git diff data/spots.json | grep '"lat"\|"lng"'` shows only the two new lines). Read through `lib/spots.ts`, never import the JSON directly.
-- `owner_rating: 4.8` renders inline as the bare star+number in list and drawer (matches item 39's D21 treatment).
-- The drawer's Photos CTA is the regular derived Google Maps search URL (no new field, no custom link). Confirm the `spot_action` `action: "photos"` event still fires.
-- A new spot enters the sitemap, OG image builder, `generateStaticParams` (`/spot/150`), JSON-LD, and **both alert crons** (same surface list as item 50). Confirm the spot builds a page and is reachable, and that nothing about it is untrustworthy enough to warrant `hidden`.
-- New user-facing content (a single additive record, not a flagged surface): keep it small; no schema change needed.
-- Verify live after deploy: `/spot/150` renders, rating shows, Photos opens the derived Maps search.
-
----
-
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
-
-## 55. [blocked(D22)] P0 mobile: tapping a list spot throws `Invalid LatLng (NaN, NaN)` and the conditions panel intermittently fails to render
-
-**Fixed and verified on `main` (commit c24fef1). Deploy coupled to D22: spot 150's un-reviewed coordinate shares the tree, so the predeploy gate blocks ANY deploy until you answer D22. Approving D22 ships this P0 fix and spot 150 together.**
-
-
-**Found by the 2026-07-17 verify loop (mobile-priority pass).** On mobile, the Map panel is CSS-hidden (`display:none` via class `hidden`) while the List tab is active, but `MapView` stays mounted (`components/HomeClient.tsx:664`). Tapping a spot in the list changes `selected`, which fires `map.flyTo([spot.lat, spot.lng], ...)` in the `FlyTo` effect (`components/MapView.tsx:21`). Leaflet's `flyTo` derives the target center from the container's pixel size; on a zero-sized (hidden) map that math divides by zero and produces `(NaN, NaN)`, which Leaflet throws as an uncaught exception.
-
-**Measured (390px, fast interaction that mirrors a real tapping user: load, tap List, tap a spot):**
-- `Invalid LatLng object: (NaN, NaN)` uncaught pageerror in **6 of 6** trials.
-- The "Conditions today" panel failed to render in **5 of those 6**. When the error did not fire (deliberate slow interaction with settle delays), conditions rendered fine.
-- Desktop is unaffected (the map is never hidden), 0 errors across all trials.
-- One fast trial left the page wedged (the List control never became tappable again within 30s), so the throw can also brick the view.
-
-**Why it matters (P0):** mobile is the priority surface, and this intermittently blanks the conditions panel, the exact feature retention is betting on, on the primary "browse the list, tap a spot" path. It is timing-dependent, so it does not show in a slow manual click-through. This is almost certainly why item 7D's 5-trial "NaN loop" check came back clean: that check used deliberate (slow) interaction and a different reload-loop hypothesis. This is a distinct, now-reproduced defect, not a re-litigation of 7D.
-
-**Acceptance:**
-- No `Invalid LatLng` / NaN error when opening a spot from the mobile List tab (map hidden), across fast repeated taps.
-- The conditions panel renders reliably on the mobile list-to-spot path (target: not 5/6 failures; verify the same 6-fast-trial harness comes back clean).
-- Likely fix: guard the `FlyTo` / `FitBounds` / `FlyToUser` effects in `MapView.tsx` to no-op when the map has zero size (e.g. `if (!map.getSize().x) return;`), and/or call `map.invalidateSize()` when the Map tab becomes visible. Do NOT unmount the map on tab switch (it would re-init Leaflet and reintroduce the single-canvas-renderer risk documented in CLAUDE.md).
-- Keep the existing non-destructive-selection behaviour (zoom floor 11, no refit on close) intact.
 
 ## 52. [ready] Proxy the NOAA tides fetch: it fails intermittently in the browser and silently drops conditions
 

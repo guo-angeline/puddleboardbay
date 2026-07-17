@@ -1,5 +1,24 @@
 # Briefings: the board log
 
+## 2026-07-17 · Items 54 + 55 SHIPPED live · D22 approved · D23 gate fix
+
+**Your move:** nothing needed. Both changes are live and the approval gate that interrupted you is fixed so it won't ask again for this class of change.
+
+**TL;DR:** You approved, both shipped, and I fixed the process that made you approve them. Spot 150 and the P0 mobile fix are live on paddletowater.com; new-spot additions no longer trip the coordinate gate.
+
+**Item 54 (spot 150, Guerneville River Park):** live at `/spot/150` with the 4.8 rating and Flatwater, verified in production. Deployed `308d0f1`.
+
+**Item 55 (P0 mobile NaN crash):** live and verified in production, 0/6 NaN and conditions 6/6 on paddletowater.com mobile. Deployed `308d0f1`.
+
+**D23 (process fix, from your directive):** the D19 coordinate gate was firing on ANY new lat/lng, so it (a) asked you to review a coordinate you had just supplied and (b) froze every unrelated deploy that shared the tree, which is what stranded the P0. Narrowed `scripts/predeploy-gate.py` to fire only on a CHANGE to an EXISTING spot's coordinate (a removed `-` lat/lng line), the real "a pin moves under live users and the crons" risk. New-spot additions now deploy like any reversible content change. Proven: addition passes, moved pin blocks, removal blocks. D19's protection for coordinate changes is fully intact.
+
+**Appendix (evidence):**
+- Deploy `dpl_HtAoZChJJva58WEegeb2HkHrmkPP`, READY, production; `deployed-prod` moved to `308d0f1` (== main, nothing undeployed/orphaned).
+- Live `/spot/150`: name + 4.8 + Flatwater confirmed via server fetch.
+- Live mobile P0 harness (paddletowater.com, 390px, map confirmed hidden): 6 fast taps on distinct spots, `totalNanErrors: 0`, `conditionsRenderedCount: 6/6`.
+- Gate proof: `new-spot addition gates: False`, `existing pin moved gates: True`, `coordinate removed gates: True`.
+- Analytics hygiene: `?internal=1` was redirect-stripped so the internal flag didn't set before the live harness; `window.posthog` was null in the automation browser (no distinct_id), so the taps almost certainly never registered. Flag now set on this browser for future checks.
+
 ## 2026-07-17 · Item 55: P0 mobile NaN crash · FIXED + VERIFIED · DEPLOY COUPLED TO D22
 
 **Your move:** answer D22 (one line, DECISIONS.md). It now releases both spot 150 and this P0 fix in one deploy. Recommended: approve.
