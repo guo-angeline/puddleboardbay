@@ -36,6 +36,8 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-17 [done, DEPLOYED] Item 7: four mobile-polish fixes. (A) geolocation-denied recovery now a visible inline message with aria-live, not a touch-invisible title tooltip (+ near_me_toggled outcome prop); (B) Leaflet zoom controls enlarged to a 44px HIG tap target, verified 44x44 live; (C) empty-state names search vs filters vs both and scopes the Clear button ("No spots match X" / "Clear search"); (D) the dev reload/NaN loop does NOT reproduce in real dev (5 trials), no speculative fix shipped. 316 tests (17 new), verified live. Marker clustering carved to item 51.
+
 - 2026-07-17 [done, DEPLOYED] Item 40: record-accuracy audit. 3 two-source pin moves (64 Del Valle, 65 Jack London Sq, 134 Eden Landing lng-only) + 7 notes-justified tide_sensitive flips (1,25,29,39,41,44,51). Merged (3f9b6a2), 299 tests. Coordinate+tide diff awaits owner review before vercel --prod, because spot data feeds both alert crons. Report: reports/item-40-record-accuracy-2026-07-17.md.
 
 - 2026-07-17 [done] Item 48: desktop filter pills no longer stretch to a fifth of the viewport (1ca79a3, deployed). FilterBar row 2 was `grid grid-cols-5` + `w-full` at every width, with no breakpoint: 278px pills on a 1408px bar vs 119px content-sized region pills one row up. Below md unchanged; from md it is a flex of content-sized pills. Row-2 class was duplicated 3x, extracted to `pillSm`. Measured before and after at 1440px and 390px.
@@ -142,25 +144,6 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Design the star row **jointly with item 43**, even if built separately: both occupy the same real estate and a solo-shipped "our take" row gets torn out when human reviews arrive.
 - Legal gate (marketing claims): the lawyer reviews the framing before deploy.
 - New user-facing surface: flag or staged tranche per the major-update directive.
-
-## 7. [in-progress] 2026-07-17T16:23:44Z Mobile polish leftovers (deferred from the Jun 2026 mobile UX pass)
-
-Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces before working it.
-
-**Scoped 2026-07-17 (loop): marker clustering carved out to item 51.** It needs a new dependency (`leaflet.markercluster`) AND collides with the single-canvas-renderer invariant in CLAUDE.md line 48: a second canvas renderer makes every pin click dead. That is architecture, not polish. The four defects below were each verified to still reproduce today before this pass.
-
-- ~~`npm run dev` fast-refresh reload loop (~1/sec, Leaflet never mounts, `Invalid LatLng (NaN,NaN)`; dev-only, blocks local QA).~~ **Defect D: does not reproduce in real dev (2026-07-17 investigation). No code fix shipped.**
-- Geolocation-denied recovery: guidance lives in a `title` tooltip invisible on touch; show an inline toast.
-- Map zoom controls are 30px (HIG minimum 44) and far from the thumb.
-- ~~Empty-state copy says "filters" when search caused it, and "Clear filters" silently also clears search.~~ **Defect C: shipped 2026-07-17.**
-
-**Defect D investigation (2026-07-17): does not reproduce in real dev.** Ran `npm ci` then `npm run dev` in the worktree (`/Users/qg/ptw-item-07`, port 3000, Next.js 16.2.6 / Turbopack) and loaded `http://localhost:3000` in a real Chromium browser (Playwright, 1280x800 viewport, not a zero-size headless container) five separate times across two clean server sessions. In every trial the page loaded once, `.leaflet-container` and its `canvas` mounted and stayed mounted through a 30-second observation window, the dev server log showed a single `GET / 200` with no repeat requests, the browser console showed a single clean `[HMR] connected` with zero `error`-level messages, and no `Invalid LatLng` or `NaN` string ever appeared in console, page errors, or the server log. No ~1/sec reload loop occurred and Leaflet mounted normally every time.
-
-One unrelated instability was observed and is recorded for completeness, not as the defect: once, mid-session, the Turbopack dev process itself exited with a workspace-root inference error (`Next.js inferred your workspace root, but it may not be correct... couldn't find the Next.js package (next/package.json) from the project directory: /Users/qg/ptw-item-07/app`), which is a Turbopack/environment quirk in this sandboxed git worktree checkout, not a Leaflet/LatLng defect: it never coincided with an `Invalid LatLng` message, it did not prevent the map from mounting before or after, and it did not recur on repeat clean-session trials. Separately, the tooling's own background-process supervisor was seen to auto-respawn or SIGTERM the dev server between test runs when I raced two `npm run dev` invocations against the same port, a self-inflicted artifact of the investigation harness (confirmed by `lsof`/`ps` showing duplicate `next dev` processes contending for port 3000), not app behavior. With those two harness-side confounds isolated and removed, a single clean server + single real-browser load never reproduced the reported symptom. Branch (a) taken: no code changed, `lib/mapBounds.ts` was not created.
-
-**Defect C shipped 2026-07-17: empty-state copy names what actually caused zero results, and clearing is scoped.** New `lib/emptyStateCopy.ts` (pure function, unit-tested) computes copy from `(search, filtersActive)`: search-only names the quoted query ("kayak"), filters-only says "No spots match your filters.", and both-active names both ("with these filters") plus a "Clear search and filters" button. Clearing now honestly names its scope: **"Clear search"** clears only the typed search text, **"Clear filters"** clears region/difficulty/freeOnly and Near Me (Near Me is grouped in the filter row and counts toward `filtersActive`, same as `hasActiveFilters`), and **"Clear search and filters"** is the unchanged full reset (`handleClearAll`). Both empty-state surfaces use the shared helper: `components/SpotList.tsx` (list-panel empty state) and the map overlay in `components/HomeClient.tsx`. No new analytics event: the two new scoped clears (`clearSearchOnly`, `clearStructuredFilters`) reuse the existing `filter_changed`/`cleared:true` event (changelog entry added, `analytics/INSTRUMENTATION_CHANGELOG.md`).
-
-## 37. [done] 2026-07-15 Visual polish pass (Part 1 + Part 3 diagnostic shipped; Part 3 fix deferred). See Shipped. Part 2 was a confirmed no-op (D12). The iOS dead-band FIX awaits an owner installed-PWA `/?vh` screenshot, then a fast follow-up picks the fix (candidates: `-webkit-fill-available` or JS-set `--app-height`).
 
 ## 8. [proposed] "Go here instead": nearby calmer alternative when your spot is blown out
 
