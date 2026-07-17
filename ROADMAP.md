@@ -63,6 +63,17 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
+## 51. [proposed] Marker clustering for dense areas (carved out of item 7, 2026-07-17)
+
+**Why:** at statewide zoom the audit measured 67 markers within a 24px radius, a blob of overlapping pins nobody can tap. Clustering is the standard fix.
+
+**Why it is its own item, not polish:** it needs a new dependency (`leaflet.markercluster`) and it collides head-on with a documented architecture invariant. CLAUDE.md line 48: the map runs `preferCanvas` with a SINGLE shared `L.canvas()` renderer, and any layer that spins up a second canvas makes per-canvas hit-testing swallow every click ("pins go dead, cursor stuck on grab"). `leaflet.markercluster` brings its own marker layer and rendering path, so the integration must be proven to compose with the shared canvas renderer before it ships, or it reproduces exactly that catastrophic click-death bug.
+
+**Acceptance (size before promoting):**
+- Clustering at low zoom that de-clusters on zoom-in, with NO regression to click handling at any zoom (test the "location granted" path specifically, since that is where the second-canvas bug bites).
+- Confirm `leaflet.markercluster` composes with `preferCanvas` + the shared `L.canvas()` renderer, or document the alternative (a canvas-native clustering approach).
+- Pins keep the difficulty colours (`DIFFICULTY_COLOR`, `lib/types.ts`); cluster bubbles need their own count styling.
+
 ## 50. [proposed] Split the multi-launch records the item 40 audit could not pin
 
 **Created by item 40 (2026-07-17), report-only section.** Four records name several real launches at once, so no single coordinate is correct. The audit verified the candidate launches with sources and deliberately changed nothing (D19 Q2a), because a split creates a new spot id that enters the sitemap, the OG image builder, `generateStaticParams`, JSON-LD, and BOTH alert crons. That is a product change, not a data fix.
@@ -136,7 +147,8 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 Carried over when IMPROVEMENT-PLAN.md was retired; verify each still reproduces before working it.
 
-- Marker clustering for dense areas (needs `leaflet.markercluster`; the audit measured 67 markers within a 24px radius at statewide zoom).
+**Scoped 2026-07-17 (loop): marker clustering carved out to item 51.** It needs a new dependency (`leaflet.markercluster`) AND collides with the single-canvas-renderer invariant in CLAUDE.md line 48: a second canvas renderer makes every pin click dead. That is architecture, not polish. The four defects below were each verified to still reproduce today before this pass.
+
 - `npm run dev` fast-refresh reload loop (~1/sec, Leaflet never mounts, `Invalid LatLng (NaN,NaN)`; dev-only, blocks local QA).
 - Geolocation-denied recovery: guidance lives in a `title` tooltip invisible on touch; show an inline toast.
 - Map zoom controls are 30px (HIG minimum 44) and far from the thumb.
