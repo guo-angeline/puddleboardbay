@@ -323,3 +323,34 @@ Two consequences accepted with it:
 3. Widen the privacy policy purpose sentence (`app/privacy/page.tsx:166-168`): reading subscription state to decide whether to render a prompt is arguably a third use beyond "to send you the alert and let you stop it".
 
 D17 was re-confirmed live by the lawyer (`dig MX` and `dig TXT _dmarc` both empty) and re-flagged as a CCPA/CPRA + FTC exposure, since `hello@` is the published channel for access, correction, deletion, AND the COPPA child-report channel. It does not gate item 47. It remains the owner's call and is still unanswered.
+
+## D19 [OPEN] 2026-07-17 · Item 40: may this pass write to spots.json, and what about records with several launches?
+
+Context: the item 40 vision pass stopped before design with two blocking questions. Both are genuinely yours; the other three escalations were advisory and are folded in as defaults below.
+
+**Q1. May this pass actually edit `data/spots.json`, or does it produce a patch for you to approve?**
+
+There is a live conflict. **Both prior audits state a house rule:** `data/spots.json` was NOT modified, and no spot is overwritten without owner manual review (`reports/coord-audit-2026-07-16.md`, `reports/data-quality-sweep-2026-07-16.md`). **Your 2026-07-17 direction** says the deliverable includes the defensible coordinate corrections applied. These cannot both hold. The stakes: spot data reaches BOTH alert crons via `lib/spots.ts`, so a wrong coordinate does not just misdraw a pin, it points a push notification at the wrong place.
+
+- (a) [recommended] **Apply only two-source-defensible edits, and gate on DEPLOY, not on commit.** The merge lands, the report is the review artifact, you read the coordinate diff, and `vercel --prod --yes` waits for your word. You asked for edits and you have paddled 117 of these spots; this honours that without letting an unreviewed coordinate reach a push send.
+- (b) Change nothing; ship the report plus a ready-to-apply patch, as both prior passes did. Safest, slowest, and arguably ignores your direction.
+- (c) Apply the `tide_sensitive` fixes only (self-evidencing from the notes, no external source needed) and hold every coordinate for approval.
+
+**Q2. Four records have no single correct coordinate. What should this pass do with them?**
+
+70 Richmond (a centroid merging 4 launches ~1km apart), 54 Russian River (pinned 24-33km from both put-ins its own notes name, duplicating 33 and 35), 84 MLK (two launches ~2.5km apart merged), 63 Berkeley Marina (the Water Trail publishes TWO trailheads: a ramp at 37.868485,-122.317743 and a small-boat hand launch at 37.86281,-122.313559). Moving the pin cannot fix these; there is no right answer to move it to.
+
+- (a) [recommended] **Pin to the launch the record's own notes already describe, escalate where the notes are silent, split nothing.** Spot 65's notes literally say the dock is half a mile east, which is a second line of evidence. A record split creates a new spot id that enters the sitemap, the OG builder, `generateStaticParams` and both crons, and that deserves its own item.
+- (b) Escalate all four, change nothing. Four fewer edits, four clean decisions for you.
+- (c) Authorise splits in this pass: 70 becomes 4 records, 54 is deleted as a duplicate, 84 becomes 2. Largest blast radius, touches every surface listed above.
+
+Defaults if you say nothing (advisory escalations, folded not asked):
+- **Tide pass runs FIRST**, before any coordinate work. It needs no external source, so sequencing makes guardrail 3 impossible to lose.
+- **The tide screen's own false positives are already corrected** in the item 40 brief: spots 96 and 60 are correctly `false` and must not be flipped. Real candidate set ~12, not the 14 I reported.
+- **No source is called blocked until it has failed via WebFetch AND a POST with a User-Agent.** `sfbaywatertrail.org` 403s a bare curl but loads via WebFetch.
+
+If silent: (a) + (a), and the deploy waits for you regardless.
+
+Blocks: item 40 (record-accuracy audit)
+
+Answer:
