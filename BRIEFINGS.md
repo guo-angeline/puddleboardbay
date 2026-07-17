@@ -1,5 +1,20 @@
 # Briefings: the board log
 
+## 2026-07-17 · Item 52: NOAA tide fetch proxied · SHIPPED + DEPLOYED (one live path pending NOAA outage)
+
+**Your move:** nothing needed.
+
+**TL;DR:** Fixed a silent, intermittent failure in the conditions differentiator: tides were CORS-blocked by NOAA about half the time and vanished from the panel. They now route through our own server, where CORS can't touch them. Live and verified, except the final NOAA round-trip, because NOAA itself is in an outage right now.
+
+**Item 52 (proxy NOAA tides):** the browser fetched NOAA tide predictions directly; NOAA sends the required CORS header only intermittently, so `tide_sensitive` spots silently lost their tide readout roughly half the time. Added `app/api/tides` (Node): validates inputs, fetches NOAA server-side (6s timeout + one retry for NOAA's 504s), caches station+day 30 min, and returns a graceful error rather than crashing. The client now calls that same-origin route; the direct NOAA URL is gone from the shipped client bundle, so CORS can never block tides again. Wind is unchanged (weather.gov sends CORS reliably); the alert crons never used this path. Deployed `42c814d`.
+
+**Appendix (evidence):**
+- Deploy READY, production; `deployed-prod` -> `42c814d` (== main, nothing orphaned).
+- Tests: 8 new route tests (validation, retry, cache, NOAA-error passthrough); 324 total green; lint clean; build shows `/api/tides` as a server function.
+- Live prod: `GET /api/tides?station=abc...` -> 400 validation error (route logic live, NOAA-independent); valid params -> graceful 502 `tides upstream unreachable` (NOAA mid-outage).
+- NOAA was returning 502/504 on every station during verification (direct curl too), the exact flakiness this item targets. The live NOAA-200 path uses params identical to the previously-working direct call and is covered by the success-passthrough unit test; it will serve tides once NOAA recovers. Graceful degradation confirmed in-browser: panel renders wind-only, never blanks.
+- Instrumentation: no logging code changed; changelog records that `conditions_loaded.has_tides` availability steps up on tidal spots from today (reliability recovering, not user behavior).
+
 ## 2026-07-17 · Items 54 + 55 SHIPPED live · D22 approved · D23 gate fix
 
 **Your move:** nothing needed. Both changes are live and the approval gate that interrupted you is fixed so it won't ask again for this class of change.

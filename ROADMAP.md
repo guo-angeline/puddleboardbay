@@ -36,6 +36,8 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Shipped
 
+- 2026-07-17 [done, DEPLOYED] Item 52: proxy the NOAA tide fetch through a same-origin `app/api/tides` route so a missing NOAA CORS header can never drop the tide half of conditions (it was silently CORS-blocked ~half the time on tidal spots, the retention differentiator). Node route validates station + dates, fetches NOAA server-side with a 6s timeout + one retry, caches station+day 30 min, passes NOAA error bodies through as non-cached 502s. Client (`lib/conditions.ts`) now calls `/api/tides`; direct NOAA URL is gone from the client bundle. Wind stays direct to weather.gov; alert crons untouched. 8 route tests + `app/**` added to vitest include; instrumentation changelog notes `conditions_loaded.has_tides` availability rises. Verified live: `/api/tides` returns 400 on bad params and a graceful 502 while NOAA is mid-outage; client bundle references the proxy, not NOAA. Live NOAA-200 path pending NOAA's own recovery (it was 5xx across all stations during verification; params identical to the previously-working direct call). Deployed 42c814d.
+
 - 2026-07-17 [done, DEPLOYED] Item 55: P0 mobile `Invalid LatLng (NaN)` crash. On mobile the map panel is display:none under the List tab but MapView stays mounted, so a list tap fired `flyTo` on a 0x0 container, throwing NaN and blanking the conditions panel (measured 6/6 NaN, 5/6 conditions failures at 390px). Guarded FlyTo/FitBounds/FlyToUser against zero size + added a ResizeHandler that invalidateSize()s and re-centers when the map reappears; map never unmounts (single-canvas invariant held). Verified live on paddletowater.com: 0/6 NaN, conditions 6/6, desktop clean. Deployed 308d0f1.
 
 - 2026-07-17 [done, DEPLOYED] Item 54: spot 150 "Russian River - Guerneville River Park" (Guerneville, North Bay, flatwater, owner_rating 4.8, owner-supplied verified coordinate). Single additive record via text-level edit, zero coordinate churn; flows to /spot/150, sitemap, OG, JSON-LD, both crons. Verified live: /spot/150 renders with the 4.8 rating and Flatwater. Owner-approved (D22) and prompted the D23 gate fix (new-spot additions no longer trip the coordinate gate). Deployed 308d0f1.
@@ -70,21 +72,6 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
-
-## 52. [ready] Proxy the NOAA tides fetch: it fails intermittently in the browser and silently drops conditions
-
-**Found by the 2026-07-17 end-to-end verify loop.** Tide conditions fetch NOAA CO-OPS directly from the browser (`lib/conditions.ts:164`, fully client-side per the file header). The header comment (`lib/conditions.ts:5`) claims NOAA sends `access-control-allow-origin: *`; it does not do so reliably.
-
-**Evidence (measured live 2026-07-17, `Origin: https://paddletowater.com`):** four back-to-back GETs to the predictions datagetter returned HTTP 200 every time but sent the CORS header on only 2 of 4 (`*`, none, `*`, none). A separate call returned a 504 with no CORS header. When the header is absent the browser blocks the response and `fetch` throws, so `fetchTides` fails and the tide half of the conditions panel silently drops. Reproduced in the local dev run: the browser console logged `Access to fetch at 'api.tidesandcurrents.noaa.gov/...' blocked by CORS policy`. Wind (weather.gov) is unaffected: it sends `access-control-allow-origin: *` on every call.
-
-**Why it matters:** conditions is the retention differentiator and `tide_sensitive` spots depend on this exact call. The failure is intermittent (~half of cold fetches in this sample) and silent, so it does not show up in a normal spot-check and would not have surfaced without the header-level test. It degrades the one feature the roadmap is betting retention on.
-
-**Acceptance:**
-- Tide data reaches the client through a same-origin path so a missing NOAA CORS header can never block it (e.g. a Node route handler `app/api/tides` that fetches NOAA server-side and returns JSON; the app already runs Node server routes, so this composes with the static-page architecture).
-- Add a short timeout + one retry to absorb NOAA's intermittent 504s.
-- Cache server-side (tide predictions for a station+day are stable) to avoid hammering NOAA and to keep the panel fast.
-- Update the stale `lib/conditions.ts:5` comment: NOAA CORS is not dependable; only weather.gov is.
-- Confirm the alert crons (`lib/alerts/conditions-window.ts`) are unaffected (they run server-side already, so no CORS exposure there) and are not accidentally rerouted.
 
 ## 53. [ready] Cut "conditions today" loading latency (make it less live)
 
