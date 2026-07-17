@@ -94,6 +94,23 @@ header {
 
 /* Leaflet resets */
 .leaflet-container { height: 100%; width: 100%; }
+/* Enlarge the zoom +/- buttons to a 44px hit target (mobile tap-size floor).
+   Leaflet's own stylesheet chunk loads after this one and sets
+   `.leaflet-touch .leaflet-bar a { width: 30px; height: 30px }` on touch
+   devices, which outranks a plain `.leaflet-control-zoom a` rule (equal
+   specificity, later source order) and even `.leaflet-control-zoom
+   a.leaflet-control-zoom-in` (still equal specificity to the touch rule).
+   The `.leaflet-control-zoom` div also carries `.leaflet-bar`, so stacking
+   both classes on the ancestor selector clears that bar without
+   !important. Focus ring left alone (no outline: none added here). */
+.leaflet-control-zoom a { width: 44px; height: 44px; line-height: 44px; font-size: 20px; }
+.leaflet-control-zoom.leaflet-bar a.leaflet-control-zoom-in,
+.leaflet-control-zoom.leaflet-bar a.leaflet-control-zoom-out {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 20px;
+}
 .leaflet-popup-content-wrapper {
   border-radius: 10px;
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
