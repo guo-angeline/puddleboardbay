@@ -1,5 +1,20 @@
 # Briefings: the board log
 
+## 2026-07-17 · Item 53 (wind/tide decouple + honesty fix) · SHIPPED + DEPLOYED
+
+**Your move:** nothing needed. Item 53 stays `[ready]` for its last structural piece (the NWS two-hop precompute).
+
+**TL;DR:** The conditions panel now shows the wind verdict in ~330ms instead of making users wait up to 4s for tides, and it stops lying about "no tide station" when NOAA is merely down.
+
+**Item 53 (decouple slice):** the panel used to wait on tide + wind together, so the wind verdict (the ~330ms dominant signal for a paddle decision) was held behind the slower tide hop. Split them into independent promises (`getConditionsRun`) and render each as it settles: wind paints immediately, tide fills in or fast-fails on its own. Also fixed a trust bug on this surface, a failed tide fetch showed "No tide station near this spot" (false when a station exists); it now says "Tide data is unavailable right now" and reserves the no-station wording for a genuine absence. Deployed `9268c66`. Item stays `[ready]` for the NWS two-hop build-time precompute (the biggest happy-path latency win left).
+
+**Appendix (evidence):**
+- Prod: wind renders ("Wind 8 mph"), tide shows the honesty message during NOAA's outage, no console errors. `deployed-prod` -> `9268c66` (== main).
+- Local timing (network trace): wind ~330ms (points 138ms + forecast 192ms) vs tide 4.5s, rendered independently. Non-tidal spot shows no tide section; saved-spots badges still compute ("Conditions: Calm") via the preserved combined `getConditions`.
+- 324 tests, lint clean, build green. The combined `getConditions` contract (used by the saved-spots batch) was kept intact; `getConditionsRun` is additive.
+- Instrumentation: `conditions_loaded` unchanged; `conditions_viewed.had_data` tightened to "a source actually returned data" (was "not fully failed"), changelog + Comparability note added.
+- Verification was behavioral (rendering + timing) plus 324 unit tests; NOAA remained mid-outage, so live tides rendering is still pending its recovery.
+
 ## 2026-07-17 · Item 53 (tide fast-fail slice) · SHIPPED + DEPLOYED
 
 **Your move:** nothing needed. Item 53 stays `[ready]` for its structural latency work; the acute hang you measured is fixed and live.
