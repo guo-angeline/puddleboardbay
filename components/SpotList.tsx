@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import type { Spot } from "@/lib/types";
 import { trackIntent, type SpotViewedSource } from "@/lib/analytics";
 import { readStashedSubscription } from "@/lib/push";
+import { isEmailConfirmed } from "@/lib/email/subscriptionState";
 import { useGenuineView } from "@/lib/useGenuineView";
 import SpotCard from "./SpotCard";
 import { rankSavedSpotsByConditions, type SavedConditionState } from "@/lib/savedConditions";
@@ -47,7 +48,7 @@ export default function SpotList({
   // alert re-offer reachable once they re-save.
   const [isStandalone, setIsStandalone] = useState(false);
   useEffect(() => {
-    const sync = () => setAlertsOn(!!readStashedSubscription());
+    const sync = () => setAlertsOn(!!readStashedSubscription() || isEmailConfirmed());
     sync();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsStandalone(
