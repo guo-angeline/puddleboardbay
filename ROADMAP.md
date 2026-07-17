@@ -59,7 +59,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
-## 48. [ready] Desktop buttons are too wide
+## 48. [in-progress] 2026-07-17T09:10:52Z Desktop buttons are too wide
 
 **Reported by the owner 2026-07-16.** Buttons render wider than they should on desktop.
 
