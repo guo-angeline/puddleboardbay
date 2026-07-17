@@ -13,7 +13,7 @@
 --             so both guardrails read from one file.
 -- Events: email_capture_confirmed (intent, marks confirmed_at per person),
 --         alert_optin_shown (intent, `channel`, `trigger`),
---         enrollment_prompt_suppressed (intent, fires when a prompt is
+--         enrollment_prompt_suppressed (system, fires when a prompt is
 --         suppressed because of email-subscribed state; carries the
 --         trigger that would have fired).
 -- Caveat: the ex-owner denominator is 0 today (reports/analytics-2026-07-11.md:
