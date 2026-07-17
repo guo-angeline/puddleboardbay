@@ -416,3 +416,21 @@ Legal gate run before implementing (marketing-claims surface). Verdict: **needs-
 Shipped: "star + number" inline in the subtitle row in SpotDrawer and SpotCard (list view added, which it was missing), no visible qualifier. Kept an sr-only "out of 5" (scale only, so a screen reader does not announce a bare "4.5"; not the removed framing). The lib/spots.test.ts aggregate-framing guard (no "average"/"reviews"/"N ratings") still passes and now also covers SpotCard. Verified in a browser: list shows the inline stars on rated spots and nothing on unrated ones; drawer matches.
 
 Answer: bare star + number, both views, no qualifier (owner override of the lawyer's needs-changes).
+
+## D22 [OPEN] 2026-07-17 · Item 54: deploy spot 150 (Guerneville River Park), a new owner-supplied coordinate reaching prod and the alert crons
+
+Item 54 is built and verified on `main` (commit bb65416), not yet live. Spot 150 "Russian River - Guerneville River Park" renders at `/spot/150` with the 4.8 owner rating inline, difficulty flatwater, `tide_sensitive: false`, the evergreen notes you drafted, and the regular derived Maps photos CTA. It flows into the sitemap, OG image, `generateStaticParams`, JSON-LD, and both alert crons via `ALL_SPOTS`. Build, lint, and all 316 unit tests pass; no existing coordinate churned (`git diff data/spots.json` shows only the two new lat/lng lines).
+
+The only thing between it and production is your standing D19 gate: a new spot adds `lat`/`lng` lines to `spots.json`, so the predeploy hook holds the `vercel --prod` until you have read the coordinate. This is your own verified coordinate (you supplied `38.5001973, -122.9957117` in item 54), so this is the D19 review-then-go step, not a data-trust question.
+
+Review artifact (`git diff deployed-prod -- data/spots.json`):
+- `"id": 150`, `"water": "Russian River - Guerneville River Park"`
+- `"lat": 38.5001973`, `"lng": -122.9957117`
+
+Recommended: approve. It is your verified coordinate and everything downstream is green.
+
+If silent: the spot stays on `main` but off production; the next loop iteration deploys once you say go. Nothing is live and nothing reverts in the meantime.
+
+Blocks: item 54 (deploy only).
+
+Answer:

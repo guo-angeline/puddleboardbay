@@ -65,7 +65,10 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
-## 54. [ready] Add the spot "Guerneville River Park" (Russian River, owner-rated, custom photos link)
+## 54. [blocked(D22)] Add the spot "Guerneville River Park" (Russian River, owner-rated, custom photos link)
+
+**Built and verified on `main` (commit bb65416), deploy gated by D19 coordinate review. Answer D22 to ship it live.**
+
 
 **Owner item, 2026-07-17.** Add a new put-in on the Russian River at Guerneville. This is distinct from the existing spot 33 (Russian River - Johnson's Beach, also Guerneville); it is a separate launch with a dedicated boat ramp. Next free spot id is **150** (current max is 149).
 
