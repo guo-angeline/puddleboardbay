@@ -257,10 +257,15 @@ export default function InstallPrompt() {
   useEffect(() => {
     if (platform !== "ios" && platform !== "android" && platform !== "desktop") return;
     if (readStashedSubscription()) return;
-    if (suppressedByEmail("return_session", platform)) return;
     try {
       const optedOut = snoozedUntil() > Date.now() || localStorage.getItem(DENIED_KEY) === "1";
       if (!optedOut && readFavoriteIds().length >= 2) {
+        // Item 47: gate on eligibility (opted-out / saved-spot count) BEFORE
+        // suppressedByEmail, so the guardrail only fires when a prompt would
+        // actually have shown here. Checking it earlier would emit a phantom
+        // suppression on every pageload for a confirmed subscriber, even one
+        // with < 2 saves, and defeat the guardrail's purpose.
+        if (suppressedByEmail("return_session", platform)) return;
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTrigger("return_session");
         setVisible(true);
@@ -300,13 +305,15 @@ export default function InstallPrompt() {
   useEffect(() => {
     function onConditionsInterest() {
       if (readStashedSubscription()) return; // already subscribed
-      if (suppressedByEmail("conditions_interest", platformRef.current)) return;
       try {
         const optedOut = snoozedUntil() > Date.now() || localStorage.getItem(DENIED_KEY) === "1";
         if (optedOut) return;
       } catch {
         return; // private mode: skip rather than risk a bad state
       }
+      // Item 47: gate on eligibility first (see return_session above) so the
+      // guardrail only counts a real would-have-shown suppression.
+      if (suppressedByEmail("conditions_interest", platformRef.current)) return;
       setTrigger("conditions_interest");
       setVisible(true);
     }
@@ -354,7 +361,12 @@ export default function InstallPrompt() {
     } catch {
       /* private mode */
     }
-    if (platform) trackIntent("alert_optin_dismissed", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
+    // Item 47: the "You're set." card never called setTrigger (it is not a
+    // channel offer, see the alert_optin_shown gate above), so its dismissal
+    // must not be attributed to whatever trigger value was last set, or a
+    // dismiss with no matching impression lands in the funnel under a
+    // fabricated trigger.
+    if (platform && !youreSet) trackIntent("alert_optin_dismissed", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {

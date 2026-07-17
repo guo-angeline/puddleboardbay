@@ -82,4 +82,29 @@ describe("InstallPrompt suppresses the email re-prompt for confirmed subscribers
     const matches = src.match(/useExperiment\(/g) || [];
     expect(matches.length).toBe(1);
   });
+
+  it("gates return_session and conditions_interest behind the eligibility check (opted-out / saves), not before it, so the guardrail only counts a real would-have-shown suppression", () => {
+    for (const trigger of ["return_session", "conditions_interest"]) {
+      const suppressedIdx = src.indexOf(`suppressedByEmail("${trigger}"`);
+      expect(suppressedIdx, `suppressedByEmail("${trigger}" not found`).toBeGreaterThan(-1);
+      // Scope the search to THIS gate's own block: from its nearest preceding
+      // readStashedSubscription() call up to the suppressedByEmail call. A
+      // whole-file lastIndexOf would match an earlier, unrelated gate's
+      // "optedOut" declaration and pass even when this gate checks eligibility
+      // too late (the exact bug being guarded against).
+      const readStashedIdx = src.slice(0, suppressedIdx).lastIndexOf("readStashedSubscription()");
+      expect(readStashedIdx, `no preceding readStashedSubscription() before suppressedByEmail("${trigger}"`).toBeGreaterThan(-1);
+      const localBlock = src.slice(readStashedIdx, suppressedIdx);
+      expect(localBlock, `no eligibility (optedOut) check between readStashedSubscription() and suppressedByEmail("${trigger}"`).toContain("optedOut");
+    }
+  });
+
+  it("does not fire alert_optin_dismissed for the youreSet terminal card (no matching impression, no fabricated trigger)", () => {
+    const dismissedIdx = src.indexOf('trackIntent("alert_optin_dismissed"');
+    expect(dismissedIdx).toBeGreaterThan(-1);
+    const precedingSrc = src.slice(0, dismissedIdx);
+    const guardIdx = precedingSrc.lastIndexOf("if (platform");
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(src.slice(guardIdx, dismissedIdx)).toContain("!youreSet");
+  });
 });

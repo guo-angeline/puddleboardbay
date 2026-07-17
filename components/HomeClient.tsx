@@ -17,6 +17,7 @@ import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/l
 import { useSavedConditions } from "@/components/useSavedConditions";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 import { reportEmailOpen } from "@/lib/email/client";
+import { cacheEmailSubscriptionState } from "@/lib/email/subscriptionState";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -103,6 +104,10 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       watched = (JSON.parse(localStorage.getItem("ptw-favorites") || "[]") as number[]).length;
     } catch { /* private mode */ }
     trackIntent("email_capture_confirmed", { watched_count: watched });
+    // Item 47: this landing IS the confirm signal, cache confirmed:true
+    // directly rather than waiting on a server round trip that would only
+    // tell us what being on this URL already proves.
+    cacheEmailSubscriptionState({ known: true, confirmed: true });
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmailConfirmed(true);
     const t = setTimeout(() => setEmailConfirmed(false), 5000);
@@ -172,7 +177,22 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             ...(pt !== null && /^\d+$/.test(pt) ? { tip_index: Number(pt) } : {}),
           });
           const token = params.get("t");
-          if (token) reportEmailOpen(token, found.id);
+          if (token) {
+            // Item 47 legal gate (D18 action 2): the token must never linger
+            // in window.location, where PostHogProvider's $current_url capture
+            // (and browser history) would carry a live unsubscribe key. Fire
+            // the open ping, then strip `t` synchronously right after, before
+            // PostHogProvider's own mount effect runs (it renders after
+            // {children} in app/layout.tsx, so its effect fires later in this
+            // same commit). Caching the resolved state is async and does not
+            // block the strip.
+            reportEmailOpen(token, found.id).then((state) => {
+              if (state) cacheEmailSubscriptionState(state);
+            });
+            params.delete("t");
+            const qs = params.toString();
+            window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+          }
         }
         trackIntent("spot_viewed", {
           spot_id: found.id,
