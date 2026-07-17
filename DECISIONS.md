@@ -252,7 +252,7 @@ Analysis: `reports/paddle-score-owner-ratings-2026-07-16.md`. The owner ratings 
 
 Two things this decision does NOT resolve, tracked below: spot 92 (see D14 addendum) and the fact that the ratings were never gated on "have I been here" (see the note in D14).
 
-## D17 [OPEN] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
+## D17 [RESOLVED] 2026-07-16 · paddletowater.com receives no mail, and no DMARC record is published
 
 Context: the privacy policy (item 44 step 1) promises access, correction, and deletion via `hello@paddletowater.com`, which is already the `EMAIL_REPLY_TO` fallback on every alert email. The lawyer gate flagged that a reply-to on a sending domain does not prove inbound mail is configured. It is not. Verified against three resolvers (local, 8.8.8.8, 1.1.1.1) with working controls:
 
