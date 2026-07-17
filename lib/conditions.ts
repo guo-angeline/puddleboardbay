@@ -267,8 +267,30 @@ async function fetchWind(lat: number, lng: number, signal: AbortSignal): Promise
   };
 }
 
+/**
+ * Per-source outcome. Distinguishes "no data / not applicable" (a valid,
+ * cacheable state, e.g. an inland spot with no tide station) from "the fetch
+ * errored" (transient: NOAA down, timeout). The panel needs this to say "No tide
+ * station near this spot" only when there truly is none, vs "temporarily
+ * unavailable" when the fetch failed. `ok: true` with a null payload is the
+ * former; `ok: false` is the latter.
+ */
+export type TideOutcome = { ok: true; tide: TideInfo | null } | { ok: false };
+export type WindOutcome = { ok: true; wind: WindInfo | null } | { ok: false };
+
+/**
+ * One spot's conditions fetch, exposed as two INDEPENDENT promises so the drawer
+ * can paint wind (the ~300ms dominant signal) the instant it resolves instead of
+ * waiting on the slower tide hop. Both resolve, never reject.
+ */
+export interface ConditionsRun {
+  tide: Promise<TideOutcome>;
+  wind: Promise<WindOutcome>;
+  fetchedAt: number;
+}
+
 interface CacheEntry {
-  promise: Promise<Conditions>;
+  run: ConditionsRun;
   createdAt: number;
 }
 const cache = new Map<number, CacheEntry>();
@@ -280,9 +302,46 @@ const cache = new Map<number, CacheEntry>();
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
- * Fetch tides + wind for a spot. Each source fails independently: one can error
- * while the other still renders. `failed` is true only when both fail, so the
- * caller never blanks the drawer. Cached per spot id, refreshed after CACHE_TTL_MS.
+ * Start (or reuse) a spot's conditions fetch and return its two independent
+ * source promises. Cached per spot id for CACHE_TTL_MS; a run where BOTH sources
+ * errored is evicted so the next open retries. This is the drawer's entry point:
+ * it renders each source as it settles.
+ */
+export function getConditionsRun(
+  spotId: number,
+  lat: number,
+  lng: number,
+  tideSensitive: boolean
+): ConditionsRun {
+  const cached = cache.get(spotId);
+  if (cached && Date.now() - cached.createdAt < CACHE_TTL_MS) return cached.run;
+
+  // Internal AbortControllers are intentionally NOT wired to any caller signal:
+  // a run stays warm even if the first viewer closes the drawer, so a reopen is
+  // instant. Each source catches into an outcome, so neither promise rejects.
+  const tide: Promise<TideOutcome> = fetchTides(lat, lng, tideSensitive, new AbortController().signal)
+    .then((t) => ({ ok: true as const, tide: t }))
+    .catch(() => ({ ok: false as const }));
+  const wind: Promise<WindOutcome> = fetchWind(lat, lng, new AbortController().signal)
+    .then((w) => ({ ok: true as const, wind: w }))
+    .catch(() => ({ ok: false as const }));
+
+  const run: ConditionsRun = { tide, wind, fetchedAt: Date.now() };
+  cache.set(spotId, { run, createdAt: Date.now() });
+  // Don't cache a hard failure forever: if BOTH sources errored, let the next
+  // open retry.
+  Promise.all([tide, wind]).then(([t, w]) => {
+    if (!t.ok && !w.ok) cache.delete(spotId);
+  });
+
+  return run;
+}
+
+/**
+ * Combined tides + wind for a spot. `failed` is true only when both sources
+ * errored, so the caller never blanks the drawer. Used by the saved-spots batch
+ * (which only needs the settled result); the spot drawer uses getConditionsRun
+ * to paint each source as it settles. `signal` is vestigial and ignored.
  */
 export function getConditions(
   spotId: number,
@@ -291,32 +350,14 @@ export function getConditions(
   tideSensitive: boolean,
   signal?: AbortSignal
 ): Promise<Conditions> {
-  const cached = cache.get(spotId);
-  if (cached && Date.now() - cached.createdAt < CACHE_TTL_MS) return cached.promise;
-
-  // Internal AbortController is intentionally NOT wired to the caller signal:
-  // we want the cached promise to complete and stay warm even if the first
-  // viewer closes the drawer, so a reopen is instant.
   void signal;
-
-  const promise = (async (): Promise<Conditions> => {
-    const [tideRes, windRes] = await Promise.allSettled([
-      fetchTides(lat, lng, tideSensitive, new AbortController().signal),
-      fetchWind(lat, lng, new AbortController().signal),
-    ]);
-    const tide = tideRes.status === "fulfilled" ? tideRes.value : null;
-    const wind = windRes.status === "fulfilled" ? windRes.value : null;
-    const failed = tideRes.status === "rejected" && windRes.status === "rejected";
-    return { tide, wind, failed, fetchedAt: Date.now() };
-  })();
-
-  cache.set(spotId, { promise, createdAt: Date.now() });
-  // Don't cache a hard failure forever: let the next open retry.
-  promise.then((c) => {
-    if (c.failed) cache.delete(spotId);
-  }).catch(() => cache.delete(spotId));
-
-  return promise;
+  const run = getConditionsRun(spotId, lat, lng, tideSensitive);
+  return Promise.all([run.tide, run.wind]).then(([t, w]) => ({
+    tide: t.ok ? t.tide : null,
+    wind: w.ok ? w.wind : null,
+    failed: !t.ok && !w.ok,
+    fetchedAt: run.fetchedAt,
+  }));
 }
 
 /** Short "live as of" clock time, e.g. "8:24 AM", from an epoch ms timestamp. */

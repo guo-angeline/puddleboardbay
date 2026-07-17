@@ -14,6 +14,16 @@ without touching this file.
 
 ---
 
+## 2026-07-17 (item 53 decouple): conditions panel renders wind/tide independently; conditions_viewed `had_data` semantics REFINED (props-values-changed)
+
+**`conditions_loaded` UNCHANGED:** still fires once per spot when BOTH sources settle, same props. `has_tides` (`t.ok && t.tide !== null`), `has_wind` (`!!windInfo`), `failed` (both errored), and `latency_ms` (both-settled) all keep their prior meaning; only the internal plumbing changed (getConditionsRun exposes the two source promises the panel already waited on).
+
+**`conditions_viewed` `had_data` REFINED.** Old value: `!!d && !d.failed`, i.e. "the combined result resolved and not BOTH sources errored". New value: `!!windInfo || !!tideInfo`, i.e. "at least one source actually returned data". The difference bites in one case: a spot where a source returned `ok` but empty (e.g. wind resolved with no forecast period, or a non-tidal spot) while the other errored counted as `had_data: true` before (not fully failed) but counts as `had_data: false` now (no real data to look at). The new reading is the intended one, whether the viewer saw actual conditions.
+
+- **Comparability: `conditions_viewed`'s `had_data: true` rate may tick DOWN slightly from 2026-07-17, because the flag now requires real data, not merely "not fully failed".** This is a definition tightening, not a drop in views or engagement; `conditions_viewed` still fires on the same dwell-gated genuine view, same trigger. Do not read the shift as users looking at conditions less. The `paddleability` prop is unchanged (still wind-derived).
+
+---
+
 ## 2026-07-17 (item 53 slice): tide fast-fail; conditions_loaded `latency_ms` tail SHRINKS on tidal spots (no event/props change, semantics-note)
 
 **No event added, no props change, no `lib/analytics.ts` edit.** `conditions_loaded.latency_ms` measures the whole `getConditions` settle, which waits on the slower of tide/wind (`Promise.allSettled`). Before this change, a flaky NOAA could hang the `/api/tides` proxy for its full timeout + retry (~13s in prod), so `latency_ms` had a long tail on `tide_sensitive` spots even though wind resolved in ~100ms. The client now aborts the tide fetch at 4s and the proxy per-attempt timeout dropped 6s -> 2.5s, so the worst-case tide wait is bounded.
