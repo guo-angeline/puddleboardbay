@@ -196,7 +196,7 @@ Question for the owner:
 1. **79:** delist permanently, or is there a real put-in there you know of? Recommend permanent delist. Also recommend a `lawyer` gate look given the closed-refuge and endangered-species exposure alongside items 34/35.
 2. **76:** call the harbormaster (650-583-6975) to confirm whether a public launch exists, drop a pin from personal knowledge, or delist.
 
-Answer: 
+Answer: delist both 79 and 76.
 
 ### Addendum, 2026-07-16: spot 92 joins this memo, and one process fact about 79
 
@@ -279,7 +279,21 @@ Questions for the owner:
 1. Which contact option? (Recommend (a).) The privacy policy stays undeployed until this is settled, and it is the CalOPPA gap that is live today, so this is worth minutes rather than days.
 2. Was DMARC ever actually published? If it was, something removed it. If it was not, the 2026-07-24 "tighten to quarantine" follow-up should become "publish p=none, then tighten".
 
-Answer: 
+Answer: **(a) Cloudflare Email Routing enabled + DMARC published at p=none.** (2026-07-17, owner, verified.)
+
+Done and independently verified via dig against two resolvers (1.1.1.1 and 8.8.8.8):
+- **Receiving:** MX records `route1/2/3.mx.cloudflare.net` are live, so `hello@paddletowater.com` receives mail (forwarded to the owner's inbox via an Email Routing rule; the Email Routing DNS records are locked to prevent accidental deletion).
+- **DMARC:** `_dmarc.paddletowater.com` now publishes `v=DMARC1; p=none; rua=mailto:hello@paddletowater.com`. This is the "publish, do not tighten" action the standing note called for; there was never a p=none record to tighten.
+- **Sending path untouched:** `conditions@alerts.paddletowater.com` still authenticates (SES/Resend SPF + DKIM intact); the alerts subdomain DKIM aligns under the new root DMARC, so p=none does not, and a later p=quarantine would not, break sends.
+
+Resolves both halves. Consequences:
+1. The **live privacy policy is now honest** with zero code change: it points at hello@, which now works. The FTC/CCPA/COPPA exposure (a designated contact and child-report channel that bounced) is closed.
+2. The **alert-email reply-to works** for the first time.
+3. **D17 no longer gates item 44 or item 49** (each still carries its own separate gate: 44 the retention read, 49 a non-empty confirmed cohort, so neither auto-promotes).
+
+Two follow-on observables, NOT D17 blockers:
+- **Deliverability:** whether confirmations now land in the inbox rather than spam. DMARC plus a monitored reply-to help, but a young sending domain can still be filtered on reputation. Watch the confirm rate; that is the real retention-loop signal.
+- **Tighten to quarantine:** only after the rua reports (now arriving at hello@) show clean alignment for a couple of weeks. Not before.
 
 ## D18 [RESOLVED] 2026-07-16 · Item 47 (email subscribers re-prompted forever): ship a fix nobody but you can feel?
 
