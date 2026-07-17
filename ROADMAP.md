@@ -116,7 +116,7 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 ## 39. [done] 2026-07-16 A paddleability score for each spot (editorial, not crowd-sourced)
 
-**Resolution: the computed rubric was CUT and stays cut. What shipped in this slot is a different feature: the owner's own hand-entered rating.** (D16, owner-directed 2026-07-16.) Deployed behind the `owner-rating` flag in `7dfd227` + `99a2aa6`; the flag does not exist in PostHog yet, so nothing renders until the owner creates it. Docs: `docs/experiments/owner-rating.md`, analysis in `reports/paddle-score-owner-ratings-2026-07-16.md`.
+**Resolution: the computed rubric was CUT and stays cut. What shipped in this slot is a different feature: the owner's own hand-entered rating.** (D16, owner-directed 2026-07-16.) Deployed behind the `owner-rating` flag in `7dfd227` + `99a2aa6`; shipped at 100% and rendering (D20, 2026-07-17); the flag was removed, no PostHog action needed. Docs: `docs/experiments/owner-rating.md`, analysis in `reports/paddle-score-owner-ratings-2026-07-16.md`.
 
 **The two are not interchangeable and must never be blended.** The rubric (D15) scored the PUT-IN; the owner rating rates THE PADDLE. They correlate at 0.04 against researcher A and -0.10 against B, while A and B correlate 0.52 with each other. China Camp is 3.6 on the rubric and 5.0 from the owner, and both are right.
 
