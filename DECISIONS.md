@@ -395,6 +395,8 @@ Defaults confirmed by silence elsewhere: tide pass runs first; the tide screen's
 
 **DEPLOYED 2026-07-17** after owner review of the coordinate diff. Verified live on paddletowater.com: spot 65 JSON-LD reads the new 37.7901745,-122.2659597; 64 and 134's new coordinates are in the live bundle; old coordinates gone. The 7 tide flips ship with them and now feed the conditions engine and the calm-window push cron. D19 fully closed.
 
+**Narrowed 2026-07-17 (D23):** the standing gate this decision created was firing on ANY spots.json lat/lng line, including brand-new spots. Per owner directive it now fires only on a CHANGE to an existing coordinate (a removed `-` lat/lng line), which is what this decision was actually about. New-spot additions no longer gate. See D23.
+
 ## D20 [RESOLVED] 2026-07-17 · Item 39 owner ratings: ship at 100%, no A/B flag
 
 Owner directive 2026-07-17, verbatim intent: do not A/B test the owner ratings; render them to everyone. This is an explicit exception to the board's "every major update behind an A/B flag" directive, consistent with the D3/D11/D13 precedents for owner overrides at this traffic level.
@@ -417,7 +419,7 @@ Shipped: "star + number" inline in the subtitle row in SpotDrawer and SpotCard (
 
 Answer: bare star + number, both views, no qualifier (owner override of the lawyer's needs-changes).
 
-## D22 [OPEN] 2026-07-17 · Items 54 + 55: one deploy gated on your read of spot 150's coordinate (now also holds a P0 mobile fix)
+## D22 [RESOLVED] 2026-07-17 · Items 54 + 55: one deploy gated on your read of spot 150's coordinate (now also holds a P0 mobile fix)
 
 **Update (2026-07-17, second loop iteration):** this gate now also holds item 55, a verified P0 mobile fix (commit c24fef1), off production. Spot 150's un-reviewed coordinate sits in the same tree, and the predeploy gate blocks any `vercel --prod` while a new spots.json lat/lng is unread. So both changes ship together the moment you approve below. The P0: on mobile, tapping a list spot threw `Invalid LatLng (NaN)` (6/6 fast trials) and blanked the conditions panel (5/6); the fix guards the map's fly effects against a hidden zero-size container. Nothing is live yet; nothing reverts.
 
@@ -436,4 +438,14 @@ If silent: the spot stays on `main` but off production; the next loop iteration 
 
 Blocks: item 54 (deploy only).
 
-Answer:
+Answer: **Approve, ship both** (owner, 2026-07-17). Plus a process directive: "I don't think they require any approval gate by me, fix the process." Neither of these needed my sign-off. Acted on both: deployed spot 150 + the P0 fix, and narrowed the standing coordinate gate so it stops asking for this. See D23.
+
+## D23 [RESOLVED] 2026-07-17 · Narrow the D19 predeploy coordinate gate: stop gating new-spot additions and unrelated deploys
+
+**Owner directive, 2026-07-17** (in the D22 thread): adding a new spot with an owner-supplied, verified coordinate, and a bug fix that touches no coordinates at all, should not require an owner approval gate. "Fix the process."
+
+What went wrong: the standing D19 gate (`scripts/predeploy-gate.py`) fired on ANY added or changed `spots.json` lat/lng line. That over-triggered two ways. (1) It gated brand-new spots, i.e. it asked the owner to review a coordinate the owner had just supplied, which is circular. (2) Because it diffs the whole tree against `deployed-prod`, an un-reviewed coordinate sitting on `main` froze EVERY later deploy, so a P0 fix touching zero coordinates was blocked purely by sharing the tree with spot 150.
+
+Fix (shipped this iteration): the gate now fires ONLY when an EXISTING spot's coordinate is changed or removed (a `-` lat/lng line in the diff), which is the real risk D19 was built for: a pin silently moving under live users and the alert crons (the item-40 machine-audit scenario). A purely ADDED lat/lng (a new spot) no longer gates: a new spot is already reviewed by the act of adding it, and letting it through also removes the coupling that stranded the P0. Non-coordinate deploys are never gated. D19's protection for coordinate CHANGES stays fully intact.
+
+Answer: gate only modified/removed existing coordinates, not new-spot additions (owner directive). Implemented in `scripts/predeploy-gate.py`; D19 and `.claude/studio.md` notes updated to match.

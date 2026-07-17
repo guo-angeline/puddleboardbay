@@ -9,8 +9,10 @@ verified deploy (ship skill step 6).
 
 Gated changes:
   * Standing gates (always on):
-      - data/spots.json lat/lng lines (D19: the owner reads the coordinate diff
-        before it reaches the alert crons).
+      - data/spots.json lat/lng CHANGES to existing spots (D19: the owner reads
+        the coordinate diff before a moved pin reaches the alert crons). New-spot
+        additions do NOT gate (D23): a purely added coordinate is reviewed by the
+        act of adding the spot, and gating it froze unrelated deploys too.
       - push / cron send behavior and Supabase subscription code (studio.md
         PROTECTED list, the 6am-alert incident).
   * Dynamic gates (no extra doc): any path named on a `Gates:` line of an OPEN
@@ -62,11 +64,21 @@ def matches(path, pattern):
 
 
 def spots_latlng_changed(cwd):
+    """True only when an EXISTING spot's coordinate was changed or removed.
+
+    A modified or deleted coordinate shows as a REMOVED (`-`) lat/lng line in the
+    diff, and that is the risk D19 exists for: a pin silently moving under live
+    users and the alert crons (the item-40 machine-audit scenario). A brand-new
+    spot adds only `+` lat/lng lines with no matching `-`; those do NOT gate.
+    A new spot is already reviewed by the act of adding it, and gating additions
+    both asked the owner to review coordinates they had just supplied and froze
+    every unrelated deploy that shared the tree (D23, owner directive 2026-07-17).
+    """
     out = git(cwd, "diff", DEPLOY_TAG, "--", SPOTS)
     if out.returncode != 0:
         return False
     for line in out.stdout.splitlines():
-        if line[:1] in ("+", "-") and line[1:2] != line[:1]:  # a real +/- line, not the +++/--- header
+        if line.startswith("-") and not line.startswith("---"):  # a removed line, not the --- header
             if '"lat"' in line or '"lng"' in line:
                 return True
     return False
