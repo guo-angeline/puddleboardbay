@@ -112,7 +112,7 @@ WCAG AA needs **4.5:1** for normal-size text; `--muted` clears only the 3:1 larg
 
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
-## 59. [proposed] Finish the tide_sensitive correction pass (the flag that gates the conditions engine)
+## 59. [ready] Finish the tide_sensitive correction pass (the flag that gates the conditions engine)
 
 **Why:** `tide_sensitive` feeds the conditions engine (`lib/savedConditions.ts` / `lib/conditions.ts`), the app's differentiator, so a wrong `false` silently drops the tide half of conditions for a tidal spot. CLAUDE.md documents this as systematic (36 of 68 bay spots say false; 14 describe tides in their own notes while the flag says false). Item 40 flipped only 7 and stopped. Verified 2026-07-18: spots **27 (moderate tidal current), 38 (opposing tides mid-bay), 40 (mellow tidal stretch), 43 (tidal river)** say `false` while their own notes describe tides, unambiguous defects; **82 (Lake Merritt "tidal lagoon")** is a judgment call; spots **60 ("usable at all tide levels") and 96 ("free of tides")** are the D19 pre-cleared false positives and must stay `false`.
 
@@ -161,7 +161,7 @@ WCAG AA needs **4.5:1** for normal-size text; `--muted` clears only the 3:1 larg
 - Confirm `leaflet.markercluster` composes with `preferCanvas` + the shared `L.canvas()` renderer, or document the alternative (a canvas-native clustering approach).
 - Pins keep the difficulty colours (`DIFFICULTY_COLOR`, `lib/types.ts`); cluster bubbles need their own count styling.
 
-## 50. [blocked(D26)] Split the multi-launch records the item 40 audit could not pin
+## 50. [ready] Fix spot 54 (hide it); 63/70 splits deferred (D26 resolved 2026-07-18)
 
 **Escalated to D26 2026-07-18 (studio loop).** Reading the item-40 audit showed the "split 4 records" framing overstates readiness: **84 has no defect** (coord already matches its notes), **63 + 70 splits are not sourced** (the audit fetched no put-in coordinates for them, and a split mints new SEO/cron surfaces, D19 Q2a reserves the scope for the owner), and **only spot 54 is a real defect** (coord ~30km off in Cloverdale vs the Guerneville put-ins its notes name, likely redundant with the owner-added spot 150). D26 recommends: hide spot 54 (reversible), drop 84, defer the 63/70 splits to a sourcing pass. Blocked on D26.
 
@@ -231,7 +231,7 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Rights-clean + attribution on every added photo (CC only; the on-image overlay from item 31); self-hosted sized derivatives; `spot_photo_viewed` already exists, no new event unless a source needs one (then changelog it).
 - Ships under the existing `spot-photos` kill switch (no A/B, DAU<100 rule).
 
-## 57. [blocked(D27)] Inspect the mobile bottom-sheet drag (slide up/down): useful, or friction?
+## 57. [ready] Mobile spot sheets open full screen; remove the drag (D27 resolved 2026-07-18)
 
 **Escalated to D27 2026-07-18 (studio loop).** Two findings: (1) the drag is ALREADY instrumented, `spot_sheet_resized {to}` fires on a drag that changes snap state and `spot_sheet_dismissed {method:"drag"}` on drag-to-dismiss, so no new event is needed and the usage data likely already exists in PostHog; (2) the item-31 photo pushed the ConditionsPanel + safety line further below the peek fold, so if the drag rate is high, that is why. The blocker: the loop has no PostHog read key to run the drag-rate query itself. D27 asks the owner to run the two-series query (or drop a read key) and, if the rate is high, ship the pre-scoped fix (auto-open taller via the item-9/42 `startExpanded`, behind a `sheet-auto-expand` kill switch). Blocked on D27.
 
@@ -242,7 +242,7 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Evaluate alternatives against the data: keep the drag as-is; auto-open fuller so conditions clears the fold (relates to item 46's cheap alternative and item 9/42's `startExpanded`); replace drag with a tap-to-expand control; or collapse to a single sensible height. Weigh discoverability (a drag handle is a weak affordance) against the single-canvas / Leaflet z-index constraints (CLAUDE.md).
 - Deliver a recommendation with the numbers behind it. If it warrants a change, spec it and ship behind a kill-switch flag (no A/B, DAU<100 rule); if the drag earns its keep, say so and stop, a validated "leave it" is a valid outcome.
 
-## 35. [blocked(D25)] Terms of Service + assented assumption-of-risk waiver (legal gate)
+## 35. [ready] Ship the /terms page + footer link now; HOLD the enrollment assent line for attorney review (D25 resolved 2026-07-18)
 
 **Lawyer gate ran 2026-07-18 (studio loop): verdict ESCALATE, opened D25.** Full draft ToS + assumption-of-risk waiver written (ready for a CA attorney to bless, embedded in D25). Core finding: a release of ORDINARY negligence for recreation is generally enforceable in CA (Tunkl), but a wrongful-death claim belongs to non-signatory heirs, so the waiver is UNCERTAIN against the exact drowning suit it targets, and gross negligence is never waivable. So it must not ship as a "shield" until attorney review. D25 asks the owner: (Q1) engage a CA attorney ~1hr; (Q2) form a CA LLC; (Q3) liability insurance; (Q4) ship the `/terms` page + footer now but HOLD the enrollment assent line until Q1. Recommended assent = sign-in-wrap ("By turning on alerts, you agree to our Terms and Disclaimer" below the CTA), NOT a checkbox, to protect enrollment conversion. No code/deploy this iteration (escalation only). Blocked on D25.
 

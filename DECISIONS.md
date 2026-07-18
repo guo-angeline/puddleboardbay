@@ -471,7 +471,7 @@ Blocks: item 43, and item 44 (its identity model is the same decision, per item 
 
 Answer:
 
-## D25 [OPEN] 2026-07-18 · Item 35 (assented Terms + assumption-of-risk waiver): four decisions before the waiver is a real defense
+## D25 [RESOLVED] 2026-07-18 · Item 35 (assented Terms + assumption-of-risk waiver): four decisions before the waiver is a real defense
 
 The lawyer gate returned **escalate** on item 35. The draft ToS + assumption-of-risk waiver is written and ready to build against (footer link + sign-in-wrap assent at enrollment, no checkbox, near-zero conversion cost, full draft at the bottom of this memo). What is NOT the studio's call: whether the waiver actually holds against a California drowning/wrongful-death claim, and whether to shield personal assets. The honest read on the core bet: a well-drafted release of **ordinary negligence** for a recreational activity is generally enforceable in CA (Tunkl), **but** a wrongful-death claim belongs to the decedent's heirs as their own independent claim, and a release the paddler signed may not bind non-signatory heirs. So this waiver strengthens the defense against a surviving paddler's own claims and is **uncertain against the exact wrongful-death suit it is meant to stop.** Gross negligence can never be waived (City of Santa Barbara). This is why it escalates rather than ships. Risk assessment, not legal advice, not a substitute for a licensed CA attorney.
 
@@ -528,9 +528,9 @@ Blocks: item 35. (Independent of D24; can be answered separately.)
 
 </details>
 
-Answer:
+Answer: (owner, 2026-07-18) **Q1: YES**, engage a licensed CA attorney to review the draft waiver, lead with the heirs'/wrongful-death enforceability point. **Q2: DEFER** the CA LLC until revenue. **Q3: DEFER** liability insurance. **Q4: SHIP NOW.** Per the memo's interlock, "ship now" = build/deploy the `/terms` page + footer link now with the draft text; the enrollment sign-in-wrap ASSENT line, the Civil Code 1542 quote, and any "enforceable waiver / defeats a wrongful-death suit" claim still HOLD until Q1 is answered by the attorney (the lawyer-gate constraint in this memo, which Q4 does not override). Net: the container ships this loop, the assent moment stays gated on the attorney.
 
-## D26 [OPEN] 2026-07-18 · Item 50 (split the multi-launch records): the audit says only 1 of the 4 is a real defect, and the splits need sourcing you have to scope
+## D26 [RESOLVED] 2026-07-18 · Item 50 (split the multi-launch records): the audit says only 1 of the 4 is a real defect, and the splits need sourcing you have to scope
 
 Item 50 was promoted to `[ready]`, but reading `reports/item-40-record-accuracy-2026-07-17.md` (the audit it depends on) shows the "split 4 records" framing overstates what is ready. Correcting the record per spot, then the calls that are yours:
 
@@ -554,9 +554,9 @@ If silent: item 50 stays blocked. Nothing is deleted or split without your Q1/Q2
 
 Blocks: item 50.
 
-Answer:
+Answer: (owner, 2026-07-18) **Q1: HIDE spot 54** (`hidden` + `hidden_reason`: coordinate ~30km off in Cloverdale, untrustworthy; Guerneville is covered by spot 150). Reversible, keeps the record, drops it from every surface + both crons. Q2/Q3 not separately specified, so default to the recommendation: **DEFER the 63 + 70 splits** to a separate sourcing item (do NOT ship guessed put-in coords, that repeats the defect item 40 exists to prevent), and **NARROW item 50 to "fix spot 54"** this loop, re-filing 63/70. Drop 84 (no defect). Do not alter any `lat`/`lng`.
 
-## D27 [OPEN] 2026-07-18 · Item 57 (mobile sheet drag): it's already measurable, but the loop can't read PostHog, so the answer + any fix is yours
+## D27 [RESOLVED] 2026-07-18 · Item 57 (mobile sheet drag): it's already measurable, but the loop can't read PostHog, so the answer + any fix is yours
 
 Item 57 asks whether the mobile bottom-sheet drag (slide up/down) is useful or friction, "with the numbers behind it." Two findings, then the ask.
 
@@ -576,4 +576,4 @@ If silent: item 57 stays blocked on the read. No layout change ships without the
 
 Blocks: item 57.
 
-Answer:
+Answer: (owner, 2026-07-18) **REMOVE the drag function; every mobile spot sheet opens FULL SCREEN.** This is a stronger call than the pre-scoped conditional auto-expand and does NOT need the PostHog drag-rate read, so Q1/Q2 are moot: don't run the query, don't build the rate-gated variant. Implementation: mobile spot sheets always open at full height (reuse the item-9/42 `startExpanded` at 100%; drop the peek snap and the drag-to-resize handle). Implementer note: drag-to-dismiss goes away with the handle, so keep a non-drag dismiss path (the existing close control / backdrop tap / back gesture) so the sheet is still closable. Ship behind the `sheet-auto-expand` kill switch (no A/B, DAU<100).
