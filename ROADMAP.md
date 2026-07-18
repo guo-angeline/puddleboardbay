@@ -114,6 +114,75 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - It never re-offers EMAIL to an email subscriber. That is item 47's bug and must not return.
 - Weigh against the standing "desktop never offers push" invariant (D18 default, E5): this is an Android/installed-PWA question, not a desktop one.
 
+## Restored 2026-07-18: items 31, 35, 45, 46 (accidentally deleted 2026-07-17 in commit 7063d16, re-added verbatim from git; owner directive: never delete a roadmap item)
+
+## 31. [proposed] A picture for each spot
+
+**Why:** Owner idea 2026-07-13. Spot cards/sheets are text-only; a photo is the highest-impact visual upgrade for browse appeal and shared-link CTR.
+
+**Acceptance (to be sized before promoting):**
+- Every spot (or a defined first tranche) shows a photo on the drawer/sheet without hurting load performance (lazy-load, sized derivatives).
+- Sourcing must be rights-clean and attributed (owner photos, CC-licensed with attribution, or a licensed API); no scraping. This is the hard part: 140 spots, so propose the sourcing plan + effort estimate as a decision before building.
+- New user-facing surface: ships behind a flag or staged tranche per the major-update directive.
+
+**Sourcing plan sized 2026-07-14 (studio); decision open at DECISIONS.md D10.** Feasibility probe found: Google Places Photos can't be self-hosted (ToS bars caching, photo names expire, so re-fetch + pay per view + a render-path dependency); free self-hostable CC sources (Wikimedia Commons + Flickr CC) cover ~55-75% of spots after human curation (36-spot probe: 78% have a geo-tagged Commons file within 500m, 22% none). Recommended path (D10 option a): tiered hybrid, harvest + curate CC-BY/BY-SA/CC0 photos self-hosted with attribution, static-map-thumbnail fallback for gaps, owner photos backfill, ship the curated tranche behind the flag. Effort ~2.5 eng days + ~1 day curation. **Blocked on D10** before build (which sourcing approach, fallback treatment, tranche scope, UGC defer). Stays `[proposed]` until the owner answers D10 and promotes to `[ready]`.
+
+## 35. [proposed] Terms of Service + assented assumption-of-risk waiver (legal gate)
+
+**Why:** Lawyer legal-gate review 2026-07-14. The site has a passive `/disclaimer` page but no Terms the user actually assents to. An assented release with an express assumption-of-risk + ordinary-negligence waiver is a contract defense that can knock a weak wrongful-death suit out early and (with an entity) protects the owner's personal assets. Highest-value legal item; the enrollment step is the strongest assent moment.
+
+**Acceptance (to be sized before promoting):**
+- Add `app/terms/page.tsx`: express assumption-of-risk (user accepts inherent risks of paddling including drowning/death), release/waiver of liability for ordinary negligence, AS-IS / no warranties, limitation-of-liability cap, indemnification.
+- Conspicuous assent: persistent footer link plus a one-time "By using this site you agree to the Terms and Disclaimer" acceptance at alert enrollment (`InstallPrompt.tsx`); link beside the existing Disclaimer link in `HomeClient.tsx` / `SpotList.tsx`.
+- **Escalate before shipping:** waiver enforceability for a paddling death and the LLC/insurance decision are California-specific and warrant ~1 hr of licensed-attorney review (CA LLC carries ~$800/yr franchise tax). Draft the ToS/waiver text for the attorney to bless rather than originate; open a DECISIONS.md memo for the owner on entity + insurance.
+
+## 45. [blocked(no-source)] Expand coverage to more of Northern California (RESCOPED 2026-07-16: the first task is finding a registry, not running the pipeline)
+
+**RESCOPED 2026-07-16 after a verified Water Trail gap analysis (`reports/item-45-watertrail-gap.md`). This item's premise did not survive it.**
+
+All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
+
+| Verdict | Count | Meaning |
+|---|---|---|
+| **CARRIED** | **34 (72%)** | already a record |
+| **MERGED** | **10 (21%)** | described inside another spot's notes, no record of its own. **This is item 40 work (split the record), not item 45 work (add a spot).** |
+| **GENUINE GAP** | **3 (6%)** | real item 45 scope |
+| UNVERIFIABLE | 0 | |
+
+**Three things this establishes:**
+
+1. **You cannot expand coverage from a source you have already ingested.** The app carries 72% of the Bay's authoritative registry. It yields three candidates, and one of them (Pier 39) is not a launch: the Water Trail itself says it is "anticipated to serve primarily as a destination site for paddlers starting elsewhere." Shipping it as a put-in would be the 47/120 defect committed knowingly.
+2. **10 of the 13 non-carried sites are item 40 in disguise, a 10:3 ratio.** Four host records hold all ten: spot 70 hides 3 Richmond trailheads; spots 68, 18, and 63 hide 2 each. Spot 63 is the Richmond pattern again, a marina-complex pin sitting *between* two trailheads 760m apart. **Splitting those four records is simultaneously the cheapest coverage in the backlog and item 40 work.** Do that before adding anything.
+3. **The registry stops at the Bay, and that is the real blocker.** No authoritative, field-complete equivalent has been identified for the Sierra, the Delta, the Central Valley, or the coast, and DBW is disqualified (it registers motorized/trailered facilities; see item 40). Absent a source, expansion falls back to the geocode-and-trust step that produced spot 79.
+
+**The parking-vs-dock trap fired live during this analysis**, which is the best evidence that the method matters: the Water Trail's published coordinate for Baylands Sailing Station reverse-geocodes to `amenity/parking`, 60m from a gravel lot. Ingesting it as published would have produced a fourth 127/130/132.
+
+**Acceptance, rewritten:**
+- **Step 1 is to identify an authoritative, field-complete registry for the target region** (one that publishes dock type, parking, fees, and hazards, as the Water Trail does), NOT to run `phase0_geocode.py`. If no such registry exists for a region, that region is not expandable at acceptable quality yet, and saying so is the correct outcome.
+- Split the four merged host records (70, 68, 18, 63) first. That is ~10 real launches, already sourced, and it fixes wrong pins at the same time.
+- Every new record carries **per-field provenance**. A guessed boolean is worse than an absent one: `tide_sensitive` gates the conditions engine, and the sweep found spot 64 with three booleans wrong at once.
+- Coordinates are the put-in, never the published parking coordinate.
+- Notes say what the source says. Do not upgrade a beach launch into a "paved ramp".
+- Only the Downtown Suisun City candidate is recommended to take as-is (high confidence, 27m from an OSM pier, tide hazard quoted from source).
+
+**Why (original):** Owner idea 2026-07-16. 142 spots today, weighted to the Bay; more coverage is more reasons to open the app and more SEO surface.
+
+**Acceptance:**
+- New spots flow through the existing pipeline (`raw-data/phase0_geocode.py` to `data/spots.json`), fully enriched (difficulty, fee tri-state, notes, amenities), not just geocoded.
+- **Blocked on item 40, and the 2026-07-16 audit made this block much stronger.** The original reason was imprecision (spots pinned kilometres off). The real reason is worse: the pipeline can emit a **plausible-looking spot that does not exist**, with invented specifics. Item 79 (Coyote Creek) appears to be an AI-summary artifact of a permit-only trip report into a closed wildlife refuge, and its notes carry the wrong closure months and the wrong species. Expanding coverage through this pipeline would scale fabrication, not just imprecision. Do not start 45 until 40 has replaced the geocode-and-trust step with a provenance check (reverse-geocode + registry confirmation of facility type).
+- Notes follow the house rule: evergreen description of the spot, never a reply to whoever reported it.
+- Scope the tranche (which waters, how many) before promoting.
+
+## 46. [proposed] The launch-reminder tap shows no safety line (item 34's one uncovered surface)
+
+**Why:** surfaced by the editor during item 34, 2026-07-16. `app/api/cron/send-reminders/route.ts` deep-links to `/?spot=X&from=alert` with **no `window` param**, originally on purpose so the interstitial would not re-show. But `HomeClient` only sets the alert banner when a window param is present, so a reminder tap renders no interstitial, and the interstitial is the only surface carrying the full canonical safety line plus the launch-direction tip (item 36). The tap lands on a peek-height sheet with `ConditionsPanel`'s line below the fold. **This is the push that fires at window open, the exact moment someone decides to get on the water, and it is the one alert whose entire journey shows no full safety line.** Item 34 covered the no-tap path (the body carries the safety half-line) but could not close this, because it is not a copy change.
+
+**Acceptance:**
+- A reminder tap surfaces the full safety line and the launch-direction tip, i.e. the interstitial renders.
+- Needs a human window label ("Sat 7 to 10am") that no layer stores today: `launch_reminders` has `window_key` (a date, for dedup) and `fire_at`; `/api/alerts/remind` is never sent one. So this is client -> API -> schema -> cron, not copy.
+- Raises `alert_interstitial_shown` (a fix, not a behavior change) and re-shows a card the user saw ~12h earlier. The card is arguably more useful the second time: the window it describes is now open. Changelog entry required.
+- Alternative if the schema change is unwanted: render the safety line above the fold on the peek sheet.
+
 ---
 
 ## Owner items, added 2026-07-13 (board-directed; the two [ready] items are queued top-most on purpose)
