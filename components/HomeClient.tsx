@@ -161,17 +161,27 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           if (isMobileViewport()) setStartExpanded(true);
         }
         if (from === "alert") {
+          const windowLabel = params.get("window");
+          // Item 46: a launch-reminder tap carries from=alert but NO window
+          // param, so the AlertInterstitial (which carries the full safety line)
+          // never renders and the sheet opens at peek with ConditionsPanel's
+          // safety line below the fold. This is the one alert whose whole journey
+          // showed no full safety line. Open it expanded on mobile so the safety
+          // line clears the fold. Windowed alert opens keep the interstitial and
+          // stay at peek (item 9), so only reminder taps expand.
+          const reminderTap = !windowLabel;
           trackIntent("alert_clicked", {
             spot_id: found.id,
             spot_name: found.water,
             region: found.region,
+            reminder_tap: reminderTap,
           });
           // Durable, server-side return signal for long-horizon subscriber
           // retention. The token rode the deep link, so this works even after
           // ITP has purged client storage. See /api/alerts/opened.
           if (token) reportAlertOpen(token, found.id);
-          const windowLabel = params.get("window");
           if (windowLabel) setAlertBanner({ spotId: found.id, windowLabel });
+          else if (isMobileViewport()) setStartExpanded(true);
         } else if (from === "email") {
           // Email twin of the alert-open path. The durable open-ping fires
           // below, once, for both the resolved and hidden-spot case.

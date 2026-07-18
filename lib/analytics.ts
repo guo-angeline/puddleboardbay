@@ -178,6 +178,10 @@ interface EventPropMap {
   alert_subscribe_failed: { status: number | null; watched_count: number };
   saved_conditions_viewed: { count: number; calm_count: number };
   spot_photo_viewed: { spot_id: number; region: string; license: string };
+  // Item 46: `reminder_tap` is true when the app opened from a launch-reminder
+  // push (from=alert with NO window param) vs a windowed alert open. Reminder
+  // taps now open the mobile sheet expanded so the safety line clears the fold.
+  alert_clicked: { spot_id: number; spot_name: string; region: string; reminder_tap: boolean };
   recent_spots_shown: { count: number; calm_count: number };
   recent_spot_clicked: { spot_id: number; region: string };
   // Values mirror lib/push.ts OptInResult; kept inline to avoid a cycle

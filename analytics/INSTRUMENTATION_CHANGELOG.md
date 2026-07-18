@@ -14,6 +14,14 @@ without touching this file.
 
 ---
 
+## 2026-07-18 (item 46): alert_clicked gains `reminder_tap` prop (props-changed); reminder taps open the sheet expanded
+
+`alert_clicked` (INTENT, fires on any from=alert open) gained a boolean `reminder_tap` prop: true when the app opened from a launch-reminder push (from=alert with NO `window` param), false for a windowed alert open. This distinguishes the two cohorts, which were previously indistinguishable in analytics (the `window` param is stripped from the URL and never logged). Behavior change shipped alongside: a reminder tap now opens the mobile spot sheet expanded (`startExpanded`) so ConditionsPanel's safety line clears the peek fold, item 46 (the reminder tap was the one alert whose journey showed no full safety line, because it carries no `window` param so the AlertInterstitial never rendered). No schema/cron change (the cheap alternative in the item's acceptance); the launch-direction tip still needs the deferred schema change.
+
+- **Comparability:** `alert_clicked` total volume is continuous (same trigger). The `reminder_tap` prop is NEW from 2026-07-18, so any segment by it only exists from that date; before, reminder-tap opens were an unlabeled subset of `alert_clicked`. No metric is discontinuous, this only adds a segment. Guardrail: watch `spot_sheet_dismissed` on the alert source is not elevated (an unwanted expand would raise dismissals).
+
+---
+
 ## 2026-07-18 (item 31): spot_photo_viewed ADDED (INTENT); per-spot photos in the drawer
 
 **One INTENT event ADDED** (`event_category: "intent"`): `spot_photo_viewed`, props `{ spot_id, region, license }`. Fires once per genuine view (on screen + dwell, via `lib/useGenuineView`, re-armed per spot) of a spot's photo in the drawer/sheet. Measures whether the new photo surface (item 31) earns attention. NOT fired on mount or on data load; it is a deliberate-attention signal, mirroring `saved_conditions_viewed` / `recent_spots_shown`.
