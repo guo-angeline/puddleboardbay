@@ -1,5 +1,17 @@
 # Briefings: the board log
 
+## 2026-07-18 · Ingested D25/26/27; item 50 shipped (spot 54 hidden); item 59 was a no-op
+
+**Your move:** nothing required. Re-run `/studio` when convenient and it takes item 57 (full-screen mobile sheet, D27) then 35 (/terms page, D25). D24 (reviews) still open if you want to unblock 43/44.
+
+**TL;DR:** Your three answers (D25/26/27) unblocked four items. Shipped item 50 (hid the misplaced spot 54). Item 59 turned out to be a no-op, its premise contradicted a tested prior decision, so no change was the correct outcome.
+
+**Appendix:**
+- **Item 50 -> done** (`6d54128`, deployed): spot 54 hidden per D26 (coord ~30km off, covered by spot 150); removed its stale 4.4 rating per the hidden-spot invariant (count 118->117); `/spot/54` now 404, gone from every surface + both crons; coord untouched.
+- **Item 59 -> done, NO-OP** (`57a8aaa`): item 40 + `lib/spots.test.ts` already correctly held the "tidal label" spots (27/38/40/43/82) false ("a label is not a dependence"); flipping them failed the test; reverted. Guarded a memory against re-filing. If you want tide shown on tidal-water spots regardless, that's a deliberate rule+test change, tell me.
+- **Ingested** (`8c9048c`): D25/26/27 committed; items 35/50/57 promoted.
+- Ready next: **57** (remove the mobile drag, sheet opens full screen, D27) and **35** (/terms page + footer, assent line held for attorney, D25). Both meatier + need stable browser verification, which is why I stopped after 50 given the tooling kept flaking this session.
+
 ## 2026-07-18 · Shipped item 60 (fresh conditions on re-foreground) + item 62 (WCAG contrast); backlog dry again
 
 **Your move:** promote **item 59** (tide_sensitive fix) to `[ready]` for the next clean build, or answer a decision (D27 is a 2-min query). Nothing urgent.
