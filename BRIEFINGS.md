@@ -1,5 +1,21 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 26 (cold-open return strip) SHIPPED · items 43 + 44 blocked on D24
+
+**Your move:** answer D24 (three questions in DECISIONS.md) to unblock reviews (item 43) and sign-in (item 44). Everything else is moving.
+
+**TL;DR:** Shipped a retention feature that gives returning visitors a reason to come back with zero friction. The two heavy items behind it (reviews, sign-in) are both waiting on your identity/moderation call.
+
+**Item 26 (Recently checked strip):** on a cold open, the list now shows the spots this device recently viewed, each with live paddleability. This targets the one validated repeat behavior (re-checking conditions) with no save/install/push required, exactly the retention-first bet. Deployed `3dba588`, verified live on desktop and mobile.
+
+**Item 44 (sign-in):** blocked on D24. Its identity model is the same decision as reviews', and it's an OAuth/personal-data surface, so I didn't start an auth system D24 could re-scope. Once you set the identity direction it gets its own lawyer gate + analytics-identity strategy.
+
+**Appendix (evidence):**
+- Live prod: "Recently checked" renders with condition badges on both viewports; a saved spot stays in Watching only (dedup); recent spots are removed from the main list (no dupes); clicking one opens the drawer; no console errors. Event + flag strings confirmed in the live bundle.
+- Rollout is a 100% kill switch (`recent-spots`, default ON, flip off in PostHog to pull it without a redeploy), not an A/B, which is what item 26's acceptance specified via the D2/D3/D6 low-traffic precedent. Guardrails to watch: `spot_viewed`, `conditions_loaded`.
+- No legal surface: recents live in on-device localStorage and are never transmitted (same as favorites), so no privacy-policy change. 331 tests (4 new), lint, build green. `deployed-prod` -> `3dba588` (== main).
+- D24 is now ~unanswered for a few hours; it gates items 43 and 44 but not everything (that's why 26 shipped). If it sits >24h I'll send one reminder per the studio rule, not repeated pings.
+
 ## 2026-07-17 · Item 43 (user reviews) · LEGAL GATE ESCALATED · BLOCKED on D24
 
 **Your move:** answer D24 (three questions, in DECISIONS.md) to unblock user reviews. Recommended answers are in the memo; the honest short version is Q1 yes (engage counsel for the UGC terms), Q2 anonymous+email-verify, Q3 binary moderation soft-launched.
