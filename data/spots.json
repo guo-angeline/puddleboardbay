@@ -958,8 +958,9 @@
     "inspection_required": false
   },
   {
-    "owner_rating": 4.4,
     "id": 54,
+    "hidden": true,
+    "hidden_reason": "Coordinate reverse-geocodes to Kelly Road, Cloverdale (~30km north of the Guerneville/Healdsburg put-ins its notes name); untrustworthy pin. Guerneville Russian River is covered by spot 150 (Guerneville River Park). Un-hide only if re-pointed to a sourced put-in (e.g. Johnson's Beach or Veterans Memorial Beach) per D26.",
     "region": "North Bay",
     "city": "Sonoma/Mendocino",
     "water": "Russian River",

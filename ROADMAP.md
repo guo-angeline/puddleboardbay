@@ -163,7 +163,9 @@ WCAG AA needs **4.5:1** for normal-size text; `--muted` clears only the 3:1 larg
 - Confirm `leaflet.markercluster` composes with `preferCanvas` + the shared `L.canvas()` renderer, or document the alternative (a canvas-native clustering approach).
 - Pins keep the difficulty colours (`DIFFICULTY_COLOR`, `lib/types.ts`); cluster bubbles need their own count styling.
 
-## 50. [ready] Fix spot 54 (hide it); 63/70 splits deferred (D26 resolved 2026-07-18)
+## 50. [done] Fix spot 54 (hidden); 63/70 splits deferred (D26, deployed 2026-07-18)
+
+**Shipped 2026-07-18 (studio loop, D26).** Spot 54 (Russian River) set `hidden: true` + `hidden_reason` (coord reverse-geocodes ~30km off in Cloverdale, untrustworthy; Guerneville covered by spot 150). Removed its `owner_rating` (4.4) per the "no hidden spot carries a rating" invariant (item 39 test; same as spots 79/92); the count guard dropped 118 -> 117. `lat`/`lng` untouched (coord-clean diff verified). Confirmed excluded from every surface + both crons (`ALL_SPOTS` drops 54, `/spot/54` no longer built) while `ALL_SPOTS_INCLUDING_HIDDEN` keeps the record. 338 tests, build green. The 63/70 splits stay deferred per D26 (need a two-source sourcing pass); 84 dropped (no defect). Un-hide only if re-pointed to a sourced Guerneville put-in.
 
 **Escalated to D26 2026-07-18 (studio loop).** Reading the item-40 audit showed the "split 4 records" framing overstates readiness: **84 has no defect** (coord already matches its notes), **63 + 70 splits are not sourced** (the audit fetched no put-in coordinates for them, and a split mints new SEO/cron surfaces, D19 Q2a reserves the scope for the owner), and **only spot 54 is a real defect** (coord ~30km off in Cloverdale vs the Guerneville put-ins its notes name, likely redundant with the owner-added spot 150). D26 recommends: hide spot 54 (reversible), drop 84, defer the 63/70 splits to a sourcing pass. Blocked on D26.
 

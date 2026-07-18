@@ -61,8 +61,11 @@ describe("hidden spots are withheld everywhere (2026-07-16 coordinate audit)", (
 describe("owner ratings (item 39, 2026-07-16)", () => {
   const rated = ALL_SPOTS_INCLUDING_HIDDEN.filter((s) => typeof s.owner_rating === "number");
 
-  it("carries the owner's 118 hand-entered ratings", () => {
-    expect(rated.length).toBe(118);
+  it("carries the owner's 117 hand-entered ratings", () => {
+    // Owner hand-entered 119 (D16); each spot hidden since drops its rating per
+    // the "no hidden spot carries a rating" invariant below: 92 (D14) -> 118,
+    // then 54 (D26, 2026-07-18, misplaced ~30km + covered by spot 150) -> 117.
+    expect(rated.length).toBe(117);
   });
 
   it("delists spot 92, where the user may have no right to launch", () => {
