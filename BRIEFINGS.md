@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 56 DONE: photo coverage 82/140 (59%), free sources exhausted
+
+**Your move:** nothing required. The photo item is closed at the limit of free sources; getting past 59% needs your own photos (a separate item if you want it). 46 + 57 are the cleaner remaining builds; D24/D25/D26 still await answers.
+
+**TL;DR:** Added a third free source (Openverse/Flickr) and closed out item 56. Coverage went 57 -> 82 across three slices (re-pick +3, Wikidata P18 +18, Openverse +4). The remaining ~58 spots are small marinas/sloughs/creeks with no free-licensed photo anywhere, so the free-automated scope is genuinely done.
+
+**Appendix:**
+- Item 56 slice C: `raw-data/openverse_photos.mjs`, +4 (spots 20/43/58/119), deployed `8b00f6f`, verified live. Openverse text-search was noisy (4 usable of 24), which confirmed exhaustion.
+- Item 56 -> `[done]`. Yield order for future photo work: Wikidata P18 (best) > Commons geosearch > Openverse. Don't re-grind these; 100% coverage needs owner photos.
+- Ready queue: 57 (mobile-sheet inspection, needs PostHog data), 46 (reminder safety line, a clean code build). Stopped after one heavy item; cron continues.
+
 ## 2026-07-18 · Item 56 slice B: +18 photos via Wikidata, coverage now 78/140 (56%)
 
 **Your move:** nothing required. Standing: D24, D25, D26 await you; 46 + 57 are the cleaner remaining code builds if you want the next run to ship non-photo work.
