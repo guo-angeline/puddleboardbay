@@ -14,6 +14,14 @@ without touching this file.
 
 ---
 
+## 2026-07-18: spot_photo_viewed `license` gains sentinel `"owner"` (semantics-changed); owner first-party photos added
+
+Twelve owner-supplied first-party photos were added to the spot-photo manifest (`source: "owner"`, spots 6, 22, 28, 30, 32, 33, 34, 64, 65, 70, 82, 99). They render with no attribution overlay (the owner took them; no CC credit is owed). `spot_photo_viewed` (INTENT, `SpotDrawer`, dwell-gated) previously logged `license` as the CC license string of a Wikimedia photo; owner photos have no license, so the event now logs `license: "owner"` for them.
+
+- **Comparability:** the `license` breakdown of `spot_photo_viewed` gains a new value `"owner"` from 2026-07-18. It is not a CC license, it is a provenance sentinel, so any "which license" cut should treat `"owner"` as first-party, not lump it with CC values. Total `spot_photo_viewed` volume rises simply because 12 more spots now have a viewable photo (94 vs 82); this is added coverage, not more engagement per photo. No historical value changes.
+
+---
+
 ## 2026-07-18 (item 60): conditions_loaded gains `trigger` prop (props-changed); PWA re-foreground refetches stale conditions
 
 `conditions_loaded` (SYSTEM, surface: spot_drawer) gained an optional `trigger` prop: `"mount"` for the first fetch when the panel opens (the existing behavior, and the value for every historical event), `"foreground"` for a refetch triggered by re-foregrounding the installed PWA on data older than the 30-min cache TTL (item 60, `ConditionsPanel` visibilitychange listener). Behavior change shipped alongside: a returning user who reopens the PWA on an already-open spot now gets fresh wind/tide instead of last session's React state. Behind the `conditions-foreground-refresh` kill switch (default ON, no A/B, DAU<100).

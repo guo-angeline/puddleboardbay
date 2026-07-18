@@ -143,7 +143,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     enabled: showPhotos && !!photo && !!spot,
     onView: () => {
       if (spot && photo) {
-        trackIntent("spot_photo_viewed", { spot_id: spot.id, region: spot.region, license: photo.license });
+        trackIntent("spot_photo_viewed", { spot_id: spot.id, region: spot.region, license: photo.license ?? "owner" });
       }
     },
   });
@@ -346,19 +346,23 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 loading="lazy"
                 className="w-full h-40 md:h-44 object-cover rounded-lg bg-gray-100"
               />
-              {/* Attribution is overlaid on the image, not a separate line: 46 of
-                  57 photos are CC-BY/BY-SA and legally require credit, but it must
-                  not cost sheet space (owner directive 2026-07-18). Small, legible
-                  over a subtle gradient; links to author source + license. */}
-              <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
-                <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.author}</a>
-                {" / "}
-                {photo.license_url ? (
-                  <a href={photo.license_url} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.license}</a>
-                ) : (
-                  photo.license
-                )}
-              </figcaption>
+              {/* Attribution is overlaid on the image, not a separate line: most
+                  third-party photos are CC-BY/BY-SA and legally require credit,
+                  but it must not cost sheet space (owner directive 2026-07-18).
+                  Small, legible over a subtle gradient; links to author source +
+                  license. Owner first-party photos carry no author, so the credit
+                  line is omitted entirely for them. */}
+              {photo.author && (
+                <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
+                  <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.author}</a>
+                  {" / "}
+                  {photo.license_url ? (
+                    <a href={photo.license_url} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.license}</a>
+                  ) : (
+                    photo.license
+                  )}
+                </figcaption>
+              )}
             </figure>
           )}
 

@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 82,
+  "total_with_photo": 94,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -49,6 +49,10 @@
       "source": "Wikimedia Commons",
       "source_page": "https://commons.wikimedia.org/wiki/File%3AVasona%20park.jpg",
       "title": "File:Vasona park.jpg"
+    },
+    "6": {
+      "file": "/spot-photos/6.jpg",
+      "source": "owner"
     },
     "7": {
       "file": "/spot-photos/7.jpg",
@@ -166,6 +170,10 @@
       "source_page": "https://www.flickr.com/photos/152491299@N02/23978395507",
       "title": "Folsom Sunset"
     },
+    "22": {
+      "file": "/spot-photos/22.jpg",
+      "source": "owner"
+    },
     "23": {
       "file": "/spot-photos/23.jpg",
       "author": "F ASTILY",
@@ -188,6 +196,10 @@
       "distance_m": 110,
       "score": 18
     },
+    "28": {
+      "file": "/spot-photos/28.jpg",
+      "source": "owner"
+    },
     "29": {
       "file": "/spot-photos/29.jpg",
       "author": "Sausalitoarchitect",
@@ -199,6 +211,10 @@
       "distance_m": 139,
       "score": 17
     },
+    "30": {
+      "file": "/spot-photos/30.jpg",
+      "source": "owner"
+    },
     "31": {
       "file": "/spot-photos/31.jpg",
       "author": "Lasthib",
@@ -209,6 +225,18 @@
       "title": "File:2019 sunset Beach on Russian River Guerneville California.jpg",
       "distance_m": 223,
       "score": 23
+    },
+    "32": {
+      "file": "/spot-photos/32.jpg",
+      "source": "owner"
+    },
+    "33": {
+      "file": "/spot-photos/33.jpg",
+      "source": "owner"
+    },
+    "34": {
+      "file": "/spot-photos/34.jpg",
+      "source": "owner"
     },
     "36": {
       "file": "/spot-photos/36.jpg",
@@ -371,6 +399,14 @@
       "distance_m": 192,
       "score": 13
     },
+    "64": {
+      "file": "/spot-photos/64.jpg",
+      "source": "owner"
+    },
+    "65": {
+      "file": "/spot-photos/65.jpg",
+      "source": "owner"
+    },
     "67": {
       "file": "/spot-photos/67.jpg",
       "author": "Mx. Granger",
@@ -401,6 +437,10 @@
       "title": "File:Point pinole lagoon.jpg",
       "distance_m": 80,
       "score": 14
+    },
+    "70": {
+      "file": "/spot-photos/70.jpg",
+      "source": "owner"
     },
     "71": {
       "file": "/spot-photos/71.jpg",
@@ -450,6 +490,10 @@
       "source": "Wikimedia Commons",
       "source_page": "https://commons.wikimedia.org/wiki/File%3ALake%20Elizabeth%20in%20Fremont%2C%20California.JPG",
       "title": "File:Lake Elizabeth in Fremont, California.JPG"
+    },
+    "82": {
+      "file": "/spot-photos/82.jpg",
+      "source": "owner"
     },
     "83": {
       "file": "/spot-photos/83.jpg",
@@ -538,6 +582,10 @@
       "title": "File:Candlestick Point Recreation Area (4437585130).jpg",
       "distance_m": 402,
       "score": 12
+    },
+    "99": {
+      "file": "/spot-photos/99.jpg",
+      "source": "owner"
     },
     "100": {
       "file": "/spot-photos/100.jpg",
@@ -859,5 +907,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage. | 2026-07-18 owner first-party import: +12 owner-supplied photos (source:\"owner\", no attribution overlay)."
 }

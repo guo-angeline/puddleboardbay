@@ -5,7 +5,12 @@ import path from "node:path";
 const ROOT = path.resolve(__dirname, "..");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(ROOT, "data", "spot-photos.json"), "utf-8")
-) as { photos: Record<string, { file: string; author: string; license: string; source_page: string }> };
+) as {
+  photos: Record<
+    string,
+    { file: string; source?: string; author?: string; license?: string; source_page?: string }
+  >;
+};
 const drawer = fs.readFileSync(path.join(ROOT, "components", "SpotDrawer.tsx"), "utf-8");
 const analytics = fs.readFileSync(path.join(ROOT, "lib", "analytics.ts"), "utf-8");
 
@@ -23,8 +28,10 @@ describe("item 31 spot photos", () => {
     }
   });
 
-  it("every photo carries the attribution fields CC-BY/BY-SA require", () => {
+  it("every third-party photo carries the attribution fields CC-BY/BY-SA require", () => {
     for (const [id, p] of Object.entries(manifest.photos)) {
+      // Owner first-party photos owe no attribution and render no credit line.
+      if (p.source === "owner") continue;
       expect(p.author, `spot ${id} author`).toBeTruthy();
       expect(p.license, `spot ${id} license`).toBeTruthy();
       // Multiple free sources now (Commons, Wikidata P18 -> Commons, Openverse/
@@ -33,8 +40,19 @@ describe("item 31 spot photos", () => {
     }
   });
 
+  it("owner photos carry no attribution (first-party) and no CC license", () => {
+    for (const [id, p] of Object.entries(manifest.photos)) {
+      if (p.source !== "owner") continue;
+      // If any of these ever gets set on an owner photo, the figcaption would
+      // render a credit line the owner did not ask for. Keep them absent.
+      expect(p.author, `owner spot ${id} must have no author`).toBeFalsy();
+      expect(p.license, `owner spot ${id} must have no license`).toBeFalsy();
+    }
+  });
+
   it("only free licenses shipped (no fair-use / non-commercial / no-derivatives)", () => {
     for (const [id, p] of Object.entries(manifest.photos)) {
+      if (p.source === "owner") continue; // no license field to screen
       expect(p.license, `spot ${id} license "${p.license}"`).toMatch(/cc0|cc by|public domain|pdm/i);
       expect(p.license).not.toMatch(/\bNC\b|\bND\b|noncommercial|no derivativ|fair use|all rights/i);
     }
