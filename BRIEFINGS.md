@@ -1,5 +1,17 @@
 # Briefings: the board log
 
+## 2026-07-18 · Dry backlog: proposed items 59-61; two are buildable-now if you promote them
+
+**Your move:** promote **item 59** (tide_sensitive fix) or **60** (foreground conditions refresh) to `[ready]` (one edit) and the loop ships it next run, no decision needed. Or answer a pending decision (D27 fastest).
+
+**TL;DR:** No `[ready]` work left, so the loop ran the visionary for fresh candidates and proposed 3 (not promoted, per the rail). Two of them (59, 60) need no decision and no legal surface, they're the cleanest way to give the loop immediate work; 61 is larger and overlaps item 8.
+
+**Appendix:**
+- **59** finish the `tide_sensitive` correction pass, fixes the conditions differentiator on tidal spots (verified 27/38/40/43 say false while their notes describe tides; 60/96 stay false). Boolean-only, no coordinate-gate risk.
+- **60** refetch conditions on PWA re-foreground (they're currently served stale from last session's React state, the return-visit moment the retention loop targets). Client-only.
+- **61** cold-open "good to paddle today" ranked surface for first-time visitors (item 26 only covers device history). Larger; consider shipping with item 8 after the retention read.
+- Still blocked on you: D24/D25/D26/D27. The loop remains idle until a promotion or a decision lands.
+
 ## 2026-07-18 · Item 46 shipped: the launch-reminder tap now shows the safety line. Backlog is fully worked out.
 
 **Your move:** the loop is out of autonomous work, everything left needs a decision from you. In rough priority: **D27** (2-min PostHog query, unblocks a sheet fix), **D26** (mostly "hide spot 54, defer the rest"), **D25** (Terms: engage a CA attorney y/n + LLC/insurance), **D24** (reviews: counsel + identity + moderation). Or promote a `[proposed]` item.
