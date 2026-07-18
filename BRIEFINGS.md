@@ -1,5 +1,17 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 63 shipped: full-screen sheet redesigned (false pill + wobble fixed); backlog dry
+
+**Your move:** one on-device check when you have a minute, open a spot on your iPhone and confirm (a) the top now shows a title + a round close button (no drag pill) and (b) the sheet doesn't wobble as you scroll. That's the one thing the emulator can't verify. Otherwise nothing.
+
+**TL;DR:** Fixed the two defects you screenshotted on item 57's sheet. It's now a true full-screen page (covers to the top), the false grabber pill is replaced by a real close bar (spot name + a 44px circular ×), and the iOS scroll wobble is fixed at the root (the layout no longer reads live `innerHeight`). Ran design-lead first, per your ask for designer scrutiny.
+
+**Appendix:**
+- **Item 63 -> done** (`dc89b55`, deployed). design-lead decided true-full-screen over near-full (the 8% gap was the bug). `fixed inset:0` + `transition:none` kills the wobble; sticky app bar replaces the pill; rounded-top/shadow stripped in full-screen. Rollback (kill-switch) peek+drag path and desktop sidebar untouched. Verified at 390px (covers 0->812, 44px close, no drag handle, no console errors).
+- Built on your concurrent owner-photos commit (`97bc9ba`); confirmed contained in the deploy (no revert).
+- Captured the reusable lesson in memory: remove an interaction's affordance chrome in the same change (item 57 left a false pill); touch-UX needs on-device verification.
+- **Backlog dry of `[ready]` again.** Remaining: D24 (reviews) open; the item-35 attorney follow-up (assent line) waits on you engaging counsel; 45 no-source; proposals 8/49/51/61.
+
 ## 2026-07-18 · Item 35 shipped (/terms page live); D25/26/27 queue fully cleared, backlog dry
 
 **Your move:** the only thing left is **D24** (user reviews, 43/44) if you want to open that up; and once you engage the CA attorney (D25 Q1), tell me and I'll ship the enrollment assent line + 1542 wording as the follow-up. Otherwise nothing.
