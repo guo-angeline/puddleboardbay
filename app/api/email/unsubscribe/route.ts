@@ -25,7 +25,7 @@ const PAGE = `<!doctype html><html><head><meta name="viewport" content="width=de
 <body style="margin:0;background:#EEF5FB;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0B2A47">
 <div style="max-width:420px;margin:12vh auto;padding:24px;text-align:center">
 <p style="font-size:18px;font-weight:600;margin:0 0 8px">You're unsubscribed.</p>
-<p style="font-size:14px;color:#6E8598;line-height:1.5;margin:0 0 20px">No more alerts. Changed your mind? Watch a spot again anytime.</p>
+<p style="font-size:14px;color:#556A7E;line-height:1.5;margin:0 0 20px">No more alerts. Changed your mind? Watch a spot again anytime.</p>
 <a href="https://paddletowater.com" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">Back to Paddle to Water</a>
 </div></body></html>`;
 

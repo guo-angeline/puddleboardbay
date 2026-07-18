@@ -77,7 +77,9 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
 
-## 62. [ready] `--muted` body text fails WCAG AA contrast (3.49:1) on the spot-row subtitle and other small text
+## 62. [done] `--muted` body text now passes WCAG AA contrast (deployed 2026-07-18)
+
+**Shipped 2026-07-18 (studio loop).** Darkened the `--muted` token from #6E8598 to **#556A7E** in `app/globals.css`, the lightest value that clears AA 4.5:1 on all three backgrounds it appears on (computed: --bg #EEF5FB 5.09:1, white 5.60:1, --accent-light #E3EEFA 4.77:1; was 3.49/3.84/3.27). Fixes all 14 failing small-text elements at once (every spot-row city/region subtitle, the hero subtitle, the rating+location line, "Tap ♥..."), since they all use `var(--muted)`. Also updated the same hardcoded #6E8598 in the email templates (`lib/email/templates.ts`, `app/api/email/unsubscribe/route.ts`, footer/tip/unsub text) to match, per the keep-in-sync rule and for email readability (color-only, no send-logic change). No analytics touched. 338 tests, build clean. Verified live-in-dev: the rendered spot-row subtitle measures 5.09:1 (passes AA), no console errors, layout unchanged.
 
 **Found by the 2026-07-18 verify loop; this is the open follow-up item 38 flagged ("A follow-up `--muted` body-text contrast question was raised") and never filed.** Measured the rendered contrast of `--muted` (#6E8598):
 - on `--bg` #EEF5FB (the canvas): **3.49:1**

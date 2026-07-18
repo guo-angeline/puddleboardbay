@@ -17,7 +17,7 @@
   /* ink */
   --dark:          #0B2A47;  /* ink primary */
   --ink-2:         #42607A;  /* ink secondary */
-  --muted:         #6E8598;  /* ink tertiary */
+  --muted:         #556A7E;  /* ink tertiary; darkened from #6E8598 for WCAG AA 4.5:1 on small text (item 62) */
   --ink-muted:     #8AA0B4;
   --ink-faint:     #9DAEBD;
   /* brand */

@@ -53,12 +53,12 @@ function shell(bodyHtml: string, unsubUrl: string, preheader: string): string {
   <div style="max-width:480px;margin:0 auto;padding:24px">
     ${bodyHtml}
     <hr style="border:none;border-top:1px solid #DCE7F0;margin:24px 0 12px">
-    <p style="font-size:12px;color:#6E8598;line-height:1.5;margin:0 0 8px">
+    <p style="font-size:12px;color:#556A7E;line-height:1.5;margin:0 0 8px">
       Guidance only, not a safety guarantee. Conditions shift fast on the water.
     </p>
-    <p style="font-size:12px;color:#6E8598;line-height:1.5;margin:0">
+    <p style="font-size:12px;color:#556A7E;line-height:1.5;margin:0">
       You're getting this because you signed up for paddle alerts at paddletowater.com.<br>
-      <a href="${unsubUrl}" style="color:#6E8598">Unsubscribe</a> &middot; Paddle to Water, ${POSTAL_ADDRESS}
+      <a href="${unsubUrl}" style="color:#556A7E">Unsubscribe</a> &middot; Paddle to Water, ${POSTAL_ADDRESS}
     </p>
   </div></body></html>`;
 }
@@ -79,8 +79,8 @@ export function composeConfirmEmail(confirmToken: string, token: string): EmailM
     `<p style="font-size:16px;font-weight:600;margin:0 0 8px">Confirm your alerts</p>
      <p style="font-size:14px;line-height:1.5;margin:0 0 12px">You asked us to keep an eye on your paddling spots. Confirm and we'll email you when one is good to paddle.</p>
      <a href="${url}" style="display:inline-block;background:#0E6FD1;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px">Confirm alerts</a>
-     <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:16px 0 0">One email a day at most, only when a spot's good to paddle. Unsubscribe any time in one tap.</p>
-     <p style="font-size:13px;color:#6E8598;line-height:1.5;margin:8px 0 0">Didn't sign up? Ignore this email and nothing happens.</p>`,
+     <p style="font-size:13px;color:#556A7E;line-height:1.5;margin:16px 0 0">One email a day at most, only when a spot's good to paddle. Unsubscribe any time in one tap.</p>
+     <p style="font-size:13px;color:#556A7E;line-height:1.5;margin:8px 0 0">Didn't sign up? Ignore this email and nothing happens.</p>`,
     unsubscribeUrl(token),
     "Confirm to start getting paddle alerts for your spots."
   );
@@ -347,15 +347,15 @@ export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
   // `proTipLine` (item 41) is generic technique that rotates daily and always
   // renders. Item 36's `tipIncluded` guardrail counts only the former.
   const tipHtml = tip
-    ? `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 12px">${escapeHtml(tip)}</p>`
+    ? `<p style="font-size:13px;color:#556A7E;line-height:1.5;margin:0 0 12px">${escapeHtml(tip)}</p>`
     : "";
   const proTipLine = `Pro tip: ${proTip}`;
-  const proTipHtml = `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 12px">${escapeHtml(proTipLine)}</p>`;
+  const proTipHtml = `<p style="font-size:13px;color:#556A7E;line-height:1.5;margin:0 0 12px">${escapeHtml(proTipLine)}</p>`;
   const extrasHtml = extras.length
     ? `<p style="font-size:14px;line-height:1.5;margin:0 0 12px">${escapeHtml(extrasLine(extras))}</p>`
     : "";
   const notesHtml = notes
-    ? `<p style="font-size:13px;color:#6E8598;line-height:1.5;margin:0 0 16px">${escapeHtml(notes)}</p>`
+    ? `<p style="font-size:13px;color:#556A7E;line-height:1.5;margin:0 0 16px">${escapeHtml(notes)}</p>`
     : "";
 
   const html = shell(
