@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Shipped item 60 (fresh conditions on re-foreground) + item 62 (WCAG contrast); backlog dry again
+
+**Your move:** promote **item 59** (tide_sensitive fix) to `[ready]` for the next clean build, or answer a decision (D27 is a 2-min query). Nothing urgent.
+
+**TL;DR:** Two accessibility/reliability fixes shipped. Item 60: the installed PWA now refetches conditions on re-foreground so returning users don't read stale wind/tide. Item 62: darkened `--muted` so all small text (every spot-row subtitle) clears WCAG AA. With both done, no `[ready]` items remain.
+
+**Appendix:**
+- **Item 60** (`d047c7f`, deployed): visibilitychange refetch when the shown run is older than the 30-min TTL; kill-switch `conditions-foreground-refresh`; `conditions_loaded` gained `trigger`. In-browser check was blocked by a tool outage at ship time (owner-verifiable; kill-switch-reversible).
+- **Item 62** (`39395da`, deployed + verified live at 5.09:1): `--muted` #6E8598 -> #556A7E, the lightest value clearing AA 4.5:1 on all three backgrounds; fixed all 14 failing elements at once; synced the email templates' hardcoded hex. No console errors, layout unchanged.
+- Backlog: 0 ready, items 59/61 proposed (59 is buildable-now), 57/50/35/43/44 blocked on D24-D27, 45 no-source, 12 owner-screenshot. Loop idles until a promotion or decision.
+
 ## 2026-07-18 · Dry backlog: proposed items 59-61; two are buildable-now if you promote them
 
 **Your move:** promote **item 59** (tide_sensitive fix) or **60** (foreground conditions refresh) to `[ready]` (one edit) and the loop ships it next run, no decision needed. Or answer a pending decision (D27 fastest).
