@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 58 shipped (Folsom Lake dedupe), item 57 escalated (D27)
+
+**Your move:** **D27**, run one PostHog query (drag-to-resize rate on mobile; the drag is already instrumented) and, if it's high, I ship the pre-scoped auto-expand fix. Standing: D24/D25/D26. After this, item 46 is the last clean `[ready]` build.
+
+**TL;DR:** Shipped item 58 (the verify loop found two spots both bare-named "Folsom Lake"; renamed 120 to "Folsom Lake - Beals Point", a one-field edit, no coordinate/id change). Item 57 (mobile sheet drag) turned out to already be instrumented but needs a PostHog read the loop can't do, so it's escalated as D27 with the query + a pre-scoped fix.
+
+**Appendix:**
+- Item 58 -> `[done]`, deployed `c1ceb40`, verified live (/spot/120 shows the new name). Left id 20 generic (multi-launch record, no single accurate sub-name, avoids the item-50 guessing defect).
+- Item 57 -> `[blocked(D27)]`. Finding: `spot_sheet_resized` + `spot_sheet_dismissed{method:drag}` already measure drag usage; the item-31 photo pushed conditions further below the peek fold. D27 asks you to run the ratio and pick the auto-expand fix if the rate is high.
+- Ready queue: **item 46** (launch-reminder safety line) is now the only clean `[ready]` build left; everything else is blocked on you (D24/D25/D26/D27) or done. Stopped after two items.
+
 ## 2026-07-18 · Item 56 DONE: photo coverage 82/140 (59%), free sources exhausted
 
 **Your move:** nothing required. The photo item is closed at the limit of free sources; getting past 59% needs your own photos (a separate item if you want it). 46 + 57 are the cleaner remaining builds; D24/D25/D26 still await answers.
