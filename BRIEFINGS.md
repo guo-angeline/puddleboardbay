@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 50 escalated (D26), item 56 backfill +3 photos live (60 total)
+
+**Your move:** **D26**, item 50 turned out to be mostly not-ready. Recommended one-liners: hide spot 54 (30km-off, redundant with spot 150), drop 84 (no defect), defer the 63/70 splits to a sourcing pass. Plus the standing D24/D25.
+
+**TL;DR:** Two items this run. Item 50 (split records) looked ready but the audit shows only 1 of its 4 records is a real defect and the splits aren't sourced, so I escalated it accurately as D26 instead of deleting/minting live SEO pages on guesswork. Item 56 (photo backfill) shipped a first slice: re-picking the item-31 rejects recovered only 3 good photos (their Commons pools are junk-dominated), so coverage is 57 -> 60 and the real lift is a widened multi-source search (slice B), which stays ready.
+
+**Appendix:**
+- Item 50 -> `[blocked(D26)]` (commit `5fdc7ee`). D26 corrects item 50's premise: 84 has no defect, 63/70 need sourcing, 54 is the only real fix.
+- Item 56 slice A -> +3 photos (spots 19/86/128), deployed `e4c3182`, verified live. Finding recorded: re-picking existing candidates is near-exhausted; slice B (larger radius + Commons categories + Wikidata P18 + Openverse/Flickr, all free) is the remaining work, item stays `[ready]`.
+- Ready queue now: 56 (slice B), 57 (mobile-sheet inspection), 46 (reminder safety line). Stopped after two items (one heavy build); the cron picks up the rest.
+
 ## 2026-07-18 · Item 31 shipped: 57 spot photos live, auto-picked + vision-curated, no owner curation
 
 **Your move:** nothing required. Optional later: backfill the 83 photo-less spots (54 need a re-pick, 29 need Flickr/owner photos), promote that slice when you want it.
