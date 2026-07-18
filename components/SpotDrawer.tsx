@@ -314,7 +314,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
               reason to come back) still sits near the peek fold. CC-BY/BY-SA
               require attribution, so author + license + source always render. */}
           {showPhotos && photo && (
-            <figure ref={photoViewRef} className="mb-3 -mx-1">
+            <figure ref={photoViewRef} className="mb-3 -mx-1 relative">
               {/* Self-hosted derivatives are already sized to 800px; next/image
                   optimization would add Vercel image cost for no gain here. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -324,20 +324,18 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 loading="lazy"
                 className="w-full h-40 md:h-44 object-cover rounded-lg bg-gray-100"
               />
-              <figcaption className="mt-1 text-[11px] text-(--muted) leading-tight">
-                Photo:{" "}
-                <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                  {photo.author}
-                </a>
-                {" · "}
+              {/* Attribution is overlaid on the image, not a separate line: 46 of
+                  57 photos are CC-BY/BY-SA and legally require credit, but it must
+                  not cost sheet space (owner directive 2026-07-18). Small, legible
+                  over a subtle gradient; links to author source + license. */}
+              <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
+                <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.author}</a>
+                {" / "}
                 {photo.license_url ? (
-                  <a href={photo.license_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    {photo.license}
-                  </a>
+                  <a href={photo.license_url} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.license}</a>
                 ) : (
                   photo.license
                 )}
-                {" · "}Wikimedia Commons
               </figcaption>
             </figure>
           )}
