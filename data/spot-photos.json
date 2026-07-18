@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 57,
+  "total_with_photo": 60,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -101,6 +101,16 @@
       "title": "File:Mission bay channel bridge at night.jpg",
       "distance_m": 41,
       "score": 20
+    },
+    "19": {
+      "file": "/spot-photos/19.jpg",
+      "author": "The Oaked Ridge",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AView%20of%20Folsom%20bridges%20from%20Lake%20Natoma%20Crossing%20Bridge.jpg",
+      "title": "File:View of Folsom bridges from Lake Natoma Crossing Bridge.jpg",
+      "score": 18
     },
     "23": {
       "file": "/spot-photos/23.jpg",
@@ -333,6 +343,16 @@
       "distance_m": 370,
       "score": 19
     },
+    "86": {
+      "file": "/spot-photos/86.jpg",
+      "author": "Mliu92",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AAntioch%20Marina%2C%20West%20side%20by%20shore.jpg",
+      "title": "File:Antioch Marina, West side by shore.jpg",
+      "score": 17
+    },
     "91": {
       "file": "/spot-photos/91.jpg",
       "author": "Pi.1415926535",
@@ -498,6 +518,16 @@
       "distance_m": 20,
       "score": 18
     },
+    "128": {
+      "file": "/spot-photos/128.jpg",
+      "author": "F ASTILY",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ASan%20Mateo%20%E2%80%93%20Hayward%20Bridge%201%202022-08-14.jpeg",
+      "title": "File:San Mateo – Hayward Bridge 1 2022-08-14.jpeg",
+      "score": 10
+    },
     "132": {
       "file": "/spot-photos/132.jpg",
       "author": "Missvain",
@@ -631,5 +661,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search."
 }

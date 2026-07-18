@@ -137,6 +137,10 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 ## 56. [ready] Photo backfill for the spots without one (expand the search, stay free)
 
+**Slice A shipped 2026-07-18 (re-pick the rejects): +3, coverage 57 -> 60.** `raw-data/repick_photos.mjs` re-scored every un-shipped spot's existing Commons candidates with a harder junk filter and staged the best alternate; vision-review of all 49 staged found the pool is junk-dominated (the rejects' candidates within 500m are mostly wildlife/objects/structures), so only **3 clear recoveries** shipped (spot 19 river, 86 Antioch Marina, 128 bay). **Finding: re-picking existing candidates is near-exhausted, low ROI.** The real remaining lift is the widened multi-source search below, kept `[ready]` for that slice.
+
+**Slice B (remaining, the actual expansion):** widen beyond the 500m Commons geosearch, larger radius + Commons Category-by-place + Wikidata `P18` / linked Wikipedia image for the water body/park; then other FREE sources (Openverse API, Flickr CC free key, Mapillary). Then the ~26 spots with zero Commons candidate + the ~46 whose 500m pool had no usable photo. Honest map-thumbnail fallback for the truly uncovered. Same pipeline: vision-curate, self-host, CC attribution overlay, `spot-photos` kill switch.
+
 **Why:** owner directive 2026-07-18, appends item 31. The first tranche covered 57 of 140 spots; 83 have no photo. Get more of them covered by widening the search and being more creative, using only **free** sources (no Google Places, no paid third-party APIs).
 
 **The 83 gaps split two ways:** 54 spots whose auto-pick was rejected but that DO have other Commons candidates (the cheapest recovery), and 29 with no free Commons candidate inside the 500m radius. Reuse the item-31 pipeline (`raw-data/harvest_photos.mjs` -> `select_photos.mjs` -> `montage_photos.mjs` -> vision-curate -> `data/spot-photos.json`). Title/geo scoring is ~50% false-positive, so every pick is vision-verified (memory `photo-autopick-needs-vision`).
