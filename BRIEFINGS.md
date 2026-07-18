@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 46 shipped: the launch-reminder tap now shows the safety line. Backlog is fully worked out.
+
+**Your move:** the loop is out of autonomous work, everything left needs a decision from you. In rough priority: **D27** (2-min PostHog query, unblocks a sheet fix), **D26** (mostly "hide spot 54, defer the rest"), **D25** (Terms: engage a CA attorney y/n + LLC/insurance), **D24** (reviews: counsel + identity + moderation). Or promote a `[proposed]` item.
+
+**TL;DR:** Shipped item 46 (the last `[ready]` build): a launch-reminder push tap now opens the mobile sheet expanded so the canonical safety line clears the fold, it was the one alert whose whole journey showed no safety line. With that done, there are no `[ready]` items left; the remaining backlog is 4 owner-decisions (D24-D27), item 45 (no-source), and 4 unpromoted proposals.
+
+**Appendix:**
+- Item 46 -> `[done]`, deployed `ab47d4b`, verified both viewports. Client-only fix (no touch to the protected send-reminders cron / Supabase schema); `alert_clicked` gained `reminder_tap` to separate the cohorts. The launch-direction tip is the one piece deferred (needs a stored window label = schema change).
+- **Session scoreboard:** shipped + deployed this session, items 32, 31 (57 photos), 56 (photo backfill to 82/140), 58 (Folsom dedupe), 46. Escalated with decision memos, D25 (Terms), D26 (multi-launch splits), D27 (sheet drag).
+- **The loop will idle from here.** Every 30-min cron tick will find nothing `[ready]` and stop quietly until you answer a decision or promote a proposal. The single highest-leverage unblock is D27 (a query) or D26 (a one-line "hide 54").
+
 ## 2026-07-18 · Item 58 shipped (Folsom Lake dedupe), item 57 escalated (D27)
 
 **Your move:** **D27**, run one PostHog query (drag-to-resize rate on mobile; the drag is already instrumented) and, if it's high, I ship the pre-scoped auto-expand fix. Standing: D24/D25/D26. After this, item 46 is the last clean `[ready]` build.
