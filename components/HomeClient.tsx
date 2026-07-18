@@ -15,7 +15,9 @@ import { distanceMiles } from "@/lib/distance";
 import { searchSpots } from "@/lib/search";
 import { emptyStateCopy } from "@/lib/emptyStateCopy";
 import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
-import { useSavedConditions } from "@/components/useSavedConditions";
+import { useSpotConditions } from "@/components/useSavedConditions";
+import { recordRecentSpot, getRecentSpotIds } from "@/lib/recentSpots";
+import { useKillSwitch } from "@/lib/experiments";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 import { reportEmailOpen } from "@/lib/email/client";
 import { cacheEmailSubscriptionState } from "@/lib/email/subscriptionState";
@@ -377,7 +379,28 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedIdsKey, favoritesLoaded]);
 
-  const { condBySpot, loading: conditionsLoading, latencyMs: savedCondLatency } = useSavedConditions(savedSpots);
+  const { condBySpot, loading: conditionsLoading, latencyMs: savedCondLatency } = useSpotConditions(savedSpots);
+
+  // Cold-open "Recently checked" strip (item 26): the spots this device viewed
+  // recently, with live paddleability. A pull-based return reason needing no
+  // save/install/push. Snapshotted from localStorage after mount (empty on the
+  // server + first client render, so no hydration mismatch), deduped against the
+  // Watching set, capped. Gated behind a 100%-on kill switch, not an A/B.
+  const recentEnabled = useKillSwitch("recent-spots");
+  const [recentIds, setRecentIds] = useState<number[]>([]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRecentIds(getRecentSpotIds());
+  }, []);
+  const recentSpots = useMemo(() => {
+    if (!recentEnabled) return [];
+    const byId = new Map(ALL_SPOTS.map((s) => [s.id, s] as const));
+    return recentIds
+      .map((id) => byId.get(id))
+      .filter((s): s is Spot => !!s && !favorites.has(s.id))
+      .slice(0, 6);
+  }, [recentEnabled, recentIds, favorites]);
+  const { condBySpot: recentCond } = useSpotConditions(recentSpots);
 
   // SYSTEM event: fire once per session after the first saved-conditions batch
   // resolves. This is availability only (data loaded) — whether the user actually
@@ -445,6 +468,9 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   function handleSelect(spot: Spot, source: SpotViewedSource = "list") {
     setSelected(spot);
+    // Remember it for the cold-open "Recently checked" strip (item 26). Fire and
+    // forget: recents are a return-reason nicety, never on a critical path.
+    recordRecentSpot(spot.id);
     // Item 9 default was peek height for in-app selections (list/map/related).
     // Item 42 generalizes item 9's expanded sheet to these opens too, at 100%
     // per owner direction 2026-07-16 (D13). No alert/email exclusion needed
@@ -655,6 +681,8 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             favorites={favorites}
             onToggleFavorite={toggleFavorite}
             condBySpot={condBySpot}
+            recentSpots={recentSpots}
+            recentCondBySpot={recentCond}
           />
         </div>
 

@@ -85,6 +85,11 @@ type IntentEventName =
   // via lib/useGenuineView). The real "I came back to check my spots" signal —
   // distinct from `saved_conditions_loaded`, which only means the data resolved.
   | "saved_conditions_viewed"
+  // The cold-open "Recently checked" strip (item 26) was genuinely viewed
+  // (on screen + dwell), and a spot in it was clicked. The return-reason signal
+  // for anonymous users with view history, no save/install/push required.
+  | "recent_spots_shown"
+  | "recent_spot_clicked"
   | "feedback_opened"
   | "view_switched"
   // The "Paddle to Water" wordmark in the header was clicked to return home
@@ -168,6 +173,8 @@ interface EventPropMap {
   location_auto_applied: { source: "permission_granted" };
   alert_subscribe_failed: { status: number | null; watched_count: number };
   saved_conditions_viewed: { count: number; calm_count: number };
+  recent_spots_shown: { count: number; calm_count: number };
+  recent_spot_clicked: { spot_id: number; region: string };
   // Values mirror lib/push.ts OptInResult; kept inline to avoid a cycle
   // (push.ts imports trackSystem from this module).
   alert_optin_shown: {

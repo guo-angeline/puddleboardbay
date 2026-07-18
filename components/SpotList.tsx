@@ -20,12 +20,16 @@ interface Props {
   favorites?: Set<number>;
   onToggleFavorite?: (id: number) => void;
   condBySpot?: Record<number, SavedConditionState>;
+  /** Cold-open "Recently checked" spots (item 26), already deduped against saved. */
+  recentSpots?: Spot[];
+  recentCondBySpot?: Record<number, SavedConditionState>;
   emptyState?: { title: string; clearLabel: string };
 }
 
 export default function SpotList({
   spots, selected, onSelect, onClearFilters, distanceMap,
-  savedSpots = [], favorites = new Set(), onToggleFavorite, condBySpot = {}, emptyState,
+  savedSpots = [], favorites = new Set(), onToggleFavorite, condBySpot = {},
+  recentSpots = [], recentCondBySpot = {}, emptyState,
 }: Props) {
   const selectedRef = useRef<HTMLDivElement>(null);
 
@@ -73,10 +77,24 @@ export default function SpotList({
     },
   });
 
-  // Remove saved spots from the main list to avoid duplicates
-  const mainSpots = spots.filter((s) => !favorites.has(s.id));
+  // INTENT: the "Recently checked" strip (item 26) was genuinely scrolled into
+  // view. The cold-open return signal for anonymous users with view history.
+  const recentIdSet = new Set(recentSpots.map((s) => s.id));
+  const recentKey = recentSpots.map((s) => s.id).join(",");
+  const recentSectionRef = useGenuineView({
+    key: recentKey,
+    enabled: recentSpots.length > 0,
+    onView: () => {
+      const calm = recentSpots.filter((s) => recentCondBySpot[s.id] === "calm").length;
+      trackIntent("recent_spots_shown", { count: recentSpots.length, calm_count: calm });
+    },
+  });
 
-  if (mainSpots.length === 0 && savedSpots.length === 0) {
+  // Remove saved AND recently-checked spots from the main list to avoid showing
+  // the same spot twice in the panel (both are pinned sections above the list).
+  const mainSpots = spots.filter((s) => !favorites.has(s.id) && !recentIdSet.has(s.id));
+
+  if (mainSpots.length === 0 && savedSpots.length === 0 && recentSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
         <p className="text-(--dark) font-semibold">{emptyState?.title ?? "No spots match your filters"}</p>
@@ -129,6 +147,34 @@ export default function SpotList({
                 isFavorite={true}
                 onToggleFavorite={onToggleFavorite}
                 conditionsBadge={<ConditionsBadge state={condBySpot[spot.id] ?? "loading"} />}
+              />
+            </div>
+          ))}
+          <div className="mx-4 my-1.5 border-t border-gray-200" />
+        </div>
+      )}
+
+      {/* Recently checked (item 26): a cold-open return strip of spots this
+          device viewed recently, with live paddleability. Pinned like Watching,
+          regardless of filters; already deduped against the saved set. */}
+      {recentSpots.length > 0 && (
+        <div ref={recentSectionRef}>
+          <div className="px-4 pt-3 pb-1.5">
+            <span className="text-[11px] font-semibold text-(--muted) uppercase tracking-wider">Recently checked</span>
+          </div>
+          {recentSpots.map((spot) => (
+            <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
+              <SpotCard
+                spot={spot}
+                selected={selected?.id === spot.id}
+                onClick={() => {
+                  trackIntent("recent_spot_clicked", { spot_id: spot.id, region: spot.region });
+                  onSelect(spot, "list");
+                }}
+                distance={distanceMap?.[spot.id]}
+                isFavorite={favorites.has(spot.id)}
+                onToggleFavorite={onToggleFavorite}
+                conditionsBadge={<ConditionsBadge state={recentCondBySpot[spot.id] ?? "loading"} />}
               />
             </div>
           ))}

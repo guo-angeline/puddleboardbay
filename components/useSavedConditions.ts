@@ -7,15 +7,16 @@ import { getConditions } from "@/lib/conditions";
 import { fetchSavedConditions } from "@/lib/savedConditions";
 
 /**
- * Resolve paddle-ability for the user's saved spots. Refetches only when the
- * set of saved ids changes (joined-id key), not on every render. getConditions
- * is cached + deduped per spot id, so re-running is cheap.
+ * Resolve paddle-ability for a list of spots (the saved "Watching" set, or the
+ * "Recently checked" set, item 26). Refetches only when the set of ids changes
+ * (joined-id key), not on every render. getConditions is cached + deduped per
+ * spot id, so re-running, and overlapping saved/recent sets, is cheap.
  *
  * `loading` is derived from whether resolvedKey matches idsKey — this avoids
  * any synchronous setState in the effect body (which triggers the
  * react-hooks/set-state-in-effect lint rule).
  */
-export function useSavedConditions(savedSpots: Spot[]): {
+export function useSpotConditions(spots: Spot[]): {
   condBySpot: Record<number, Paddleability>;
   loading: boolean;
   /** Batch fetch wall-clock in ms for the last resolved set, for availability logging. */
@@ -25,14 +26,14 @@ export function useSavedConditions(savedSpots: Spot[]): {
   // Tracks which idsKey we have resolved results for. null = never fetched.
   const [resolvedKey, setResolvedKey] = useState<string | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
-  const idsKey = savedSpots.map((s) => s.id).sort((a, b) => a - b).join(",");
+  const idsKey = spots.map((s) => s.id).sort((a, b) => a - b).join(",");
   // Loading while: we have spots but haven't resolved for this exact set yet.
-  const loading = resolvedKey !== idsKey && savedSpots.length > 0;
+  const loading = resolvedKey !== idsKey && spots.length > 0;
 
   useEffect(() => {
     let alive = true;
     const startedAt = performance.now();
-    fetchSavedConditions(savedSpots, getConditions).then((map) => {
+    fetchSavedConditions(spots, getConditions).then((map) => {
       if (!alive) return;
       setCondBySpot(map);
       setResolvedKey(idsKey);

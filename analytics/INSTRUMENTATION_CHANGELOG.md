@@ -14,6 +14,18 @@ without touching this file.
 
 ---
 
+## 2026-07-18 (item 26): recent_spots_shown + recent_spot_clicked ADDED (INTENT); new cold-open "Recently checked" strip
+
+**Two INTENT events ADDED** (`event_category: "intent"`):
+- `recent_spots_shown` — props `{ count, calm_count }`. Fires once per genuine view (on screen + dwell, via `lib/useGenuineView`, re-armed on the recent-set key) of the new "Recently checked" strip in the list panel. NOT an impression-on-mount: it is the "I came back to re-check my spots" signal for anonymous users with view history, the item-26 cold-open return reason. Mirrors `saved_conditions_viewed`.
+- `recent_spot_clicked` — props `{ spot_id, region }`. Fires on a click of a spot within that strip (deliberate act). Distinct from `spot_viewed`, which also fires for the same open; join on `spot_id` to attribute an open to the recent strip specifically.
+
+Both carry the standard `display_mode` super-property and are bot-filtered like every event. The strip (and therefore these events) is gated behind a 100%-on kill-switch flag `recent-spots` (`useKillSwitch`, default ON, hides only on an explicit PostHog disable), not an A/B, per the D2/D3/D6 low-traffic precedent.
+
+- **Comparability: both events are NEW from 2026-07-18, no prior series, nothing discontinuous.** Guardrails to watch while the kill switch is live (must not regress): `spot_viewed` and `conditions_loaded`. Note the strip removes recently-viewed spots from the main list into the pinned section, so a `spot_viewed` with no `source` change is still counted the same; the strip does not add or suppress `spot_viewed` (still one per open, via handleSelect). If `recent_spots_shown` volume is ~0 but `recent_spot_clicked` > 0, suspect the dwell gate; if the reverse, suspect users not scrolling to the strip.
+
+---
+
 ## 2026-07-17 (item 53 decouple): conditions panel renders wind/tide independently; conditions_viewed `had_data` semantics REFINED (props-values-changed)
 
 **`conditions_loaded` UNCHANGED:** still fires once per spot when BOTH sources settle, same props. `has_tides` (`t.ok && t.tide !== null`), `has_wind` (`!!windInfo`), `failed` (both errored), and `latency_ms` (both-settled) all keep their prior meaning; only the internal plumbing changed (getConditionsRun exposes the two source promises the panel already waited on).

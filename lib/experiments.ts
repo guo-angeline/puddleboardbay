@@ -102,6 +102,26 @@ export function getVariant<N extends ExperimentName>(name: N): VariantOf<N> {
 }
 
 /**
+ * A 100%-on KILL SWITCH (not an A/B). Returns true by default and flips to false
+ * only if PostHog explicitly disables `flag`. A content surface must never wait
+ * on PostHog to render (analytics-blockers would lose it, per D20), so the
+ * default is ON: this only ever HIDES the feature on an explicit kill, letting
+ * us pull a shipped-at-100% surface without a redeploy if a guardrail regresses.
+ */
+export function useKillSwitch(flag: string): boolean {
+  const [killed, setKilled] = useState(false);
+  useEffect(() => {
+    // isFeatureEnabled is boolean once flags load, undefined before; only an
+    // explicit `false` kills. onFeatureFlags fires immediately if already loaded.
+    const unsubscribe = posthog.onFeatureFlags(() => {
+      setKilled(posthog.isFeatureEnabled(flag) === false);
+    });
+    return unsubscribe;
+  }, [flag]);
+  return !killed;
+}
+
+/**
  * Reactive variant for rendering. `ready` is false until flags load — render
  * control until then so a flash-of-control isn't mis-counted as exposure. Call
  * `logExposure()` from a useEffect inside the rendered variant branch.
