@@ -148,7 +148,10 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - New intent events for submit / view, with `spot_id`+`region` and an `INSTRUMENTATION_CHANGELOG.md` entry. Rollout flag-gated per the major-update directive.
 - Lawyer gate (data collection, UGC moderation, marketing claims, FTC) returns `clear` before deploy. Likely an `escalate` on the moderation-policy and aggregate-display questions.
 
-## 44. [ready] Optional sign-in to sync spots and alerts across devices
+## 44. [blocked(D24)] Optional sign-in to sync spots and alerts across devices
+
+**Blocked on D24: its identity model is the same decision as item 43's (the spec sequences the identity decision across both), and item 44's scope depends on the answer, if reviews go anonymous, item 44 is a pure cross-device sync feature; if reviews require sign-in, item 44 is the account foundation they build on. It is also an OAuth/personal-data surface (escalation-class), so once D24 sets the direction it gets its own lawyer gate + the analytics-identity strategy its acceptance requires. Not started to avoid building an auth system that D24 could re-scope.**
+
 
 **Promoted by the owner 2026-07-17** (see strategy note above). The retention engine ships anonymous by design; this is the upgrade path, not a replacement. It also gives item 43 a real identity to attach reviews to, so sequence the identity decision across both.
 
@@ -260,7 +263,7 @@ Attempts 2026-07-09 in the `app/globals.css` shell, none cleared it on-device: (
 - No new client events required (existing series only); if any prop is added, an `INSTRUMENTATION_CHANGELOG.md` entry. Analytics contract only, no protected surface touched.
 - Delivered before the read window opens so the early-August numbers are interpretable.
 
-## 26. [ready] Cold-open return surface: your recently-checked spots, with conditions now
+## 26. [in-progress] 2026-07-18T00:18:03Z Cold-open return surface: your recently-checked spots, with conditions now
 
 **Why:** Conditions checking is the one validated, repeated behavior (89 of 100 openers genuinely view the dwell-gated conditions panel; the ~16% who return come back to re-check, per `reports/analytics-2026-07-09.md`), and it is the only reason-to-return not gated on the unproven alert loop or an install. A returner today lands on a bare map and must re-find their spots. Give cold opens a personal strip of the spots they recently viewed with live paddleability: a pull-based return reason that needs no push, no email, no install.
 

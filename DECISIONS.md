@@ -467,6 +467,6 @@ The lawyer gate returned **escalate** on item 43 (crowd reviews). It is buildabl
 
 If silent: item 43 stays blocked and nothing builds, because the identity answer determines the data model and the counsel/moderation answers gate the first publish. Also worth noting: you promoted this as a deliberate bet against the retention-first thesis, and it carries a counsel spend, so deferring it behind retention work is a legitimate answer too.
 
-Blocks: item 43.
+Blocks: item 43, and item 44 (its identity model is the same decision, per item 44's spec "sequence the identity decision across both"). Q2's answer sets the direction for both; once it lands, item 44 gets its own auth lawyer-gate + analytics-identity strategy (how account identity composes with `anon_id` without reshuffling experiment buckets or the retention/exclusion queries).
 
 Answer:
