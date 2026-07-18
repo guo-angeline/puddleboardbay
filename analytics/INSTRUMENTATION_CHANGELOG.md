@@ -22,6 +22,15 @@ without touching this file.
 
 ---
 
+## 2026-07-18 (item 57): mobile sheet opens full-screen, drag removed; spot_sheet_dismissed `method` values change, spot_sheet_resized stops (semantics-changed)
+
+D27: every mobile spot sheet now opens FULL SCREEN and the drag-to-resize handle is gone (behind the `sheet-auto-expand` kill switch, default ON). Analytics impact on the two sheet events (both INTENT, `SpotDrawer`):
+- **`spot_sheet_resized` stops firing** in full-screen mode, it only ever fired from a drag that changed the snap state, and there is no drag. Expect its volume to fall to ~0 from 2026-07-18 (non-zero only from sessions where the kill switch is disabled). Not a drop in engagement, the interaction was removed.
+- **`spot_sheet_dismissed.method` changes.** It previously fired only on a drag-to-dismiss (`method: "drag"`). Now it fires on the two non-drag dismiss paths with `method: "close"` (the × button) and `method: "backdrop"` (tap outside), and `"drag"` stops in full-screen mode. So total `spot_sheet_dismissed` volume RISES (most dismissals were previously untracked ×/backdrop taps), and the `method` breakdown is discontinuous at 2026-07-18. This keeps the dismissal guardrail alive under the new UX rather than letting it vanish with the drag.
+- **Comparability:** segment `spot_sheet_dismissed` by `method` before/after 2026-07-18; the pre-period is drag-only, the post-period is close/backdrop. Do not read the total-volume rise as more people leaving, it is newly-tracked taps. `spot_sheet_resized` as a guardrail is retired with the drag.
+
+---
+
 ## 2026-07-18 (item 46): alert_clicked gains `reminder_tap` prop (props-changed); reminder taps open the sheet expanded
 
 `alert_clicked` (INTENT, fires on any from=alert open) gained a boolean `reminder_tap` prop: true when the app opened from a launch-reminder push (from=alert with NO `window` param), false for a windowed alert open. This distinguishes the two cohorts, which were previously indistinguishable in analytics (the `window` param is stripped from the URL and never logged). Behavior change shipped alongside: a reminder tap now opens the mobile spot sheet expanded (`startExpanded`) so ConditionsPanel's safety line clears the peek fold, item 46 (the reminder tap was the one alert whose journey showed no full safety line, because it carries no `window` param so the AlertInterstitial never rendered). No schema/cron change (the cheap alternative in the item's acceptance); the launch-direction tip still needs the deferred schema change.

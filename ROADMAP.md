@@ -235,7 +235,9 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Rights-clean + attribution on every added photo (CC only; the on-image overlay from item 31); self-hosted sized derivatives; `spot_photo_viewed` already exists, no new event unless a source needs one (then changelog it).
 - Ships under the existing `spot-photos` kill switch (no A/B, DAU<100 rule).
 
-## 57. [ready] Mobile spot sheets open full screen; remove the drag (D27 resolved 2026-07-18)
+## 57. [done] Mobile spot sheets open full screen; drag removed (D27, deployed 2026-07-18)
+
+**Shipped 2026-07-18 (studio loop, D27).** `SpotDrawer` on mobile now always opens at FULL height with no drag-to-resize handle (replaced by a static grabber); dismiss is the × or a backdrop tap. Behind the `sheet-auto-expand` kill switch (default ON, no A/B, DAU<100); if disabled it falls back to the old peek + drag behavior. Kept the dismissal guardrail alive: `spot_sheet_dismissed` now fires with `method: "close" | "backdrop"` (was drag-only), and `spot_sheet_resized` stops with the drag, changelog entry added. 338 tests, build clean. Verified live-in-dev at 390px: sheet fills 747/812px, no `role=slider` handle, conditions + safety line visible without dragging, × dismiss works, no console errors. Desktop sidebar unaffected (mobile-gated).
 
 **Escalated to D27 2026-07-18 (studio loop).** Two findings: (1) the drag is ALREADY instrumented, `spot_sheet_resized {to}` fires on a drag that changes snap state and `spot_sheet_dismissed {method:"drag"}` on drag-to-dismiss, so no new event is needed and the usage data likely already exists in PostHog; (2) the item-31 photo pushed the ConditionsPanel + safety line further below the peek fold, so if the drag rate is high, that is why. The blocker: the loop has no PostHog read key to run the drag-rate query itself. D27 asks the owner to run the two-series query (or drop a read key) and, if the rate is high, ship the pre-scoped fix (auto-open taller via the item-9/42 `startExpanded`, behind a `sheet-auto-expand` kill switch). Blocked on D27.
 

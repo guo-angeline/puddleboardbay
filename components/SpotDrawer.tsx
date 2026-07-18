@@ -58,13 +58,18 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ startY: number; startH: number } | null>(null);
   const snapState = useRef<"peek" | "full">("peek");
+  // Item 57 (D27): every mobile spot sheet opens FULL SCREEN and the drag-to-
+  // resize handle is gone. Behind a kill switch (default ON, no A/B, DAU<100);
+  // if disabled it falls back to the old peek + drag behavior for rollback.
+  const fullScreen = useKillSwitch("sheet-auto-expand");
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
-    // Item 9: shared-link arrivals open at FULL height; everything else at PEEK.
+    // Item 57: full-screen mode always opens at FULL. Item 9's share/alert
+    // startExpanded still forces FULL in the rollback (drag) mode too.
     // Read once on mount (the `h ?? ` guard means a later drag is never clobbered).
-    const initFraction = startExpanded ? FULL : PEEK;
-    if (startExpanded) snapState.current = "full";
+    const initFraction = fullScreen || startExpanded ? FULL : PEEK;
+    if (fullScreen || startExpanded) snapState.current = "full";
     const sync = () => {
       setIsMobile(mq.matches);
       if (mq.matches) setSheetH((h) => h ?? Math.round(window.innerHeight * initFraction));
@@ -145,6 +150,17 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
 
   if (!spot) return null;
 
+  // Item 57: with the drag gone, the × and the backdrop are the dismiss paths.
+  // Keep spot_sheet_dismissed alive (it's a guardrail) by tagging the method,
+  // so the metric doesn't just vanish when the drag ("drag" method) is removed.
+  const dismiss = (method: "close" | "backdrop") => {
+    trackIntent("spot_sheet_dismissed", { spot_id: spot.id, spot_name: spot.water, region: spot.region, method });
+    onClose();
+  };
+  // Item 57: full-screen mobile sheet (kill switch ON). Rollback = drag mode.
+  const forceFull = isMobile && fullScreen;
+  const renderH = forceFull && typeof window !== "undefined" ? Math.round(window.innerHeight * FULL) : sheetH;
+
   const diff = DIFF_STYLES[spot.difficulty] ?? DIFF_STYLES.unknown;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}`;
   const photosUrl = `https://www.google.com/maps/search/${encodeURIComponent(`${spot.water} ${spot.city ?? ""} California`)}/`;
@@ -192,11 +208,11 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
 
   return (
     <>
-      {/* Backdrop (mobile) */}
+      {/* Backdrop (mobile) — tap to dismiss (a non-drag dismiss path, item 57). */}
       <div
         className="fixed inset-0 bg-black/20 md:hidden"
         style={{ zIndex: 1100 }}
-        onClick={onClose}
+        onClick={() => dismiss("backdrop")}
       />
 
       {/* Drawer panel */}
@@ -204,15 +220,15 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
         className="fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 rounded-t-2xl md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full shadow-2xl md:shadow-none"
         style={{
           zIndex: 1200,
-          ...(isMobile && sheetH != null
+          ...(isMobile && renderH != null
             ? {
                 // Anchor the box's bottom edge at the *physical* screen bottom, not
                 // the layout-viewport bottom, so the white sheet paints through the
                 // home-indicator safe-area inset instead of leaving the page canvas
-                // showing. Height grows by the same inset so the visible top (peek
-                // height) is unchanged; inner content padding keeps text above the
-                // indicator.
-                height: `calc(${sheetH}px + env(safe-area-inset-bottom))`,
+                // showing. Height grows by the same inset so the visible top
+                // height is unchanged; inner content padding keeps text above the
+                // indicator. Item 57: renderH is forced to FULL in full-screen mode.
+                height: `calc(${renderH}px + env(safe-area-inset-bottom))`,
                 bottom: "calc(-1 * env(safe-area-inset-bottom))",
                 maxHeight: "none",
                 transition: dragging ? "none" : "height 0.28s cubic-bezier(0.32, 0.72, 0, 1)",
@@ -220,23 +236,29 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
             : {}),
         }}
       >
-        {/* Handle (mobile) — drag to expand to full screen, down to peek/dismiss.
-            Sticky so it stays grabbable when the body scrolls; touch-action none so
-            the gesture drags the sheet instead of scrolling. */}
-        <div
-          className="sticky top-0 z-10 bg-white flex justify-center pt-2 pb-1.5 cursor-grab active:cursor-grabbing md:hidden"
-          style={{ touchAction: "none" }}
-          onTouchStart={onHandleStart}
-          onTouchMove={onHandleMove}
-          onTouchEnd={onHandleEnd}
-          role="slider"
-          aria-label="Resize panel: drag up to expand, down to dismiss"
-          aria-valuenow={sheetH != null && typeof window !== "undefined" ? Math.round((sheetH / window.innerHeight) * 100) : 58}
-          aria-valuemin={0}
-          aria-valuemax={92}
-        >
-          <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
-        </div>
+        {/* Handle (mobile). Item 57: in full-screen mode it's a static grabber
+            (visual only); dismiss is the × or the backdrop. In rollback (drag)
+            mode it's the old drag-to-resize surface. */}
+        {fullScreen ? (
+          <div className="sticky top-0 z-10 bg-white flex justify-center pt-2 pb-1.5 md:hidden" aria-hidden>
+            <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
+          </div>
+        ) : (
+          <div
+            className="sticky top-0 z-10 bg-white flex justify-center pt-2 pb-1.5 cursor-grab active:cursor-grabbing md:hidden"
+            style={{ touchAction: "none" }}
+            onTouchStart={onHandleStart}
+            onTouchMove={onHandleMove}
+            onTouchEnd={onHandleEnd}
+            role="slider"
+            aria-label="Resize panel: drag up to expand, down to dismiss"
+            aria-valuenow={sheetH != null && typeof window !== "undefined" ? Math.round((sheetH / window.innerHeight) * 100) : 58}
+            aria-valuemin={0}
+            aria-valuemax={92}
+          >
+            <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
+          </div>
+        )}
 
         <div
           className="p-5 pt-1.5 md:pt-5"
@@ -270,7 +292,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => dismiss("close")}
               className="text-gray-400 hover:text-gray-600 shrink-0 mt-0.5 text-xl leading-none"
               aria-label="Close"
             >
