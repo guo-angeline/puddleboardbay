@@ -77,6 +77,20 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
 
+## 58. [ready] Two spots are both named exactly "Folsom Lake" (ids 20 and 120): indistinguishable in the list
+
+**Found by the 2026-07-18 verify loop (data + UX).** Two non-hidden records carry the identical `water` name "Folsom Lake", same city ("Folsom"), same region (Sacramento), same difficulty (flatwater), 5.7 mi apart on the same reservoir. In the list and map a user sees two "Folsom Lake" rows with nothing in the primary label to tell them apart; the only difference (pin location, notes) is hidden until the spot is opened. It is the sole identical-name pair among all non-hidden spots (checked programmatically).
+
+- **id 20** (38.7844, -121.1070): notes list Peninsula Campground, Rattlesnake Bar, Granite Beach, Browns Ravine, Beeks Bite.
+- **id 120** (38.7193, -121.1729): notes describe Beals Point (ramp, beach, parking).
+
+**Relationship to item 50 / D26:** this is the same class as item 50's multi-launch records, but Folsom Lake is NOT in item 50's enumerated list (70, 54, 84, 63) nor in the D26 memo, so it is currently untracked. Item 50/D26 reserve the split-vs-dedupe *product* decision (new spot ids touch sitemap/OG/`generateStaticParams`/JSON-LD/both crons) for the owner.
+
+**Acceptance (pick the smallest fix that removes the ambiguity):**
+- The two rows are distinguishable at a glance in the list/map. The low-risk path is a disambiguating rename of the visible label to name each launch area (e.g. "Folsom Lake - Granite Beach" and "Folsom Lake - Beals Point"), grounded in each record's actual notes/coordinate. This is a `water`-field edit only: no new spot id, no new SEO/cron surface, unlike a split.
+- If instead the two are judged truly redundant (same launch), that is a delete-as-duplicate and an owner decision, same as the item 50 records. Do not delete without owner sign-off.
+- A rename touches the page `<title>`, OG, and JSON-LD (all derive from `water`); verify those regenerate and the sitemap URL (spot id) is unchanged. Do NOT alter `lat`/`lng`.
+
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
 ## 51. [proposed] Marker clustering for dense areas (carved out of item 7, 2026-07-17)
@@ -160,7 +174,9 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 - Rights-clean + attribution on every added photo (CC only; the on-image overlay from item 31); self-hosted sized derivatives; `spot_photo_viewed` already exists, no new event unless a source needs one (then changelog it).
 - Ships under the existing `spot-photos` kill switch (no A/B, DAU<100 rule).
 
-## 57. [ready] Inspect the mobile bottom-sheet drag (slide up/down): useful, or friction?
+## 57. [blocked(D27)] Inspect the mobile bottom-sheet drag (slide up/down): useful, or friction?
+
+**Escalated to D27 2026-07-18 (studio loop).** Two findings: (1) the drag is ALREADY instrumented, `spot_sheet_resized {to}` fires on a drag that changes snap state and `spot_sheet_dismissed {method:"drag"}` on drag-to-dismiss, so no new event is needed and the usage data likely already exists in PostHog; (2) the item-31 photo pushed the ConditionsPanel + safety line further below the peek fold, so if the drag rate is high, that is why. The blocker: the loop has no PostHog read key to run the drag-rate query itself. D27 asks the owner to run the two-series query (or drop a read key) and, if the rate is high, ship the pre-scoped fix (auto-open taller via the item-9/42 `startExpanded`, behind a `sheet-auto-expand` kill switch). Blocked on D27.
 
 **Why:** owner directive 2026-07-18. On mobile the spot drawer is a draggable bottom sheet, peek (~58%) and full (~92%) snap points with a grab handle (`components/SpotDrawer.tsx`: `onHandleStart/Move/End`, `PEEK`/`FULL`, `startExpanded` from items 9/42). Question the gesture itself: is the slide up/down discoverable, used, and necessary, or is it friction that hides key content (conditions, the safety line) below the peek fold? This is a research-first item, not a foregone change.
 

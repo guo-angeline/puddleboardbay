@@ -555,3 +555,25 @@ If silent: item 50 stays blocked. Nothing is deleted or split without your Q1/Q2
 Blocks: item 50.
 
 Answer:
+
+## D27 [OPEN] 2026-07-18 · Item 57 (mobile sheet drag): it's already measurable, but the loop can't read PostHog, so the answer + any fix is yours
+
+Item 57 asks whether the mobile bottom-sheet drag (slide up/down) is useful or friction, "with the numbers behind it." Two findings, then the ask.
+
+**Finding 1 (good news): the drag is already instrumented, no new event needed.** `spot_sheet_resized {to: "peek"|"full"}` fires when a drag changes the snap state, and `spot_sheet_dismissed {method: "drag"}` fires on a drag-to-dismiss (`components/SpotDrawer.tsx` onHandleEnd). So the usage data likely already exists in PostHog. The query: on mobile sessions, `spot_sheet_resized` count / `spot_viewed` count = the drag-to-resize rate; if it's high, users are routinely dragging to see more, which means the sheet opens too short and the drag is load-bearing (friction on the core content), not optional polish.
+
+**Finding 2 (the concern): the item-31 photo pushed core content down.** The photo now sits above the notes and the ConditionsPanel, so on a peek-height sheet the conditions readout (the retention differentiator) and the safety line sit further below the fold than before. If Finding 1's drag-rate is high, that is why.
+
+**The blocker:** the studio loop has no PostHog personal API key (the app ships only the write-only ingestion key), so it cannot run the query itself. This is the one thing gating a data-backed answer.
+
+**Q1.** Run the drag-rate query yourself (you have the key + project 458289), or drop a read-only `phx_…` key where the loop can use it, so it can finish the empirical read?
+- Recommended: **you run it once**, it's a two-series ratio and takes minutes; a standing read key is more surface than this one question needs.
+
+**Q2 (the fix, pre-scoped).** If the drag-to-resize rate is high (say >30% of mobile spot opens), ship the item-57-authorized fix: auto-open mobile spot sheets taller so ConditionsPanel clears the fold (reuse the item-9/42 `startExpanded` machinery), behind a `sheet-auto-expand` kill switch (no A/B, DAU<100). If the rate is low, the drag earns its keep, mark item 57 "leave it" and stop. Which way, once you have the number?
+- Recommended: **auto-expand if the rate is high**; it removes a weak-affordance drag gating the app's core content.
+
+If silent: item 57 stays blocked on the read. No layout change ships without the number, since raising the default sheet height covers more of the map and is a real UX trade-off.
+
+Blocks: item 57.
+
+Answer:
