@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 60,
+  "total_with_photo": 78,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -13,6 +13,42 @@
       "title": "File:The New Alviso Boat Launch - panoramio.jpg",
       "distance_m": 10,
       "score": 17
+    },
+    "2": {
+      "file": "/spot-photos/2.jpg",
+      "author": "Elf",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AStevensCreekReservoir.jpg",
+      "title": "File:StevensCreekReservoir.jpg"
+    },
+    "3": {
+      "file": "/spot-photos/3.jpg",
+      "author": "Kyle Hawton",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AAerial%20view%20of%20Coyote%20Lake.JPG",
+      "title": "File:Aerial view of Coyote Lake.JPG"
+    },
+    "4": {
+      "file": "/spot-photos/4.jpg",
+      "author": "Elf",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ALexingtonReservoirR4IMG002.jpg",
+      "title": "File:LexingtonReservoirR4IMG002.jpg"
+    },
+    "5": {
+      "file": "/spot-photos/5.jpg",
+      "author": "Mike24 at English Wikipedia",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AVasona%20park.jpg",
+      "title": "File:Vasona park.jpg"
     },
     "7": {
       "file": "/spot-photos/7.jpg",
@@ -79,6 +115,15 @@
       "title": "File:Fallen Leaf Lake and Lake Tahoe, CA - panoramio.jpg",
       "distance_m": 486,
       "score": 20
+    },
+    "16": {
+      "file": "/spot-photos/16.jpg",
+      "author": "Syced",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AAquatic%20Cove.jpg",
+      "title": "File:Aquatic Cove.jpg"
     },
     "17": {
       "file": "/spot-photos/17.jpg",
@@ -299,6 +344,15 @@
       "distance_m": 192,
       "score": 13
     },
+    "67": {
+      "file": "/spot-photos/67.jpg",
+      "author": "Mx. Granger",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AShadow%20Cliffs%20Regional%20Recreation%20Area%201.jpg",
+      "title": "File:Shadow Cliffs Regional Recreation Area 1.jpg"
+    },
     "68": {
       "file": "/spot-photos/68.jpg",
       "author": "Pi.1415926535",
@@ -343,6 +397,42 @@
       "distance_m": 370,
       "score": 19
     },
+    "74": {
+      "file": "/spot-photos/74.jpg",
+      "author": "Unknown",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ACoyote%20point.jpg",
+      "title": "File:Coyote point.jpg"
+    },
+    "75": {
+      "file": "/spot-photos/75.jpg",
+      "author": "Bob n' Renee",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3APacificaStateBeach.jpg",
+      "title": "File:PacificaStateBeach.jpg"
+    },
+    "80": {
+      "file": "/spot-photos/80.jpg",
+      "author": "Oleg Alexandrov",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ALake%20Elizabeth%20in%20Fremont%2C%20California.JPG",
+      "title": "File:Lake Elizabeth in Fremont, California.JPG"
+    },
+    "83": {
+      "file": "/spot-photos/83.jpg",
+      "author": "sfbaywalk from Oakland, Cal",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AQuarry%20Lakes%20(5003082542).jpg",
+      "title": "File:Quarry Lakes (5003082542).jpg"
+    },
     "86": {
       "file": "/spot-photos/86.jpg",
       "author": "Mliu92",
@@ -363,6 +453,42 @@
       "title": "File:Larkspur Landing from pedestrian bridge, November 2018.JPG",
       "distance_m": 73,
       "score": 18
+    },
+    "93": {
+      "file": "/spot-photos/93.jpg",
+      "author": "Frank Schulenburg",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AAbbotts%20Lagoon%2C%20October%202012.jpg",
+      "title": "File:Abbotts Lagoon, October 2012.jpg"
+    },
+    "94": {
+      "file": "/spot-photos/94.jpg",
+      "author": "Stepheng3 ( talk )",
+      "license": "Public domain",
+      "license_url": null,
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ADoranBeach3189.jpg",
+      "title": "File:DoranBeach3189.jpg"
+    },
+    "95": {
+      "file": "/spot-photos/95.jpg",
+      "author": "Kglavin",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ADorn%20bay%20clear%20lake%20state%20park%20ca.jpg",
+      "title": "File:Dorn bay clear lake state park ca.jpg"
+    },
+    "96": {
+      "file": "/spot-photos/96.jpg",
+      "author": "Isabell Schulz",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ALake%20Merced%20at%20SFSU.jpg",
+      "title": "File:Lake Merced at SFSU.jpg"
     },
     "97": {
       "file": "/spot-photos/97.jpg",
@@ -430,6 +556,15 @@
       "distance_m": 194,
       "score": 16
     },
+    "105": {
+      "file": "/spot-photos/105.jpg",
+      "author": "USFS Region 5",
+      "license": "Public domain",
+      "license_url": null,
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AHuntington%20Lake%20(3717098437).jpg",
+      "title": "File:Huntington Lake (3717098437).jpg"
+    },
     "106": {
       "file": "/spot-photos/106.jpg",
       "author": "Region 5 Photography",
@@ -441,6 +576,15 @@
       "distance_m": 69,
       "score": 14
     },
+    "107": {
+      "file": "/spot-photos/107.jpg",
+      "author": "sdold",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ABig%20Hill%20Lookout%20-%20panoramio.jpg",
+      "title": "File:Big Hill Lookout - panoramio.jpg"
+    },
     "110": {
       "file": "/spot-photos/110.jpg",
       "author": "U.S. Army Corps of Engineers Sacramento District",
@@ -451,6 +595,15 @@
       "title": "File:Hiking down to fish New Hogan Lake) (17837696071).jpg",
       "distance_m": 217,
       "score": 13
+    },
+    "113": {
+      "file": "/spot-photos/113.jpg",
+      "author": "No machine-readable author provided. Scooterboss assumed (based on copyright claims).",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3AAvila%20Beach%2010-12-07.jpg",
+      "title": "File:Avila Beach 10-12-07.jpg"
     },
     "114": {
       "file": "/spot-photos/114.jpg",
@@ -495,6 +648,15 @@
       "title": "File:2022 Point San Pablo Yacht Harbor.jpg",
       "distance_m": 125,
       "score": 13
+    },
+    "120": {
+      "file": "/spot-photos/120.jpg",
+      "author": "JazzD",
+      "license": "Public domain",
+      "license_url": null,
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ALake%20Folsom.JPG",
+      "title": "File:Lake Folsom.JPG"
     },
     "123": {
       "file": "/spot-photos/123.jpg",
@@ -661,5 +823,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign)."
 }
