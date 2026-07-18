@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 78,
+  "total_with_photo": 82,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -157,6 +157,15 @@
       "title": "File:View of Folsom bridges from Lake Natoma Crossing Bridge.jpg",
       "score": 18
     },
+    "20": {
+      "file": "/spot-photos/20.jpg",
+      "author": "lgilbert7",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "source": "flickr",
+      "source_page": "https://www.flickr.com/photos/152491299@N02/23978395507",
+      "title": "Folsom Sunset"
+    },
     "23": {
       "file": "/spot-photos/23.jpg",
       "author": "F ASTILY",
@@ -222,6 +231,15 @@
       "title": "File:Mill-valley-apartments-and-wetlands.jpg",
       "distance_m": 350,
       "score": 13
+    },
+    "43": {
+      "file": "/spot-photos/43.jpg",
+      "author": "Patrick Feller",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "source": "flickr",
+      "source_page": "https://www.flickr.com/photos/32345848@N07/6773096094",
+      "title": "New Galveston Causeway Railroad Lift Bridge 0219121402"
     },
     "45": {
       "file": "/spot-photos/45.jpg",
@@ -299,6 +317,15 @@
       "title": "File:Oakland Marina (15367053646).jpg",
       "distance_m": 55,
       "score": 10
+    },
+    "58": {
+      "file": "/spot-photos/58.jpg",
+      "author": "jennheflin",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "source": "flickr",
+      "source_page": "https://www.flickr.com/photos/125063157@N02/23840958384",
+      "title": "Robert Crown Beach, Alameda, California"
     },
     "59": {
       "file": "/spot-photos/59.jpg",
@@ -649,6 +676,15 @@
       "distance_m": 125,
       "score": 13
     },
+    "119": {
+      "file": "/spot-photos/119.jpg",
+      "author": "sarahstierch",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "source": "flickr",
+      "source_page": "https://www.flickr.com/photos/7633518@N08/7901172638",
+      "title": "silver lake from treasure island"
+    },
     "120": {
       "file": "/spot-photos/120.jpg",
       "author": "JazzD",
@@ -823,5 +859,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign)."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage."
 }

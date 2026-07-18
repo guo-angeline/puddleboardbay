@@ -27,7 +27,9 @@ describe("item 31 spot photos", () => {
     for (const [id, p] of Object.entries(manifest.photos)) {
       expect(p.author, `spot ${id} author`).toBeTruthy();
       expect(p.license, `spot ${id} license`).toBeTruthy();
-      expect(p.source_page, `spot ${id} source_page`).toMatch(/^https:\/\/commons\.wikimedia\.org\//);
+      // Multiple free sources now (Commons, Wikidata P18 -> Commons, Openverse/
+      // Flickr), so the attribution link just has to be a real https source page.
+      expect(p.source_page, `spot ${id} source_page`).toMatch(/^https:\/\/\S+$/);
     }
   });
 

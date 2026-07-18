@@ -135,7 +135,11 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 **Remaining (follow-up, not blocking):** 83 spots still have no photo, 54 rejected auto-picks (have candidates, need a targeted re-pick pass, ids in git history of this commit) + 29 with no free Commons candidate (Flickr-CC needs an API key, or owner photos). This is a proposed backfill slice, not auto-promoted.
 
-## 56. [ready] Photo backfill for the spots without one (expand the search, stay free)
+## 56. [done] Photo backfill (free-source scope complete, 82/140 = 59%, deployed 2026-07-18)
+
+**Done for the free-automated scope. Coverage 57 -> 82 across three slices, three free sources, no paid providers (owner directive).** Slice A re-pick (+3), slice B Wikidata P18 (+18), slice C Openverse/Flickr (+4). Each vision-curated (title/geo scoring is ~50% FP). Tools: `raw-data/{repick,wikidata,openverse}_photos.mjs`.
+
+**Free sources are now exhausted at 59%.** Commons geosearch (500m), Wikidata P18 (coord-verified), and Openverse text-search all run; the remaining ~58 spots are small marinas/sloughs/creeks with no free-licensed photo (Openverse top-1 was 4/24 usable, pure keyword noise). Further coverage needs **owner-supplied photos** (excluded from this item's free-only scope) or a paid provider (owner ruled out). If the owner wants 100%, the path is an owner-photo upload/backfill, a separate item. Slice notes below retained for history.
 
 **Slice B shipped 2026-07-18 (Wikidata P18): +18, coverage 60 -> 78 (56%).** `raw-data/wikidata_photos.mjs` searches Wikidata by spot name, VERIFIES the match by coordinate (P625 within 4km), and pulls the entity's P18 "image" (a curated main photo of the place, on Commons so license/author come free). 25 of 80 uncovered spots had a coord-verified P18; vision-review kept 18 (dropped 7: aerials/satellite, a B&W dam, the Morro Bay power plant, an entrance sign). Named lakes/reservoirs/regional parks hit best. All free-licensed, CC-attributed, self-hosted.
 
