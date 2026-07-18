@@ -14,6 +14,37 @@ without touching this file.
 
 ---
 
+## 2026-07-17 (item 32 retired to 100%): `enrollment_dual_cta` experiment REMOVED; `experiment_exposed` for it stops; `alert_optin_shown`/`_dismissed` `channel:"both"` now fires for ALL mobile enrollment surfaces (semantics-changed)
+
+The `enrollment_dual_cta` A/B (added 2026-07-14, see entry below) is retired to a
+100% rollout (owner directive: no A/B until DAU > 100; the enrollment card shows
+~once per 8 days ex-owner, so the arm comparison was never powered). The
+equal-weight push + "or" + email dual-CTA card now renders unconditionally on the
+three mobile surfaces (standalone-not-denied / iOS Safari / Android); the old
+email-led and install-led control layouts were deleted. Desktop (email-only) and
+standalone-push-denied (email rescue) are unchanged.
+
+- **`experiment_exposed` with `experiment: "enrollment_dual_cta"` STOPS from
+  2026-07-17.** `useExperiment`/`logExposure` for this flag were removed. Any
+  analysis of that experiment is closed as of this date; the flag `enrollment-dual-cta`
+  is now dead in PostHog and can be archived.
+- **`alert_optin_shown` and `alert_optin_dismissed` `channel: "both"` semantics
+  changed.** From 2026-07-14 to 2026-07-17, `channel: "both"` fired only for
+  sessions bucketed into the treatment arm; control mobile sessions emitted the
+  per-platform `leadChannel(...)` value (`push` / `email`). From 2026-07-17,
+  `channel: "both"` fires for EVERY mobile enrollment impression/dismiss (the card
+  is the same for all of them), and `leadChannel(...)` now appears only on desktop
+  and standalone-push-denied. So a rise in `channel:"both"` volume (and a fall in
+  mobile `channel:"push"`/`"email"`) on/after 2026-07-17 is this instrumentation
+  change, NOT a behavior change.
+- **Comparability:** `alert_optin_shown`/`_dismissed` segmented by `channel` is
+  discontinuous at 2026-07-17 for mobile; segment before/after separately. Total
+  `alert_optin_shown` volume is continuous (the card still shows on the same
+  triggers/surfaces). `experiment_exposed{experiment:"enrollment_dual_cta"}` ends
+  at 2026-07-17.
+
+---
+
 ## 2026-07-18 (item 26): recent_spots_shown + recent_spot_clicked ADDED (INTENT); new cold-open "Recently checked" strip
 
 **Two INTENT events ADDED** (`event_category: "intent"`):

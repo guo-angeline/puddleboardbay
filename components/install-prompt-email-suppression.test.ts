@@ -77,10 +77,13 @@ describe("InstallPrompt suppresses the email re-prompt for confirmed subscribers
     expect(src).toContain("We&rsquo;ll email you when your spots are good to paddle.");
   });
 
-  it("does not add an 'Add push' button or a second experiment call", () => {
+  it("does not add an 'Add push' button, and carries no experiment plumbing", () => {
+    // D18 deferred the email-subscriber push upgrade (item 49); no "Add push"
+    // button was added. Item 32's dual-CTA experiment was retired to 100%
+    // 2026-07-17, so the component now has no useExperiment call at all.
     expect(src).not.toContain("Add push");
     const matches = src.match(/useExperiment\(/g) || [];
-    expect(matches.length).toBe(1);
+    expect(matches.length).toBe(0);
   });
 
   it("gates return_session and conditions_interest behind the eligibility check (opted-out / saves), not before it, so the guardrail only counts a real would-have-shown suppression", () => {

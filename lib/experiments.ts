@@ -59,16 +59,14 @@ export const EXPERIMENTS = {
     primaryMetric: "spot_action",
     guardrails: ["conditions_loaded", "spot_sheet_dismissed"],
   },
-  // Item 32: control is the current single-lead enrollment card (push-led on
-  // Android/standalone, email-led on iOS/desktop). Treatment is the
-  // equal-weight push + "or" + email dual-CTA card. Defaults to control so
-  // production is undisturbed during the mid-July retention read.
-  enrollment_dual_cta: {
-    flag: "enrollment-dual-cta",
-    variants: ["control", "treatment"],
-    primaryMetric: "alert_optin_result",
-    guardrails: ["email_capture_submitted", "alert_optin_dismissed"],
-  },
+  // NOTE: enrollment_dual_cta (item 32) was removed here 2026-07-17. The owner
+  // directed it to 100% (no A/B until DAU > 100): the enrollment card shows
+  // ~once per 8 days ex-owner, so an arm comparison could never reach
+  // significance. The equal-weight push + "or" + email dual-CTA card now renders
+  // unconditionally on the three mobile surfaces (see components/InstallPrompt.tsx);
+  // the old email-led / install-led control layouts were deleted. Same retire
+  // path as alert_interstitial (D2a) and owner_rating (D20). Doc:
+  // docs/experiments/enrollment-dual-cta.md.
   // NOTE: owner_rating (item 39) was removed here 2026-07-17 (D20). The owner
   // directed it to 100%, so it no longer needs an experiment: it renders
   // unconditionally in SpotDrawer whenever a spot has a rating. Gating editorial

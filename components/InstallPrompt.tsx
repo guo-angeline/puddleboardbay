@@ -5,7 +5,6 @@ import { trackIntent, trackSystem, setPersona } from "@/lib/analytics";
 import { enablePushAlerts, readStashedSubscription, getAnonId, type OptInResult } from "@/lib/push";
 import { isValidEmail } from "@/lib/email/validation";
 import { isEmailConfirmed, wasReconciledThisSession } from "@/lib/email/subscriptionState";
-import { useExperiment } from "@/lib/experiments";
 import {
   RESEND_COOLDOWN_MS,
   RESEND_SPAM_LINE,
@@ -138,9 +137,11 @@ export default function InstallPrompt() {
   // spam the resend endpoint.
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "confirmed" | "failed">("idle");
   const [resendCooling, setResendCooling] = useState(false);
-  // Item 32: dual-CTA experiment (push + email at equal weight on mobile
-  // surfaces). Control is today's single-lead card; see lib/experiments.ts.
-  const dualCta = useExperiment("enrollment_dual_cta");
+  // Item 32: dual-CTA enrollment card (push + email at equal weight on mobile
+  // surfaces). Shipped at 100% (no A/B flag) 2026-07-17: the enrollment card is
+  // shown ~once per 8 days ex-owner, so an arm comparison could never reach
+  // significance (owner directive: no A/B until DAU > 100). Retired the same way
+  // as alert_interstitial (D2a) and owner_rating (D20).
 
   // Item 47: a mirror of `platform` readable inside effects that only run once
   // ([] deps: onSaved, the manual entry point, conditions-interest), where
@@ -323,36 +324,29 @@ export default function InstallPrompt() {
 
   const shownRef = useRef(false);
 
-  // Item 32: shared source of truth for the dual-CTA experiment. Eligible on
-  // the three mobile surfaces (standalone-not-denied, ios, android) once the
-  // card would actually show a channel choice; desktop and the terminal
-  // states (granted, email pending) are excluded either way.
-  const dualEligible =
+  // Item 32: the dual-CTA card renders on the three mobile surfaces
+  // (standalone-not-denied, ios, android) once the card would actually show a
+  // channel choice; desktop and the terminal states (granted, email pending)
+  // fall through to their own single-channel copy. Shipped at 100%, so this is
+  // now the default enrollment layout on mobile, not a treatment arm.
+  const dualCta =
     visible &&
     !!platform &&
-    dualCta.ready &&
     platform !== "desktop" &&
     result !== "granted" &&
     emailResult !== "pending" &&
     !youreSet &&
     !(platform === "standalone" && result === "denied");
-  const isTreatment = dualEligible && dualCta.variant === "treatment";
 
   useEffect(() => {
     // Item 47: a suppressed-then-manual "You're set." card is not a channel
     // offer, so it must never count as an enrollment impression.
     if (!visible || youreSet) { shownRef.current = false; return; }
-    if (platform && dualCta.ready && !shownRef.current) {
-      trackIntent("alert_optin_shown", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
+    if (platform && !shownRef.current) {
+      trackIntent("alert_optin_shown", { platform, trigger, channel: dualCta ? "both" : leadChannel(platform, result) });
       shownRef.current = true;
     }
-  }, [visible, youreSet, platform, trigger, result, dualCta.ready, dualCta.variant]);
-
-  // Log exposure for BOTH arms at this shared render point once eligible;
-  // logExposure no-ops until ready and dedupes once per session per variant.
-  useEffect(() => {
-    if (dualEligible) dualCta.logExposure();
-  }, [dualEligible, dualCta]);
+  }, [visible, youreSet, platform, trigger, result, dualCta]);
 
   function handleDismiss() {
     setVisible(false);
@@ -366,7 +360,7 @@ export default function InstallPrompt() {
     // must not be attributed to whatever trigger value was last set, or a
     // dismiss with no matching impression lands in the funnel under a
     // fabricated trigger.
-    if (platform && !youreSet) trackIntent("alert_optin_dismissed", { platform, trigger, channel: isTreatment ? "both" : leadChannel(platform, result) });
+    if (platform && !youreSet) trackIntent("alert_optin_dismissed", { platform, trigger, channel: dualCta ? "both" : leadChannel(platform, result) });
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -635,10 +629,10 @@ export default function InstallPrompt() {
         {resendState === "failed" && <p style={{ ...muted, color: "#FCA5A5" }}>{RESEND_FAILED_NOTE}</p>}
       </div>
     );
-  } else if (isTreatment) {
-    // Item 32: dual-CTA treatment. Equal-weight push button, "or" divider,
+  } else if (dualCta) {
+    // Item 32: dual-CTA card. Equal-weight push button, "or" divider,
     // then the inline email row, in that literal DOM order (tab order =
-    // reading order). Desktop never reaches here (excluded by dualEligible).
+    // reading order). Desktop never reaches here (excluded by dualCta).
     if (platform === "ios") {
       body = altChannel
         ? iosSteps
@@ -666,7 +660,7 @@ export default function InstallPrompt() {
         </div>
       );
     } else {
-      // standalone, not push-denied (dualEligible already excludes denied).
+      // standalone, not push-denied (dualCta already excludes denied).
       body = (
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
@@ -685,59 +679,15 @@ export default function InstallPrompt() {
     }
   } else if (platform === "desktop") {
     // Desktop leads with email: install is near-useless, desktop push rarely seen.
+    // Desktop is the one surface excluded from the dual-CTA card (E5: desktop
+    // never offers push).
     body = emailForm("Get paddle alerts by email.", "Watch a spot and we'll email you when it's good to paddle.");
-  } else if (platform === "ios") {
-    // iOS Safari leads with email (install converts ~1%); push is the demoted option.
-    body = altChannel
-      ? iosSteps
-      : emailForm(
-          "Get an email when your spots are good to paddle.",
-          "One email when a spot you watch has a good window.",
-          <button onClick={() => setAltChannel(true)} style={linkBtn}>Prefer push? Add to Home Screen</button>
-        );
-  } else if (platform === "standalone") {
-    // Installed: push is the primary channel. If notifications were hard-denied,
-    // rescue with email instead of the old browser-settings dead end.
-    body = result === "denied"
-      ? emailForm("Notifications are off. Get alerts by email instead.", "We'll email you when a watched spot is good to paddle.")
-      : (
-        <>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-              {trigger === "first_save"
-                ? `Get a heads-up when ${spotName} is good to paddle`
-                : "Turn on alerts for the spots you watch"}
-            </p>
-            <p style={muted}>Turn on alerts and we&rsquo;ll ping you when a spot&rsquo;s good to paddle.</p>
-          </div>
-          <button onClick={handleEnable} disabled={enabling} style={primaryBtn}>
-            {enabling ? "Enabling..." : "Enable alerts"}
-          </button>
-        </>
-      );
   } else {
-    // android: one-tap install is the low-friction default; email is the fallback
-    // offered if they would rather not install.
-    body = altChannel
-      ? emailForm(
-          "Get alerts by email.",
-          "One email when a spot you watch has a good window.",
-          <button onClick={() => setAltChannel(false)} style={linkBtn}>Install the app instead</button>
-        )
-      : (
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-            {trigger === "first_save"
-              ? `Get alerts when ${spotName} is good to paddle`
-              : "Get alerts when your spots are good to paddle"}
-          </p>
-          <p style={muted}>Install the app, then turn on alerts for the spots you watch.</p>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
-            <button onClick={handleInstall} style={primaryBtn}>Install</button>
-            <button onClick={() => setAltChannel(true)} style={linkBtn}>Prefer email?</button>
-          </div>
-        </div>
-      );
+    // Installed (standalone) with push hard-denied: the only mobile surface the
+    // dual-CTA card excludes. Rescue with email instead of the old
+    // browser-settings dead end. (iOS Safari and Android always render the
+    // dual-CTA card above; a non-denied standalone user does too.)
+    body = emailForm("Notifications are off. Get alerts by email instead.", "We'll email you when a watched spot is good to paddle.");
   }
 
   return (

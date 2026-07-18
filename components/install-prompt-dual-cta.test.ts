@@ -4,10 +4,13 @@ import path from "node:path";
 
 const src = fs.readFileSync(path.resolve(__dirname, "InstallPrompt.tsx"), "utf-8");
 
-describe("InstallPrompt dual-CTA (item 32, enrollment_dual_cta flag)", () => {
-  it("wires the enrollment_dual_cta experiment and exposure logging", () => {
-    expect(src).toContain('useExperiment("enrollment_dual_cta")');
-    expect(src).toContain("logExposure");
+describe("InstallPrompt dual-CTA (item 32, shipped at 100%)", () => {
+  it("no longer gates the dual-CTA card behind an experiment flag", () => {
+    // Retired to 100% 2026-07-17 (owner: no A/B until DAU > 100). The card must
+    // render unconditionally on mobile, not behind useExperiment/logExposure.
+    expect(src).not.toContain("useExperiment");
+    expect(src).not.toContain("logExposure");
+    expect(src).not.toContain("enrollment_dual_cta");
   });
 
   it("emits the channel:\"both\" dual-CTA value alongside the existing leadChannel fallback", () => {

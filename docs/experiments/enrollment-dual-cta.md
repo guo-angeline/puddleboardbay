@@ -84,7 +84,22 @@ channel instead of choosing deliberately.
   primary (see Exposure/Primary above), so any read leans on Android and
   standalone exposures for the primary metric.
 
-## Result (fill in at the end)
-- Exposed users / variant, primary metric per variant, guardrail readings,
-  decision, and a one-line note for `analytics/INSTRUMENTATION_CHANGELOG.md` if
-  any event changed.
+## Result: retired to 100%, no read (2026-07-17)
+- **Not evaluated. Retired as an A/B and shipped at 100%** on owner directive:
+  no A/B tests until DAU passes 100. This experiment was never powerable at
+  measured volume (see Decision rule: ~2,313 exposed/arm needed, ~9-18 years at
+  this traffic), so there was no lift to read and no counterfactual to preserve.
+- The equal-weight dual-CTA card now renders unconditionally on the three mobile
+  surfaces; the `useExperiment`/`logExposure` plumbing and the old control layouts
+  (email-led iOS/desktop, install-led Android) were removed from
+  `components/InstallPrompt.tsx`, and the entry was deleted from
+  `lib/experiments.ts`. The `enrollment-dual-cta` PostHog flag is now dead and can
+  be archived.
+- Instrumentation note: `experiment_exposed{experiment:"enrollment_dual_cta"}`
+  stops 2026-07-17; `alert_optin_shown`/`_dismissed` `channel:"both"` now fires for
+  all mobile enrollment surfaces (was treatment-only). Full comparability note in
+  `analytics/INSTRUMENTATION_CHANGELOG.md` (2026-07-17 entry).
+- Guardrails to keep watching post-rollout (no arm to compare, so monitor the
+  trend, not a delta): `email_capture_submitted`, `alert_optin_dismissed`,
+  combined-enrollment-per-shown, and submit reliability
+  (`email_capture_failed{source:"submit"}`, `alert_subscribe_failed`).
