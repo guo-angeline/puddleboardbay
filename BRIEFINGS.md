@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 57 shipped: mobile spot sheet opens full-screen, drag removed
+
+**Your move:** nothing required. One ready item left, **35** (/terms page, D25); it ships the ToS container next run.
+
+**TL;DR:** Item 57 (D27) shipped and verified: every mobile spot sheet now opens full-screen with the drag gone, so conditions + the safety line are visible without a gesture. Dismiss is the × or a backdrop tap; behind the `sheet-auto-expand` kill switch.
+
+**Appendix:**
+- **Item 57 -> done** (`0319945`, deployed, verified live at 390px): full-height sheet, no `role=slider` handle, × + backdrop dismiss, conditions above the fold, no console errors. Kept the dismissal guardrail: `spot_sheet_dismissed` now tags `method:"close"|"backdrop"` (was drag-only); `spot_sheet_resized` retires with the drag (changelog).
+- **Item 35 is the last ready item and needs care, not a quick append:** the D25 ToS draft carries `[ATTORNEY: …]` notes + `[DATE]/[COUNTY]` placeholders to strip/resolve, the 1542-quote + enrollment-assent-line holds to honor, and it's public legal copy that wants an editor pass. Next run gives it a focused iteration.
+- Session shipped so far: 32, 31, 56, 58, 46, 60, 62, 50, 57 (+ item 59 no-op, D25/26/27 ingested). After 35, the ready queue is clear.
+
 ## 2026-07-18 · Ingested D25/26/27; item 50 shipped (spot 54 hidden); item 59 was a no-op
 
 **Your move:** nothing required. Re-run `/studio` when convenient and it takes item 57 (full-screen mobile sheet, D27) then 35 (/terms page, D25). D24 (reviews) still open if you want to unblock 43/44.
