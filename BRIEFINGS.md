@@ -1,5 +1,15 @@
 # Briefings: the board log
 
+## 2026-07-18 · Loop caught up: no `[ready]` work left, waiting on you
+
+**Your move:** either answer **D24** (unblocks items 43 + 44) or promote one of the four `[proposed]` items (51 marker-clustering, 50 split multi-launch records, 49 Android-subscriber push path, 8 "go here instead") to `[ready]`.
+
+**TL;DR:** The loop has shipped everything that was ready (items 52, 53, 54, 55, 26 this session). Nothing is `[ready]` now: 2 items are blocked on your D24 answer, 4 are proposals awaiting your promotion, and item 37 is parked pending your iOS `?vh` screenshot. I can't promote proposals myself, so the loop is idle until you act or the verifier files new findings.
+
+**Appendix:**
+- The 30-min cron stays live (you asked to keep it running, and the verifier feeds new `[ready]` items ~every 2h). Dry fires will idle quietly, no re-briefing or re-pinging each time.
+- D24 opened 2026-07-17; if it passes 24h still unanswered I'll send one reminder, then leave it. Nothing is being nagged in the meantime.
+
 ## 2026-07-18 · Item 26 (cold-open return strip) SHIPPED · items 43 + 44 blocked on D24
 
 **Your move:** answer D24 (three questions in DECISIONS.md) to unblock reviews (item 43) and sign-in (item 44). Everything else is moving.
