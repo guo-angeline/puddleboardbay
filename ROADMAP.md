@@ -90,7 +90,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - Confirm `leaflet.markercluster` composes with `preferCanvas` + the shared `L.canvas()` renderer, or document the alternative (a canvas-native clustering approach).
 - Pins keep the difficulty colours (`DIFFICULTY_COLOR`, `lib/types.ts`); cluster bubbles need their own count styling.
 
-## 50. [proposed] Split the multi-launch records the item 40 audit could not pin
+## 50. [ready] Split the multi-launch records the item 40 audit could not pin
 
 **Created by item 40 (2026-07-17), report-only section.** Four records name several real launches at once, so no single coordinate is correct. The audit verified the candidate launches with sources and deliberately changed nothing (D19 Q2a), because a split creates a new spot id that enters the sitemap, the OG image builder, `generateStaticParams`, JSON-LD, and BOTH alert crons. That is a product change, not a data fix.
 
@@ -132,6 +132,28 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 **Slice 2 shipped + deployed 2026-07-18 (owner directive: automate the pick, no manual curation).** `raw-data/select_photos.mjs` scored each spot's candidates (relevance keywords + spot-name-token match + orientation/resolution, minus junk) and downloaded the top pick; `raw-data/montage_photos.mjs` built contact sheets that were **vision-reviewed** (the title score cannot tell "bird photographed at X Bay" from "photo of X Bay"). Of 111 auto-picks, **57 were verified genuine location photos and shipped; 54 rejected** (wildlife, objects, buildings, signs, maps, satellite imagery). Self-hosted as 800px derivatives in `public/spot-photos/` (~5MB), served via a plain lazy `<img>`. Display in `SpotDrawer` above the notes, with required CC attribution ("Photo: {author} · {license} · Wikimedia Commons", linked to source + license). Behind the `spot-photos` kill-switch flag at 100% (no A/B, DAU<100 rule). New dwell-gated INTENT `spot_photo_viewed` + changelog. 338 tests (6 new), build clean; verified live desktop + mobile (photo + attribution render, conditions still reachable, no-photo spots render nothing, no console errors). IP note: only CC-BY/BY-SA/CC0/PD shipped, attribution rendered per license (the D10 Q4 caption model, pre-cleared); no lawyer re-gate needed for a pre-cleared attribution surface.
 
 **Remaining (follow-up, not blocking):** 83 spots still have no photo, 54 rejected auto-picks (have candidates, need a targeted re-pick pass, ids in git history of this commit) + 29 with no free Commons candidate (Flickr-CC needs an API key, or owner photos). This is a proposed backfill slice, not auto-promoted.
+
+## 56. [ready] Photo backfill for the spots without one (expand the search, stay free)
+
+**Why:** owner directive 2026-07-18, appends item 31. The first tranche covered 57 of 140 spots; 83 have no photo. Get more of them covered by widening the search and being more creative, using only **free** sources (no Google Places, no paid third-party APIs).
+
+**The 83 gaps split two ways:** 54 spots whose auto-pick was rejected but that DO have other Commons candidates (the cheapest recovery), and 29 with no free Commons candidate inside the 500m radius. Reuse the item-31 pipeline (`raw-data/harvest_photos.mjs` -> `select_photos.mjs` -> `montage_photos.mjs` -> vision-curate -> `data/spot-photos.json`). Title/geo scoring is ~50% false-positive, so every pick is vision-verified (memory `photo-autopick-needs-vision`).
+
+**Acceptance (raise coverage well above 57/140, free only):**
+- **Re-pick the 54 rejects first.** They already have candidates; vision-review each spot's FULL candidate list (not just the top-1), not just the rejected top pick. Highest yield for least work.
+- **Widen the search for the 29 (and any still-empty):** larger Commons radius (1-2km), Commons Category-by-place and the linked Wikipedia/Wikidata `P18` image for the water body or park; then other FREE sources, Openverse API (aggregates CC, free), Flickr CC (free API key is not "paying a provider"), Mapillary street-level (CC-BY-SA, free). Confirm each source's license permits self-hosting + our resize.
+- **Honest fallback for the truly uncovered:** a static map-crop thumbnail from the tiles the app already uses, visually distinct from a real photo (labeled), never dressed up as a photo. Owner photos backfill high-value gaps.
+- Rights-clean + attribution on every added photo (CC only; the on-image overlay from item 31); self-hosted sized derivatives; `spot_photo_viewed` already exists, no new event unless a source needs one (then changelog it).
+- Ships under the existing `spot-photos` kill switch (no A/B, DAU<100 rule).
+
+## 57. [ready] Inspect the mobile bottom-sheet drag (slide up/down): useful, or friction?
+
+**Why:** owner directive 2026-07-18. On mobile the spot drawer is a draggable bottom sheet, peek (~58%) and full (~92%) snap points with a grab handle (`components/SpotDrawer.tsx`: `onHandleStart/Move/End`, `PEEK`/`FULL`, `startExpanded` from items 9/42). Question the gesture itself: is the slide up/down discoverable, used, and necessary, or is it friction that hides key content (conditions, the safety line) below the peek fold? This is a research-first item, not a foregone change.
+
+**Acceptance:**
+- **Measure, do not eyeball** (memory `verify-loop-priorities`): what share of mobile sessions actually drag the sheet vs never touch it? Does content below the peek fold (conditions panel, safety line) get seen? Use existing events (`spot_sheet_dismissed`, `conditions_loaded`, `spot_viewed`); add a lightweight `sheet_dragged` intent event if the drag isn't currently observable (changelog it).
+- Evaluate alternatives against the data: keep the drag as-is; auto-open fuller so conditions clears the fold (relates to item 46's cheap alternative and item 9/42's `startExpanded`); replace drag with a tap-to-expand control; or collapse to a single sensible height. Weigh discoverability (a drag handle is a weak affordance) against the single-canvas / Leaflet z-index constraints (CLAUDE.md).
+- Deliver a recommendation with the numbers behind it. If it warrants a change, spec it and ship behind a kill-switch flag (no A/B, DAU<100 rule); if the drag earns its keep, say so and stop, a validated "leave it" is a valid outcome.
 
 ## 35. [blocked(D25)] Terms of Service + assented assumption-of-risk waiver (legal gate)
 
@@ -182,7 +204,7 @@ All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
 - Notes follow the house rule: evergreen description of the spot, never a reply to whoever reported it.
 - Scope the tranche (which waters, how many) before promoting.
 
-## 46. [proposed] The launch-reminder tap shows no safety line (item 34's one uncovered surface)
+## 46. [ready] The launch-reminder tap shows no safety line (item 34's one uncovered surface)
 
 **Why:** surfaced by the editor during item 34, 2026-07-16. `app/api/cron/send-reminders/route.ts` deep-links to `/?spot=X&from=alert` with **no `window` param**, originally on purpose so the interstitial would not re-show. But `HomeClient` only sets the alert banner when a window param is present, so a reminder tap renders no interstitial, and the interstitial is the only surface carrying the full canonical safety line plus the launch-direction tip (item 36). The tap lands on a peek-height sheet with `ConditionsPanel`'s line below the fold. **This is the push that fires at window open, the exact moment someone decides to get on the water, and it is the one alert whose entire journey shows no full safety line.** Item 34 covered the no-tap path (the body carries the safety half-line) but could not close this, because it is not a copy change.
 
