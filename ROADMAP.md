@@ -95,6 +95,42 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-16 (evening; both [ready], queued top-most on purpose)
 
+## 59. [proposed] Finish the tide_sensitive correction pass (the flag that gates the conditions engine)
+
+**Why:** `tide_sensitive` feeds the conditions engine (`lib/savedConditions.ts` / `lib/conditions.ts`), the app's differentiator, so a wrong `false` silently drops the tide half of conditions for a tidal spot. CLAUDE.md documents this as systematic (36 of 68 bay spots say false; 14 describe tides in their own notes while the flag says false). Item 40 flipped only 7 and stopped. Verified 2026-07-18: spots **27 (moderate tidal current), 38 (opposing tides mid-bay), 40 (mellow tidal stretch), 43 (tidal river)** say `false` while their own notes describe tides, unambiguous defects; **82 (Lake Merritt "tidal lagoon")** is a judgment call; spots **60 ("usable at all tide levels") and 96 ("free of tides")** are the D19 pre-cleared false positives and must stay `false`.
+
+**Acceptance:**
+- Flip `tide_sensitive` to `true` on the notes-self-evidencing defects (27, 38, 40, 43; decide 82 on its note), leaving 60 and 96 `false`. Note-grounded, no external source (D19 tide-pass-first default).
+- Boolean-only change: `git diff data/spots.json | grep '"lat"\|"lng"'` empty, so the D23 coordinate gate never fires.
+- After deploy, the affected spots' conditions panel shows a tide readout, not "No tide station" (verify `/spot/43`).
+- The broader "tidal-but-says-false with no tide word in notes" set is a larger per-spot-judgment sub-pass; scope this to the self-evidencing slice and note the remainder.
+
+**Flags:** no decision, no legal surface. The loop can ship this immediately once promoted.
+
+## 60. [proposed] Refresh stale conditions when the installed PWA is re-foregrounded
+
+**Why:** Conditions cache per session with a 30-min TTL (`lib/conditions.ts` `CACHE_TTL_MS`), but there is no `visibilitychange`/focus refetch anywhere in the app. iOS keeps an installed PWA alive in memory across sessions (item 12 note), so a returning user who reopens the PWA sees conditions state from their last session, hours stale, at the exact return-visit moment the retention loop exists to serve. Stale wind/tide on that open is the differentiator failing on the return visit.
+
+**Acceptance:**
+- On `visibilitychange` to visible, if the open spot's cached run is older than the TTL, refetch and repaint with a fresh `fetchedAt` stamp.
+- Bounded: refetch only the currently-open/selected spot (and the watched strip if cheap), never a fan-out.
+- Instrument as SYSTEM (`conditions_loaded` with a `trigger: "foreground"` prop, or a `_loaded` twin) + changelog; measures availability, not intent.
+- Kill-switch flag at 100%, no A/B (DAU<100).
+
+**Flags:** no decision, no legal surface. Client-side only, buildable now.
+
+## 61. [proposed] Cold-open "good to paddle today" ranked surface
+
+**Why:** The strategy names "calm-window alerts + a cold-open reason to check" (line 8) and the vision answers "where's good today?" (line 16). Item 26 shipped a cold-open strip but only for spots this device already viewed, so a first-time or one-and-done visitor (78% one-and-done) gets no answer. This ranks spots by today's conditions on load, the purest expression of the per-spot-judgment moat as discovery. Distinct from item 8 (a redirect *out* of an already-open blown-out spot) and item 26 (device history).
+
+**Acceptance:**
+- On cold open, show a short ranked "good to paddle today" list (top 2-3 spots with a live paddleability badge), tappable into the drawer.
+- Bounded candidate set only: rank across nearest-K by geolocation or map viewport, cached, reusing the SAME `evaluateGoodWindow` as the cron/item 8 + precomputed gridpoints (item 53), no unbounded NWS fan-out.
+- The "not good enough to surface" threshold must equal the calm-window definition, or it contradicts the drawer.
+- New dwell-gated INTENT `good_today_shown` + `good_today_clicked` (`spot_id`/`region`) + changelog; kill-switch flag at 100%, no A/B.
+
+**Flags:** no owner decision or legal surface, but it is the largest of the three (M/L) and shares conditions-fan-out plumbing with the still-proposed item 8; the board may prefer to ship 61 + 8 as one epic, sequenced after the early-August retention read.
+
 ## 51. [proposed] Marker clustering for dense areas (carved out of item 7, 2026-07-17)
 
 **Why:** at statewide zoom the audit measured 67 markers within a 24px radius, a blob of overlapping pins nobody can tap. Clustering is the standard fix.
