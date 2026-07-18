@@ -7,12 +7,14 @@ import {
   formatTideTime,
   formatFetchedAt,
   isNextDay,
+  CACHE_TTL_MS,
   type WindInfo,
   type WindOutcome,
   type TideOutcome,
   type Paddleability,
 } from "@/lib/conditions";
 import { trackSystem, trackIntent } from "@/lib/analytics";
+import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
 import NextGoodWindowPanel from "@/components/NextGoodWindowPanel";
 
@@ -118,10 +120,23 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
   // availability signal (success rate + latency), NOT engagement — engagement is
   // the dwell-gated INTENT event below.
   const logged = useRef<number | null>(null);
+  // Item 60: re-foregrounding the installed PWA refetches conditions when the
+  // shown data is older than the cache TTL, so a returning user never reads a
+  // stale morning forecast. Kill-switch flag (default ON, no A/B, DAU<100 rule).
+  const refreshOn = useKillSwitch("conditions-foreground-refresh");
+  const [refreshTick, setRefreshTick] = useState(0);
+  const fetchedAtRef = useRef<number | null>(null);
+  const lastFetchSpot = useRef<number | null>(null);
 
   useEffect(() => {
     let alive = true;
     const startedAt = performance.now();
+    // "foreground" only when this run is a re-fetch of the SAME spot triggered by
+    // refreshTick; a fresh open or spot change is "mount". Re-arm the once-per-run
+    // availability log either way.
+    const trigger = refreshTick > 0 && lastFetchSpot.current === spot.id ? "foreground" : "mount";
+    lastFetchSpot.current = spot.id;
+    logged.current = null;
     const run = getConditionsRun(spot.id, spot.lat, spot.lng, spot.tide_sensitive);
     run.wind.then((o) => {
       if (alive) setWind({ spotId: spot.id, outcome: o, fetchedAt: run.fetchedAt });
@@ -141,12 +156,13 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
         has_tides: t.ok && t.tide !== null,
         has_wind: !!windInfo,
         surface: "spot_drawer",
+        trigger,
       });
     });
     return () => {
       alive = false;
     };
-  }, [spot.id, spot.lat, spot.lng, spot.water, spot.region, spot.difficulty, spot.tide_sensitive]);
+  }, [spot.id, spot.lat, spot.lng, spot.water, spot.region, spot.difficulty, spot.tide_sensitive, refreshTick]);
 
   const isFlatwater = spot.difficulty === "flatwater";
   // A slot only counts for the spot now showing; otherwise it's still loading.
@@ -160,6 +176,26 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
     (wind && wind.spotId === spot.id ? wind.fetchedAt : null) ??
     (tide && tide.spotId === spot.id ? tide.fetchedAt : null);
   const windInfo = windOutcome?.ok ? windOutcome.wind : null;
+
+  // Item 60: keep the shown data's age readable inside the visibility listener
+  // without re-subscribing it every render.
+  useEffect(() => {
+    fetchedAtRef.current = fetchedAt;
+  });
+  // Refetch on re-foreground when the shown run is older than the cache TTL. The
+  // TTL means getConditionsRun cache-misses and fetches fresh; bumping refreshTick
+  // re-runs the fetch effect above. Only fires when stale, so a quick tab-away is
+  // free. getConditionsRun already caps concurrency/dedupes per spot.
+  useEffect(() => {
+    if (!refreshOn) return;
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      const at = fetchedAtRef.current;
+      if (at != null && Date.now() - at > CACHE_TTL_MS) setRefreshTick((t) => t + 1);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refreshOn]);
 
   // INTENT event: the panel was genuinely looked at (on screen + dwell), not just
   // fetched. Read the latest values via refs so the one-shot callback is current.

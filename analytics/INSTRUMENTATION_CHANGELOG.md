@@ -14,6 +14,14 @@ without touching this file.
 
 ---
 
+## 2026-07-18 (item 60): conditions_loaded gains `trigger` prop (props-changed); PWA re-foreground refetches stale conditions
+
+`conditions_loaded` (SYSTEM, surface: spot_drawer) gained an optional `trigger` prop: `"mount"` for the first fetch when the panel opens (the existing behavior, and the value for every historical event), `"foreground"` for a refetch triggered by re-foregrounding the installed PWA on data older than the 30-min cache TTL (item 60, `ConditionsPanel` visibilitychange listener). Behavior change shipped alongside: a returning user who reopens the PWA on an already-open spot now gets fresh wind/tide instead of last session's React state. Behind the `conditions-foreground-refresh` kill switch (default ON, no A/B, DAU<100).
+
+- **Comparability:** `conditions_loaded` VOLUME rises from 2026-07-18, because a returning-session refetch now emits an additional event that previously never fired (the panel held stale state silently). So a `conditions_loaded` count increase on/after this date is partly this instrumentation, not more opens, segment by `trigger` (`foreground` is the new slice; `mount`/absent is the old apples-to-apples series). Latency/availability semantics per event are unchanged. This is a SYSTEM availability event, still not engagement.
+
+---
+
 ## 2026-07-18 (item 46): alert_clicked gains `reminder_tap` prop (props-changed); reminder taps open the sheet expanded
 
 `alert_clicked` (INTENT, fires on any from=alert open) gained a boolean `reminder_tap` prop: true when the app opened from a launch-reminder push (from=alert with NO `window` param), false for a windowed alert open. This distinguishes the two cohorts, which were previously indistinguishable in analytics (the `window` param is stripped from the URL and never logged). Behavior change shipped alongside: a reminder tap now opens the mobile spot sheet expanded (`startExpanded`) so ConditionsPanel's safety line clears the peek fold, item 46 (the reminder tap was the one alert whose journey showed no full safety line, because it carries no `window` param so the AlertInterstitial never rendered). No schema/cron change (the cheap alternative in the item's acceptance); the launch-direction tip still needs the deferred schema change.

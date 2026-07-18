@@ -164,6 +164,10 @@ interface EventPropMap {
     has_tides: boolean;
     has_wind: boolean;
     surface: "spot_drawer";
+    // Item 60: "mount" = first fetch when the panel opened; "foreground" = a
+    // refetch triggered by re-foregrounding the PWA on stale data. Optional so
+    // existing call sites (which are all "mount") stay valid.
+    trigger?: "mount" | "foreground";
   };
   conditions_viewed: {
     spot_id: number;

@@ -327,7 +327,9 @@ const cache = new Map<number, CacheEntry>();
 // session (open a spot in the morning, reopen in the afternoon) we want fresh
 // data, not the morning's forecast still labeled "today". After this window a
 // reopen refetches instead of serving the warm cache.
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+// Exported so the foreground-refresh path (item 60, ConditionsPanel) uses the
+// exact same staleness threshold as the cache, no second copy to drift.
+export const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Start (or reuse) a spot's conditions fetch and return its two independent

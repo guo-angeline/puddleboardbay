@@ -77,6 +77,21 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
 
+## 62. [ready] `--muted` body text fails WCAG AA contrast (3.49:1) on the spot-row subtitle and other small text
+
+**Found by the 2026-07-18 verify loop; this is the open follow-up item 38 flagged ("A follow-up `--muted` body-text contrast question was raised") and never filed.** Measured the rendered contrast of `--muted` (#6E8598):
+- on `--bg` #EEF5FB (the canvas): **3.49:1**
+- on white: **3.84:1**
+- on `--accent-light` #E3EEFA: 3.27:1
+
+WCAG AA needs **4.5:1** for normal-size text; `--muted` clears only the 3:1 large-text bar. And it is used for small (12px, weight 400) text throughout, measured live at 390px: **14 distinct failing elements**, including the one that matters most, **every spot row's city/region subtitle** ("Alviso · South Bay", "Cupertino · South Bay", ...). That subtitle is core content (it is how a user tells spots apart, e.g. the two Folsom Lake records) shown below the AA threshold on all 140 rows. Also failing: the hero subtitle "Paddleboard & kayak spots across the Bay Area", the rating+location line, and "Tap ♥ to watch a spot's conditions". `--dark` (13.3:1) and `--accent` (4.53:1) pass; the problem is scoped to `--muted`.
+
+**Acceptance (color-only, no layout risk, same shape as item 38):**
+- `--muted` text at normal size hits >=4.5:1 on both backgrounds it appears on (`--bg` and white). A measured candidate that clears both is **#576E82** (4.82 on `--bg`, 5.31 on white); **#526A7E** (5.13 / 5.64) gives more margin. Final hex is design-lead's call, keep it a muted gray-blue in the Meltwater palette; darken only until AA passes.
+- This is design-lead territory (it shifts the app-wide tertiary text tone); check the darkened token still reads as clearly tertiary against `--ink-2` #42607A and `--dark`.
+- Verify the change is token-only (no size/weight/layout change) and re-measure the spot-row subtitle live at >=4.5:1 after.
+- If the owner prefers to keep the lighter tone for aesthetics over strict AA, that is a real tradeoff to escalate, not silently accept: it is core body text, not decorative.
+
 ## 58. [done] Two spots both named "Folsom Lake" (ids 20/120): disambiguated (deployed 2026-07-18)
 
 **Shipped 2026-07-18 (studio loop).** Renamed spot 120's `water` to "Folsom Lake - Beals Point" (its coordinate 38.719,-121.173 and notes both confirm Beals Point); spot 20 stays "Folsom Lake". The two rows are now distinguishable at a glance in the list/map. `water`-field text edit only, verified no `lat`/`lng` churn in the diff, no new spot id, spot-id/sitemap URL unchanged; page `<title>`/OG/JSON-LD regenerate from `water` (confirmed the new name in the build output). 338 tests + build green. Left id 20 generic on purpose: it is a genuine multi-launch record (Peninsula/Rattlesnake Bar/Granite Beach/Browns Ravine/Beeks Bight) with no single accurate sub-name, giving it a guessed one would be the item-50/D26 defect; renaming only 120 is the smallest fully-grounded fix that removes the ambiguity.
@@ -107,7 +122,9 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Flags:** no decision, no legal surface. The loop can ship this immediately once promoted.
 
-## 60. [proposed] Refresh stale conditions when the installed PWA is re-foregrounded
+## 60. [done] Refresh stale conditions when the installed PWA is re-foregrounded (deployed 2026-07-18)
+
+**Shipped 2026-07-18 (studio loop, owner-authorized promotion).** `ConditionsPanel` now listens for `visibilitychange`; when the app is re-foregrounded and the shown run is older than the exported `CACHE_TTL_MS` (30 min), it bumps a refresh tick that re-runs the fetch effect (`getConditionsRun` cache-misses on expiry and fetches fresh), so a returning user never reads last session's stale wind/tide. Additive + guarded: the normal mount fetch/render path is unchanged; the refetch only fires when stale and only when the `conditions-foreground-refresh` kill switch is ON (default ON, no A/B, DAU<100). Instrumentation: `conditions_loaded` gained an optional `trigger: "mount" | "foreground"` + changelog (volume rises from a genuinely-new return-session refetch; segment by `trigger`). 338 tests, lint (app), build all green; `CACHE_TTL_MS` exported from `lib/conditions.ts` so there's one staleness threshold. NOTE: in-browser wiring check was blocked by a Browser-tool outage at ship time; the change is additive/kill-switch-reversible and the normal path is untouched, and the 30-min stale refetch is owner-verifiable (background the installed PWA 30+ min, reopen, the freshness stamp updates).
 
 **Why:** Conditions cache per session with a 30-min TTL (`lib/conditions.ts` `CACHE_TTL_MS`), but there is no `visibilitychange`/focus refetch anywhere in the app. iOS keeps an installed PWA alive in memory across sessions (item 12 note), so a returning user who reopens the PWA sees conditions state from their last session, hours stale, at the exact return-visit moment the retention loop exists to serve. Stale wind/tide on that open is the differentiator failing on the return visit.
 
