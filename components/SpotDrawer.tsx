@@ -222,21 +222,25 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
           (a viewport-covering surface clips its own corners and has no edge to
           shadow); rollback keeps them (it's still a partial sheet). */}
       <div
-        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 md:rounded-none overflow-y-auto overscroll-contain max-h-[58vh] md:max-h-none md:h-full md:shadow-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
+        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full md:shadow-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
         style={{
           zIndex: 1200,
           ...(forceFull
             ? {
-                // Item 63: cover the whole viewport with fixed insets. No
-                // window.innerHeight read and no height transition. Combined with
-                // `overscroll-contain` on the scroller (className), which stops an
-                // overscroll at the top/bottom from chaining to the document and
-                // dragging this fixed sheet (the remaining wobble the owner saw
-                // at the scroll extremes). safe-area-top is on the sticky bar.
+                // Item 63: cover the whole viewport with fixed insets, no
+                // innerHeight read, no height transition. The remaining wobble
+                // the owner saw at the scroll extremes is the panel's OWN
+                // rubber-band bounce: the app shell is already locked and every
+                // `.overflow-y-auto` already has `overscroll-behavior: contain`
+                // (globals.css), which only stops *chaining* and still permits
+                // the bounce. `none` suppresses the bounce itself; it must be
+                // inline to beat that global class rule. safe-area-top is on the
+                // sticky bar.
                 position: "fixed",
                 inset: 0,
                 maxHeight: "none",
                 transition: "none",
+                overscrollBehavior: "none",
               }
             : isMobile && renderH != null
               ? {
