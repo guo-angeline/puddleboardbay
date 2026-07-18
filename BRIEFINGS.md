@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-18 · Item 32 shipped to 100%; item 31 photo harvest started (80% coverage), your curation next
+
+**Your move:** (1) curate `raw-data/photo-candidates.json` when you have time (per spot, pick a candidate or drop an owner photo, reject off-topic hits), that unblocks the item-31 display build. (2) Still open from before: answer **D24** or promote a `[proposed]` item. Nothing urgent.
+
+**TL;DR:** Two things landed. Item 32 (push+email equal-weight enrollment card) was retired from its dead-end A/B and shipped **100% live** on your directive. Item 31 (a photo per spot) started: a Commons harvester pulled **946 free-licensed candidates covering 112/140 spots (80%)** into a curation file. That's the "hard part" (rights-clean sourcing) turned into a review queue; the display UI + deploy come after you curate.
+
+**Appendix:**
+- Item 32: retired the `enrollment-dual-cta` flag, deleted the dead control layouts, changelog + policy (no A/B until DAU>100) recorded. Commit `95b2dbf`, deployed + verified live. Also fixed the stale `deployed-prod` tag.
+- Item 31 slice 1: `raw-data/harvest_photos.mjs` + `photo-candidates.json` (commit `cf68bcd`). No deploy (no user-facing change). 28 gap spots (reservoirs/Delta/coast) need Flickr-CC (an API key) or your photos. Item -> `[blocked(curation)]` so the loop won't re-run the harvest.
+- The 30-min cron is live; it fired this iteration, next tick re-checks. Dry fires idle quietly.
+
 ## 2026-07-18 · Loop caught up: no `[ready]` work left, waiting on you
 
 **Your move:** either answer **D24** (unblocks items 43 + 44) or promote one of the four `[proposed]` items (51 marker-clustering, 50 split multi-launch records, 49 Android-subscriber push path, 8 "go here instead") to `[ready]`.
