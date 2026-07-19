@@ -6,11 +6,11 @@
 export const RESEND_COOLDOWN_MS = 20000;
 
 export const RESEND_SPAM_LINE = "Not there? Check spam or junk.";
-export const RESEND_LABEL = "Resend confirm email";
+export const RESEND_LABEL = "Resend email";
 export const RESEND_SENDING_LABEL = "Sending...";
 export const RESEND_SENT_NOTE = "Sent again. Check spam too.";
-export const RESEND_CONFIRMED_NOTE = "You are already confirmed. No need to resend.";
-export const RESEND_FAILED_NOTE = "Resend did not go through. Try again later.";
+export const RESEND_CONFIRMED_NOTE = "You're already confirmed.";
+export const RESEND_FAILED_NOTE = "Couldn't resend. Try again shortly.";
 
 export type EmailCaptureOutcome = "pending" | "already_confirmed" | "failed";
 

@@ -73,8 +73,10 @@ describe("InstallPrompt suppresses the email re-prompt for confirmed subscribers
 
   it("the manual gate sets the static terminal state and both terminal strings ship verbatim", () => {
     expect(src).toContain("setYoureSet(true)");
-    expect(src).toContain("You&rsquo;re set.");
-    expect(src).toContain("We&rsquo;ll email you when your spots are good to paddle.");
+    // Item 66: plain-apostrophe strings (were &rsquo; HTML entities before the
+    // copy redesign moved them into JS string props on the Header helper).
+    expect(src).toContain("You're set.");
+    expect(src).toContain("We'll email you when your spots are good to paddle.");
   });
 
   it("does not add an 'Add push' button, and carries no experiment plumbing", () => {

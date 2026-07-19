@@ -494,42 +494,83 @@ export default function InstallPrompt() {
   // time without covering the drawer's bottom Save/Share actions.
   const anchorTop = drawerOpen;
 
+  // Item 66: light Meltwater card (was a dark navy chat bubble), converging on
+  // the rest of the app. Block layout, relative so the × can sit in the corner
+  // and the content uses the full width (the old flex row shared width with the
+  // emoji + ×, forcing text to wrap). ALL logic/handlers/effects unchanged.
   const card: React.CSSProperties = {
-    background: "#0B2A47",
-    color: "#FFFFFF",
-    borderRadius: 14,
-    padding: "12px 16px",
+    position: "relative",
+    background: "#FFFFFF",
+    color: "var(--dark)",
+    border: "1px solid var(--border)",
+    borderRadius: 16,
+    padding: "16px",
     maxWidth: 420,
     width: "calc(100% - 32px)",
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 12,
-    boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+    boxShadow: "0 8px 30px rgba(11,42,71,0.14)",
     pointerEvents: "auto",
   };
-  const muted = { margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.72)", lineHeight: 1.4 } as const;
-  const primaryBtn: React.CSSProperties = {
-    background: "#0E6FD1", color: "#fff", border: "none", borderRadius: 8,
-    padding: "6px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
-  };
-  const linkBtn: React.CSSProperties = {
-    background: "transparent", border: "none", color: "rgba(255,255,255,0.7)",
-    textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, whiteSpace: "nowrap",
-  };
-  // Item 32: full-width primary push button for the dual-CTA treatment card.
+  const subStyle: React.CSSProperties = { margin: "4px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.4 };
+  const footnote: React.CSSProperties = { margin: "6px 0 0", fontSize: 11, color: "var(--muted)", lineHeight: 1.45 };
+  const errorText: React.CSSProperties = { margin: "6px 0 0", fontSize: 12, color: "var(--wind-alert)", lineHeight: 1.4 };
+  // Full-width primary push button (item 32), matching SpotDrawer's primary CTA.
   const pushBtn: React.CSSProperties = {
-    background: "#0E6FD1", color: "#fff", border: "none", borderRadius: 8,
+    background: "var(--accent)", color: "#fff", border: "none", borderRadius: 12,
     padding: "12px 16px", fontSize: 14, fontWeight: 600, width: "100%", cursor: "pointer",
   };
-  // Item 32: "or" divider between the push button and the email row. Uses the
-  // muted 0.72 opacity (not the 0.55 dismiss-glyph opacity) to clear 4.5:1
-  // contrast. Static text, not interactive.
+  // Email submit button (inline next to the input); min-width so it never
+  // squeezes the input, short label ("Email me").
+  const submitBtn: React.CSSProperties = {
+    background: "var(--accent)", color: "#fff", border: "none", borderRadius: 10,
+    padding: "10px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", minWidth: 88,
+  };
+  // Outline secondary (resend), matching SpotDrawer's Share button.
+  const outlineBtn: React.CSSProperties = {
+    background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: 12,
+    padding: "10px 16px", fontSize: 14, fontWeight: 600, width: "100%", cursor: "pointer",
+  };
+  // Tertiary underline link (iOS channel toggle). py padding => ~44px tap target.
+  const linkBtn: React.CSSProperties = {
+    background: "transparent", border: "none", color: "var(--accent)",
+    textDecoration: "underline", textUnderlineOffset: 2, cursor: "pointer", fontSize: 14, padding: "8px 0",
+  };
   const divider = (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }} />
-      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.72)" }}>or</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0" }}>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+      <span style={{ fontSize: 12, color: "var(--muted)" }}>or</span>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
     </div>
+  );
+
+  // Item 66: state-driven icon badge replacing the 🚣 emoji (the app's only
+  // emoji; everything else is a stroked SVG). Bell = an offer, envelope =
+  // pending confirm, check = done. Decorative (aria-hidden); the headline
+  // carries the meaning.
+  const iconKind: "offer" | "pending" | "done" =
+    youreSet || result === "granted" ? "done" : emailResult === "pending" ? "pending" : "offer";
+  const badge = (() => {
+    const wrap = (bg: string, fg: string, path: React.ReactNode) => (
+      <span aria-hidden className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 28, height: 28, background: bg, color: fg }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>
+      </span>
+    );
+    if (iconKind === "done") return wrap("var(--free-fill)", "var(--free)", <path d="M20 6 9 17l-5-5" />);
+    if (iconKind === "pending") return wrap("var(--accent-light)", "var(--accent)", <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>);
+    return wrap("var(--accent-light)", "var(--accent)", <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>);
+  })();
+
+  // Header: icon badge + headline on one row, sub full-width below. A plain
+  // render helper (lowercase, called as a function), NOT a component defined in
+  // render, so React doesn't remount the subtree each render.
+  const header = (title: React.ReactNode, sub?: React.ReactNode) => (
+    <>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        {badge}
+        {/* paddingRight clears the corner × so a long headline wraps before it. */}
+        <p className="font-['Newsreader']" style={{ margin: 0, flex: 1, minWidth: 0, paddingRight: 28, fontWeight: 600, fontSize: 16, lineHeight: 1.25, color: "var(--dark)" }}>{title}</p>
+      </div>
+      {sub && <p style={subStyle}>{sub}</p>}
+    </>
   );
 
   // Email capture block (item 23). The bare form + inline errors + disclaimer,
@@ -539,7 +580,7 @@ export default function InstallPrompt() {
   function emailRow() {
     return (
       <>
-        <form onSubmit={handleEmailSubmit} noValidate style={{ display: "flex", gap: 6, marginTop: 8 }}>
+        <form onSubmit={handleEmailSubmit} noValidate style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <input
             type="email"
             inputMode="email"
@@ -548,33 +589,25 @@ export default function InstallPrompt() {
             onChange={(ev) => { setEmail(ev.target.value); if (emailError) setEmailError(false); }}
             placeholder="you@email.com"
             aria-label="Email address"
-            // Explicit light colors + color-scheme so a dark-mode browser does not
-            // paint the field dark (which made it blend into the card and hid the
-            // typed text). White box, dark text, gray placeholder.
             style={{
-              flex: 1, minWidth: 0, borderRadius: 8, border: "1px solid #DCE7F0",
-              padding: "7px 10px", fontSize: 13, background: "#FFFFFF", color: "#0B2A47",
+              flex: 1, minWidth: 0, borderRadius: 10, border: "1px solid var(--border)",
+              padding: "10px 12px", fontSize: 14, background: "var(--fill)", color: "var(--dark)",
               colorScheme: "light",
             }}
           />
-          <button type="submit" disabled={emailSubmitting} style={primaryBtn}>
-            {emailSubmitting ? "..." : "Email me alerts"}
+          <button type="submit" disabled={emailSubmitting} style={submitBtn}>
+            {emailSubmitting ? "..." : "Email me"}
           </button>
         </form>
-        {emailError && (
-          <p style={{ ...muted, color: "#FCA5A5" }}>Enter a valid email address.</p>
-        )}
-        {emailResult === "failed" && (
-          <p style={{ ...muted, color: "#FCA5A5" }}>Something went wrong. Try again.</p>
-        )}
-        <p style={{ ...muted, fontSize: 11 }}>One email a day, max. Only when a spot you watch looks good. Unsubscribe in one tap.</p>
+        {emailError && <p style={errorText}>Enter a valid email address.</p>}
+        {emailResult === "failed" && <p style={errorText}>Something went wrong. Try again.</p>}
+        <p style={footnote}>One email a day, max, for the spots you watch. Unsubscribe anytime.</p>
         {/* Item 34: the canonical safety line at the consent moment, so enrolling
-            is informed. Deliberately here, in the slot that already holds the
-            standing terms, and NOT between the headline and the button: a caveat
-            above the CTA reads as a warning about the CTA, and this card is the
-            conversion path for the whole retention loop. Next to "Unsubscribe in
-            one tap" it reads as terms, which is what it is. */}
-        <p style={{ ...muted, fontSize: 11 }}>Guidance only, not a safety guarantee. Conditions shift fast on the water.</p>
+            is informed. In the slot that already holds the standing terms, NOT
+            between the headline and the button (a caveat above the CTA reads as a
+            warning about the CTA on the retention loop's conversion path). Kept
+            BYTE-FOR-BYTE identical to ConditionsPanel (item 66 constraint). */}
+        <p style={footnote}>Guidance only, not a safety guarantee. Conditions shift fast on the water.</p>
       </>
     );
   }
@@ -583,19 +616,18 @@ export default function InstallPrompt() {
   // rendered below (iOS: reveal install steps; Android: swap back to install).
   function emailForm(headline: string, sub: string, secondary?: React.ReactNode) {
     return (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{headline}</p>
-        <p style={muted}>{sub}</p>
+      <div style={{ minWidth: 0 }}>
+        {header(headline, sub)}
         {emailRow()}
-        {secondary && <div style={{ marginTop: 8 }}>{secondary}</div>}
+        {secondary && <div style={{ marginTop: 12 }}>{secondary}</div>}
       </div>
     );
   }
 
   const iosSteps = (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Add to your home screen for push</p>
-      <ol style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5, color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
+    <div style={{ minWidth: 0 }}>
+      {header("Add to your home screen")}
+      <ol style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
         <li>
           Tap the Share icon{" "}
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -607,9 +639,9 @@ export default function InstallPrompt() {
           </svg>
         </li>
         <li>Pick &ldquo;Add to Home Screen&rdquo;</li>
-        <li>Open it from there to turn on alerts</li>
+        <li>Open it to turn on alerts</li>
       </ol>
-      <button onClick={() => setAltChannel(false)} style={{ ...linkBtn, marginTop: 8 }}>Get alerts by email instead</button>
+      <button onClick={() => setAltChannel(false)} style={{ ...linkBtn, marginTop: 4 }}>Use email instead</button>
     </div>
   );
 
@@ -619,16 +651,14 @@ export default function InstallPrompt() {
     // card, no push offer (D18 Q2(c) preserves the desktop-never-offers-push
     // invariant); reuses the granted-push copy pattern with the email verb.
     body = (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>You&rsquo;re set.</p>
-        <p style={muted}>We&rsquo;ll email you when your spots are good to paddle.</p>
+      <div style={{ minWidth: 0 }}>
+        {header("You're set.", "We'll email you when your spots are good to paddle.")}
       </div>
     );
   } else if (result === "granted") {
     body = (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>You&rsquo;re set.</p>
-        <p style={muted}>We&rsquo;ll ping you when your spots are good to paddle.</p>
+      <div style={{ minWidth: 0 }}>
+        {header("You're set.", "We'll ping you when your spots are good to paddle.")}
       </div>
     );
   } else if (emailResult === "pending") {
@@ -636,10 +666,9 @@ export default function InstallPrompt() {
     // Item 24: a resend control rescues the user if the mail lands in spam or
     // never arrives, instead of leaving them stuck with only "check your inbox".
     body = (
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Check your inbox.</p>
-        <p style={muted}>Tap the confirm link and you&rsquo;re set. We&rsquo;ll email you when your spots are good to paddle.</p>
-        <p style={muted}>{RESEND_SPAM_LINE}</p>
+      <div style={{ minWidth: 0 }}>
+        {header("Check your inbox.", "Tap the link in that email to finish setting up alerts.")}
+        <p style={footnote}>{RESEND_SPAM_LINE}</p>
         {(() => {
           const resendDisabled =
             resendState === "sending" || resendState === "confirmed" || resendCooling;
@@ -648,8 +677,8 @@ export default function InstallPrompt() {
               onClick={handleResend}
               disabled={resendDisabled}
               style={{
-                ...primaryBtn,
-                marginTop: 8,
+                ...outlineBtn,
+                marginTop: 10,
                 opacity: resendDisabled ? 0.55 : 1,
                 cursor: resendDisabled ? "default" : "pointer",
               }}
@@ -658,9 +687,9 @@ export default function InstallPrompt() {
             </button>
           );
         })()}
-        {resendState === "sent" && <p style={muted}>{RESEND_SENT_NOTE}</p>}
-        {resendState === "confirmed" && <p style={muted}>{RESEND_CONFIRMED_NOTE}</p>}
-        {resendState === "failed" && <p style={{ ...muted, color: "#FCA5A5" }}>{RESEND_FAILED_NOTE}</p>}
+        {resendState === "sent" && <p style={footnote}>{RESEND_SENT_NOTE}</p>}
+        {resendState === "confirmed" && <p style={footnote}>{RESEND_CONFIRMED_NOTE}</p>}
+        {resendState === "failed" && <p style={errorText}>{RESEND_FAILED_NOTE}</p>}
       </div>
     );
   } else if (dualCta) {
@@ -671,24 +700,18 @@ export default function InstallPrompt() {
       body = altChannel
         ? iosSteps
         : (
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Get alerts when your spots are good to paddle</p>
-            <p style={muted}>Push or email, your call.</p>
-            <button onClick={() => setAltChannel(true)} style={pushBtn}>Add to Home Screen for push</button>
+          <div style={{ minWidth: 0 }}>
+            {header("Get alerts for your spots", "Push or email, your call.")}
+            <button onClick={() => setAltChannel(true)} style={{ ...pushBtn, marginTop: 12 }}>Add to Home Screen</button>
             {divider}
             {emailRow()}
           </div>
         );
     } else if (platform === "android") {
       body = (
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-            {trigger === "first_save"
-              ? `Get alerts when ${spotName} is good to paddle`
-              : "Get alerts when your spots are good to paddle"}
-          </p>
-          <p style={muted}>Push or email, your call. Install for push, or leave your email below.</p>
-          <button onClick={handleInstall} style={pushBtn}>Install</button>
+        <div style={{ minWidth: 0 }}>
+          {header(trigger === "first_save" ? `Get alerts for ${spotName}` : "Get alerts for your spots", "Push or email, your call.")}
+          <button onClick={handleInstall} style={{ ...pushBtn, marginTop: 12 }}>Install app</button>
           {divider}
           {emailRow()}
         </div>
@@ -696,14 +719,9 @@ export default function InstallPrompt() {
     } else {
       // standalone, not push-denied (dualCta already excludes denied).
       body = (
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-            {trigger === "first_save"
-              ? `Get a heads-up when ${spotName} is good to paddle`
-              : "Turn on alerts for the spots you watch"}
-          </p>
-          <p style={muted}>{"Push or email, your call. We'll let you know when a spot's good to paddle."}</p>
-          <button onClick={handleEnable} disabled={enabling} style={pushBtn}>
+        <div style={{ minWidth: 0 }}>
+          {header(trigger === "first_save" ? `Get alerts for ${spotName}` : "Turn on alerts for your spots", "Push or email, your call.")}
+          <button onClick={handleEnable} disabled={enabling} style={{ ...pushBtn, marginTop: 12 }}>
             {enabling ? "Turning on..." : "Turn on push"}
           </button>
           {divider}
@@ -715,13 +733,12 @@ export default function InstallPrompt() {
     // Desktop leads with email: install is near-useless, desktop push rarely seen.
     // Desktop is the one surface excluded from the dual-CTA card (E5: desktop
     // never offers push).
-    body = emailForm("Get paddle alerts by email.", "Watch a spot and we'll email you when it's good to paddle.");
+    body = emailForm("Get alerts by email", "We'll email you when a spot you watch is good to paddle.");
   } else {
     // Installed (standalone) with push hard-denied: the only mobile surface the
     // dual-CTA card excludes. Rescue with email instead of the old
-    // browser-settings dead end. (iOS Safari and Android always render the
-    // dual-CTA card above; a non-denied standalone user does too.)
-    body = emailForm("Notifications are off. Get alerts by email instead.", "We'll email you when a watched spot is good to paddle.");
+    // browser-settings dead end.
+    body = emailForm("Get alerts by email instead", "We'll email you when your spots are good to paddle.");
   }
 
   return (
@@ -739,17 +756,24 @@ export default function InstallPrompt() {
       }}
     >
       <div style={card}>
-        <div style={{ fontSize: 26, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>🚣</div>
         {body}
+        {/* Item 66: dismiss moves to its own top-right corner slot (SVG, not a
+            glyph) so it never shares a row with, or crowds, the content. */}
         <button
           onClick={handleDismiss}
           aria-label="Dismiss"
+          className="hover:bg-(--fill) motion-safe:transition-colors"
           style={{
-            background: "transparent", border: "none", color: "rgba(255,255,255,0.55)",
-            cursor: "pointer", fontSize: 22, lineHeight: 1, padding: "0 2px", flexShrink: 0,
+            position: "absolute", top: 8, right: 8, width: 40, height: 40,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "transparent", border: "none", borderRadius: 9999,
+            color: "var(--muted)", cursor: "pointer",
           }}
         >
-          ×
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round">
+            <line x1="5" y1="5" x2="19" y2="19" />
+            <line x1="19" y1="5" x2="5" y2="19" />
+          </svg>
         </button>
       </div>
     </div>

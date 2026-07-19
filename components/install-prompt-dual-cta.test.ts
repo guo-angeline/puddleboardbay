@@ -18,16 +18,18 @@ describe("InstallPrompt dual-CTA (item 32, shipped at 100%)", () => {
     expect(src).toContain("leadChannel");
   });
 
-  it("has the treatment push button labels", () => {
+  it("has the treatment push button labels (item 66 copy)", () => {
     expect(src).toContain("Turn on push");
     expect(src).toContain("Turning on...");
-    expect(src).toContain("Add to Home Screen for push");
+    expect(src).toContain("Add to Home Screen");
+    expect(src).toContain("Install app");
   });
 
-  it("has the treatment shared subheads", () => {
-    expect(src).toContain("Push or email, your call. We'll let you know when a spot's good to paddle.");
-    expect(src).toContain("Push or email, your call. Install for push, or leave your email below.");
+  it("has the unified dual-CTA subhead (item 66 copy)", () => {
+    // Item 66 unified the three platform sublines to one short line.
     expect(src).toContain("Push or email, your call.");
+    expect(src).toContain("Get alerts for your spots");
+    expect(src).toContain("Turn on alerts for your spots");
   });
 
   it("renders an 'or' divider between the two channels", () => {
@@ -42,7 +44,7 @@ describe("InstallPrompt dual-CTA (item 32, shipped at 100%)", () => {
     expect(src).toContain("SNOOZE_KEY");
     expect(src).toContain("handleEnable");
     expect(src).toContain("handleInstall");
-    expect(src).toContain("🚣");
+    expect(src).toContain("handleDismiss");
   });
 
   it("has no em dashes and never uses 'Calm' for the alert promise", () => {
