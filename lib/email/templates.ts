@@ -80,9 +80,7 @@ function shell(bodyHtml: string, unsubUrl: string, preheader: string): string {
       </td></tr>
       <tr><td style="padding:26px 24px 6px">${bodyHtml}</td></tr>
       <tr><td class="ptw-border-top" style="border-top:1px solid #DCE7F0;padding:20px 24px 28px">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ptw-card-neutral" style="background:#F2F7FC;border:1px solid #DCE7F0;border-radius:6px;margin:0 0 14px"><tr><td style="padding:10px 12px">
-          <span class="ptw-muted" style="font-size:12px;color:#556A7E;line-height:1.5">Guidance only, not a safety guarantee. Conditions shift fast on the water.</span>
-        </td></tr></table>
+        <p class="ptw-muted" style="font-size:12px;color:#556A7E;line-height:1.5;margin:0 0 6px">Guidance only, not a safety guarantee. Conditions shift fast on the water.</p>
         <p class="ptw-muted" style="font-size:12px;color:#556A7E;line-height:1.5;margin:0 0 6px">You're getting this because you signed up for paddle alerts at paddletowater.com. <a href="${unsubUrl}" style="color:#0E6FD1">Unsubscribe</a></p>
         <p class="ptw-muted" style="font-size:11px;color:#556A7E;line-height:1.5;margin:0">Paddle to Water, ${POSTAL_ADDRESS}</p>
       </td></tr>
