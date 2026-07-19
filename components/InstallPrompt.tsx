@@ -491,8 +491,11 @@ export default function InstallPrompt() {
   if (!visible || !platform) return null;
 
   // When a drawer is open, anchor to the top so the banner is visible at save
-  // time without covering the drawer's bottom Save/Share actions.
-  const anchorTop = drawerOpen;
+  // time without covering the mobile bottom sheet's Save/Share actions. Desktop
+  // only: the drawer is a right SIDE panel, not a bottom sheet, so there's
+  // nothing to clear, top-anchoring just floats the card over the header
+  // (weird). Keep it bottom-anchored on desktop.
+  const anchorTop = drawerOpen && platform !== "desktop";
 
   // Item 66: light Meltwater card (was a dark navy chat bubble), converging on
   // the rest of the app. Block layout, relative so the × can sit in the corner
