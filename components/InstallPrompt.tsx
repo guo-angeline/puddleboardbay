@@ -601,7 +601,10 @@ export default function InstallPrompt() {
         </form>
         {emailError && <p style={errorText}>Enter a valid email address.</p>}
         {emailResult === "failed" && <p style={errorText}>Something went wrong. Try again.</p>}
-        <p style={footnote}>One email a day, max, for the spots you watch. Unsubscribe anytime.</p>
+        {/* Item 66: the "one email a day, max / unsubscribe anytime" reassurance
+            line was cut (owner, 2026-07-18): filler that added no info the reader
+            needs at this moment and wrapped ugly on mobile. The CAN-SPAM
+            unsubscribe path lives in the emails, not here. */}
         {/* Item 34: the canonical safety line at the consent moment, so enrolling
             is informed. In the slot that already holds the standing terms, NOT
             between the headline and the button (a caveat above the CTA reads as a
@@ -701,7 +704,7 @@ export default function InstallPrompt() {
         ? iosSteps
         : (
           <div style={{ minWidth: 0 }}>
-            {header("Get alerts for your spots", "Push or email, your call.")}
+            {header("Get alerts when your spots are good to paddle", "Push or email, your call.")}
             <button onClick={() => setAltChannel(true)} style={{ ...pushBtn, marginTop: 12 }}>Add to Home Screen</button>
             {divider}
             {emailRow()}
@@ -710,7 +713,7 @@ export default function InstallPrompt() {
     } else if (platform === "android") {
       body = (
         <div style={{ minWidth: 0 }}>
-          {header(trigger === "first_save" ? `Get alerts for ${spotName}` : "Get alerts for your spots", "Push or email, your call.")}
+          {header(trigger === "first_save" ? `Get alerts when ${spotName} is good to paddle` : "Get alerts when your spots are good to paddle", "Push or email, your call.")}
           <button onClick={handleInstall} style={{ ...pushBtn, marginTop: 12 }}>Install app</button>
           {divider}
           {emailRow()}
@@ -720,7 +723,7 @@ export default function InstallPrompt() {
       // standalone, not push-denied (dualCta already excludes denied).
       body = (
         <div style={{ minWidth: 0 }}>
-          {header(trigger === "first_save" ? `Get alerts for ${spotName}` : "Turn on alerts for your spots", "Push or email, your call.")}
+          {header(trigger === "first_save" ? `Get alerts when ${spotName} is good to paddle` : "Get alerts when your spots are good to paddle", "Push or email, your call.")}
           <button onClick={handleEnable} disabled={enabling} style={{ ...pushBtn, marginTop: 12 }}>
             {enabling ? "Turning on..." : "Turn on push"}
           </button>

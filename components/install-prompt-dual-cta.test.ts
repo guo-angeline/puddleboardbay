@@ -25,11 +25,22 @@ describe("InstallPrompt dual-CTA (item 32, shipped at 100%)", () => {
     expect(src).toContain("Install app");
   });
 
-  it("has the unified dual-CTA subhead (item 66 copy)", () => {
-    // Item 66 unified the three platform sublines to one short line.
+  it("headline names the value (good to paddle), subhead names the channel choice (item 66)", () => {
+    // Item 66 (owner copy fix 2026-07-18): the headline must say WHAT the alert
+    // is for (good paddling conditions), not just "your spots". The channel
+    // choice lives in the one-line subhead.
     expect(src).toContain("Push or email, your call.");
-    expect(src).toContain("Get alerts for your spots");
-    expect(src).toContain("Turn on alerts for your spots");
+    expect(src).toContain("Get alerts when your spots are good to paddle");
+    expect(src).toContain("is good to paddle"); // the first_save personalized headline
+    // The vague pre-fix headlines must be gone.
+    expect(src).not.toContain("Get alerts for your spots");
+    expect(src).not.toContain("Turn on alerts for your spots");
+  });
+
+  it("dropped the email-frequency reassurance filler (item 66, owner)", () => {
+    expect(src).not.toContain("One email a day, max, for the spots you watch");
+    // The safety line stays (item 34), byte-identical to ConditionsPanel.
+    expect(src).toContain("Guidance only, not a safety guarantee. Conditions shift fast on the water.");
   });
 
   it("renders an 'or' divider between the two channels", () => {
