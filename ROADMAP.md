@@ -119,6 +119,26 @@ Problems to fix:
 
 ---
 
+## Owner item, added 2026-07-19 (mobile back-swipe; queued top-most on purpose)
+
+## 71. [ready] Left-edge swipe (left-to-right) to go back on mobile: close the spot sheet, or return home (design-lead + history integration)
+
+**Owner-directed 2026-07-19.** Add the platform-standard back gesture: a swipe starting at the **left edge** of the screen, dragging right, navigates back (close the open spot sheet and return to the map/list; on the standalone `/spot/[id]` page, return to home). Mobile/touch only; desktop unaffected.
+
+**Why it matters most in the installed PWA:** in a browser, Safari/Chrome already give an edge-swipe that navigates browser history. In **standalone (installed PWA) there is no browser chrome and no back gesture at all**, so right now the only way out of a full-screen spot sheet is the back button. This gesture is the expected way home on a phone, and its absence is most felt exactly where retention lives (the installed app).
+
+**This connects to a real navigation gap, fix them together.** Opening a spot uses `window.history.replaceState` (`components/HomeClient.tsx:287-289`), NOT `pushState`, so opening a spot adds **no history entry**: even the browser Back button (or a browser edge-swipe) exits the site instead of closing the sheet. A correct back gesture needs actual back state:
+- On mobile spot-open, `pushState` a history entry (`?spot=<id>`) instead of `replaceState`, and add a `popstate` handler that closes the sheet when that entry is popped. Then the edge-swipe can simply call `history.back()` and both the gesture AND the hardware/browser back behave correctly.
+- Define "back" precisely: sheet open -> close sheet (return to map/list); standalone `/spot/[id]` -> navigate to `/`; at the home root with nothing open -> do NOT trap, let the OS/browser handle it. Preserve the deep-link/`from=share`/`from=email`/`from=alert` arrival flows (they must still land on the spot, and back from them should go home, not re-loop).
+
+**This is a design-lead pass because of one real conflict:** the map pans on horizontal drag (Leaflet), so a left-to-right swipe on the Map tab is a pan. The back-swipe MUST be scoped to a **narrow left-edge zone** (match the iOS/Android ~20px edge) and must not break map panning or list scrolling. Design-lead owns: the edge-zone width, the horizontal-distance + direction threshold (and rejecting mostly-vertical swipes so it doesn't fight scroll), whether to show an interactive drag-follow (the sheet slides out under the finger, iOS-style) or a simple threshold-triggered dismiss, and `prefers-reduced-motion` handling.
+
+**Acceptance:**
+- A left-edge left-to-right swipe on mobile closes an open spot sheet (returns to map/list), and on the standalone `/spot/[id]` page returns home; verified in the installed/standalone PWA context, not just mobile browser.
+- Map panning and vertical list scrolling are NOT degraded (test a horizontal drag that starts away from the edge = still pans the map; a mostly-vertical swipe = still scrolls).
+- Hardware/browser Back also closes the sheet now (the `pushState` + `popstate` fix), instead of leaving the site.
+- The back button / existing dismiss paths still work; gesture is additive, not the only way. No console errors; design-lead sign-off; verified at 390px.
+
 ## Owner item, added 2026-07-18 (email polish; queued top-most on purpose)
 
 ## 68. [done] Polish the alert + confirm email design and copy: brand header, visual hierarchy, color (deployed 2026-07-18)
@@ -195,6 +215,37 @@ Problems to fix:
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
+
+## 70. [ready] Full-screen mobile spot sheet is not an accessible dialog: no focus move, no focus trap, no role (a11y)
+
+**Found by the 2026-07-18 verify loop.** Items 63/64 made the mobile spot sheet a viewport-covering surface (`position:fixed; inset:0`, `components/SpotDrawer.tsx` panel ~line 224), but it is not marked or managed as a modal dialog. Measured at 390px, opening a spot from the list:
+- **No `role="dialog"` / `aria-modal="true"`** on the sheet (grep of `SpotDrawer.tsx` confirms none), so a screen reader is never told a dialog opened.
+- **Focus is not moved into the sheet** on open. It stays on the list row behind, so a keyboard user's focus is on content now hidden under a full-screen surface.
+- **Focus is not trapped.** Tabbing leaks to the list behind the full-screen sheet on the first Tab. The user tabs through invisible content they cannot see, with no way to tell where focus is.
+
+Escape-to-close already works, and the × back button has a label, those parts are fine. The gap got worse when the sheet went full-screen: with the old peek sheet the list behind was partly visible, so leaked focus was less disorienting; now the sheet covers everything, so tabbing "behind" it is a real trap (WCAG 2.4.3 Focus Order, 4.1.2 Name/Role/Value, and the modal dialog pattern).
+
+**Scope: the full-screen MOBILE sheet only.** The desktop drawer is a persistent side panel, not a modal (the map + list stay interactive beside it), so it should NOT get a focus trap; do not change desktop behavior.
+
+**Fix (standard modal-dialog pattern):**
+- Add `role="dialog"` + `aria-modal="true"` + `aria-labelledby` pointing at the spot-name heading, on the full-screen sheet container (kill-switch-ON / `forceFull` branch only).
+- On open, move focus into the sheet (the back button or the sheet container); on close, restore focus to the element that opened it (the list row / map pin).
+- Trap Tab / Shift+Tab within the sheet while open.
+- Make the background inert while the sheet is open (`inert` on the app shell, or `aria-hidden`), so AT and Tab cannot reach the covered list/map.
+- Keep Escape-to-close and the existing dismiss paths. Verify at 390px with a keyboard (focus stays in, Escape closes, focus returns) and ideally a screen reader.
+
+**Acceptance:** opening a mobile spot sheet moves focus into it, traps Tab within it, exposes it as a modal dialog to AT, and returns focus on close; desktop side-panel behavior unchanged; no console errors.
+
+## 69. [ready] Alert email grammar: "a 8-hour window" should be "an 8-hour window" (a/an agreement on the window length)
+
+**Found by the 2026-07-18 verify loop, rendering the redesigned alert email (item 68).** 4 of the 7 alert copy variants hardcode the indefinite article "a" before "{lengthHours}-hour", so an 8-hour window (common) renders "**a 8-hour window**", and 11- or 18-hour windows would read "a 11-hour" / "a 18-hour". English wants "an" before those (they start with a vowel sound: eight, eleven, eighteen). Confirmed visible in the shipped email render.
+
+Occurrences in `lib/email/templates.ts` (`bodyNoWind` / `bodyWithWind` / `preheaderNoWind` / `preheaderWithWind` each): **baseline** (lines ~200-204, "about a {lengthHours}-hour window"), **friendly-local** (~224-228, "a {lengthHours}-hour stretch"), **weather-nerd** (~260-264, "A {lengthHours}-hour run"), **pencil-it-in** (~272-276, "a {lengthHours}-hour window"). The other 3 variants (plain-report, hours-first, your-watchlist) phrase it without an article and are fine.
+
+**Fix (small, editor + a helper):**
+- Add a tiny `indefiniteArticle(n)` helper (returns "an" for numbers spoken with a leading vowel: 8, 11, 18, 80-89, ...; "a" otherwise) and feed it into `fill()` as an `{a}`/`{A}` placeholder (capitalized form for the sentence-initial weather-nerd variant), rather than editing 16 strings by hand and re-introducing the bug on the next variant.
+- Keep it in both the HTML and the `text/plain`/preheader paths (they share the same variant strings, so one fix covers all).
+- Add a unit test asserting an 8-hour and an 11-hour window produce "an" for each affected variant; `lib/email/templates.test.ts` is the home. No em dashes.
 
 ## 62. [done] `--muted` body text now passes WCAG AA contrast (deployed 2026-07-18)
 
