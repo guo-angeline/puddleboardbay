@@ -914,3 +914,11 @@ accepting pushes k weeks on) and `queries/active_subscriber_retention.sql`
 retention numbers; PostHog `retention_w1.sql` remains device-based and
 Safari-censored past ~7 days and must be labelled as such. GLOSSARY gains a
 "Long-horizon retention" subsection.
+
+---
+
+## 2026-07-19: native iOS app scaffolding, analytics stubs only (no change to any live event)
+
+The React Native (Expo) iOS app landed in `native/`. Its `native/src/lib/analytics.ts` is a NO-OP stub: `trackIntent`/`trackSystem`/`setPersona` exist so call sites compile, but nothing is emitted from the native app yet. The real posthog-react-native wrapper (shared typed event unions, `display_mode: "native_ios"`) ships in a later milestone with its own entry here.
+
+- **Comparability:** none. Zero events are emitted by the native app as of this entry; every PostHog series is untouched. When native emission begins (future entry), `display_mode` gains a `"native_ios"` value and volumes rise from added surface, not behavior change.

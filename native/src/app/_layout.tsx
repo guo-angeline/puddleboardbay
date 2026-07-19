@@ -17,9 +17,13 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { configureApi } from "../api/base";
 import { colors } from "../theme/tokens";
 
 SplashScreen.preventAutoHideAsync();
+// Point the shared conditions module at the production tides proxy + NWS UA
+// before anything fetches.
+configureApi();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
