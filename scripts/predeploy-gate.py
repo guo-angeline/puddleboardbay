@@ -99,6 +99,27 @@ def spots_latlng_changed(cwd):
     return False
 
 
+def owner_approved_protected(cwd):
+    """A DEPLOY_APPROVAL file at the repo root containing the current HEAD sha
+    (full or short prefix, >=7 chars) releases the standing PROTECTED push/cron
+    gate for THAT EXACT commit: it is written only after the owner explicitly
+    reviews and approves the deploy in chat, and deleted right after the
+    deploy. Any further commit invalidates it. It does NOT release the D19
+    coordinate gate or dynamic Gates: lines. (Added 2026-07-19 when the owner
+    approved the native-push backend deploy live in session.)"""
+    try:
+        with open(os.path.join(cwd, "DEPLOY_APPROVAL"), "r", encoding="utf-8") as f:
+            approved = f.read().strip()
+    except OSError:
+        return False
+    if len(approved) < 7:
+        return False
+    head = git(cwd, "rev-parse", "HEAD")
+    if head.returncode != 0:
+        return False
+    return head.stdout.strip().startswith(approved)
+
+
 def open_decision_gates(cwd):
     """[(decision_id, [patterns])] for OPEN decisions carrying a `Gates:` line."""
     path = os.path.join(cwd, "DECISIONS.md")
@@ -137,7 +158,7 @@ def find_block(cwd):
         reasons.append("web/data/spots.json lat/lng changed (D19: owner reads the coordinate diff before it reaches the alert crons)")
 
     protected_hits = sorted({f for f in files for p in PROTECTED_PATTERNS if matches(f, p)})
-    if protected_hits:
+    if protected_hits and not owner_approved_protected(cwd):
         reasons.append("push/cron/subscription surface changed (" + ", ".join(protected_hits) + "): studio.md PROTECTED, always owner-reviewed")
 
     for did, pats in open_decision_gates(cwd):
