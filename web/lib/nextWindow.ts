@@ -1,5 +1,5 @@
 import { evaluateGoodWindow, DEFAULT_HORIZON_DAYS, type GoodWindow, type HourlyPeriod } from "@/lib/alerts/conditions-window";
-import { precomputedForecastUrl } from "@/lib/conditions";
+import { conditionsFetchConfig, precomputedForecastUrl } from "@/lib/conditions";
 
 export type NextWindowResult = { ok: true; window: GoodWindow | null } | { ok: false };
 
@@ -36,16 +36,19 @@ export function getNextWindow(
       // missing from the bundle resolves the gridpoint live (two hops).
       const precomputed = precomputedForecastUrl(lat, lng);
       let forecastUrl: string | null = precomputed ? `${precomputed}/hourly` : null;
+      // Rides the same fetch adapter as lib/conditions.ts: no-op on web,
+      // explicit NWS User-Agent on native (browsers forbid setting UA).
+      const nwsHeaders = { Accept: "application/geo+json", ...conditionsFetchConfig().headers };
       if (!forecastUrl) {
         const pointRes = await fetch(`https://api.weather.gov/points/${lat.toFixed(4)},${lng.toFixed(4)}`, {
-          headers: { Accept: "application/geo+json" },
+          headers: nwsHeaders,
         });
         if (!pointRes.ok) return { ok: false };
         const point = (await pointRes.json()) as { properties?: { forecastHourly?: string } };
         forecastUrl = point.properties?.forecastHourly ?? null;
       }
       if (!forecastUrl) return { ok: false };
-      const fRes = await fetch(forecastUrl, { headers: { Accept: "application/geo+json" } });
+      const fRes = await fetch(forecastUrl, { headers: nwsHeaders });
       if (!fRes.ok) return { ok: false };
       const data = (await fRes.json()) as { properties?: { periods?: HourlyPeriod[] } };
       const periods = data.properties?.periods ?? [];

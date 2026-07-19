@@ -29,6 +29,32 @@ import gridpointsData from "@/data/gridpoints.json";
 /** Precomputed "<lat4>,<lng4>" -> NWS forecast URL. See precompute_gridpoints.py. */
 const PRECOMPUTED_GRIDPOINTS = gridpointsData as Record<string, string>;
 
+/**
+ * Fetch adapter for the native app. The web build never calls configure: the
+ * tides fetch stays same-origin (`/api/tides`) and NWS gets no extra headers
+ * (browsers manage User-Agent themselves and forbid setting it). The React
+ * Native app calls `configureConditionsFetch` once at startup with
+ * `apiBase: "https://paddletowater.com"` (its tides proxy) and an explicit
+ * User-Agent for api.weather.gov, whose rate limiter dislikes the default
+ * CFNetwork agent. Keeping this here, not forked in native/, keeps one
+ * conditions code path for both platforms.
+ */
+let conditionsApiBase = "";
+let conditionsExtraHeaders: Record<string, string> = {};
+
+export function configureConditionsFetch(opts: {
+  apiBase?: string;
+  headers?: Record<string, string>;
+}): void {
+  if (opts.apiBase !== undefined) conditionsApiBase = opts.apiBase.replace(/\/+$/, "");
+  if (opts.headers !== undefined) conditionsExtraHeaders = { ...opts.headers };
+}
+
+/** Current adapter values; consumed by lib/nextWindow.ts so its NWS fetches ride the same config. */
+export function conditionsFetchConfig(): { apiBase: string; headers: Record<string, string> } {
+  return { apiBase: conditionsApiBase, headers: conditionsExtraHeaders };
+}
+
 /** The bundled forecast URL for a spot, or null if it wasn't precomputed. */
 export function precomputedForecastUrl(lat: number, lng: number): string | null {
   return PRECOMPUTED_GRIDPOINTS[`${lat.toFixed(4)},${lng.toFixed(4)}`] ?? null;
@@ -193,7 +219,7 @@ async function fetchTides(
   const timer = setTimeout(() => controller.abort(), TIDE_CLIENT_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(`/api/tides?${params.toString()}`, { signal: controller.signal });
+    res = await fetch(`${conditionsApiBase}/api/tides?${params.toString()}`, { signal: controller.signal });
   } finally {
     clearTimeout(timer);
     signal.removeEventListener("abort", onCallerAbort);
@@ -246,7 +272,7 @@ export function paddleabilityFromWind(maxMph: number): Paddleability {
 async function resolveGridpoint(key: string, signal: AbortSignal): Promise<string | null> {
   const pointRes = await fetch(`https://api.weather.gov/points/${key}`, {
     signal,
-    headers: { Accept: "application/geo+json" },
+    headers: { Accept: "application/geo+json", ...conditionsExtraHeaders },
   });
   if (!pointRes.ok) throw new Error(`points ${pointRes.status}`);
   const point = (await pointRes.json()) as { properties?: { forecast?: string } };
@@ -260,14 +286,20 @@ async function fetchWind(lat: number, lng: number, signal: AbortSignal): Promise
   let forecastUrl = precomputed ?? (await resolveGridpoint(key, signal));
   if (!forecastUrl) return null;
 
-  let fRes = await fetch(forecastUrl, { signal, headers: { Accept: "application/geo+json" } });
+  let fRes = await fetch(forecastUrl, {
+    signal,
+    headers: { Accept: "application/geo+json", ...conditionsExtraHeaders },
+  });
   if (!fRes.ok && precomputed) {
     // A precomputed gridpoint can go stale if NWS re-grids (rare). Re-resolve
     // live once and retry before giving up, so a stale bundle self-heals.
     const fresh = await resolveGridpoint(key, signal);
     if (fresh && fresh !== forecastUrl) {
       forecastUrl = fresh;
-      fRes = await fetch(forecastUrl, { signal, headers: { Accept: "application/geo+json" } });
+      fRes = await fetch(forecastUrl, {
+        signal,
+        headers: { Accept: "application/geo+json", ...conditionsExtraHeaders },
+      });
     }
   }
   if (!fRes.ok) throw new Error(`forecast ${fRes.status}`);

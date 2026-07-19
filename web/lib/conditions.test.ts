@@ -20,3 +20,25 @@ describe("precomputed wind gridpoints (item 53: one-hop wind fetch)", () => {
     expect(precomputedForecastUrl(0, 0)).toBeNull();
   });
 });
+
+describe("conditions fetch adapter (native app config; web must stay same-origin)", () => {
+  it("defaults to an empty apiBase and no extra headers (web behavior unchanged)", async () => {
+    const { conditionsFetchConfig } = await import("./conditions");
+    expect(conditionsFetchConfig()).toEqual({ apiBase: "", headers: {} });
+  });
+
+  it("configure sets the base (trailing slash trimmed) and headers; reconfigure resets", async () => {
+    const { configureConditionsFetch, conditionsFetchConfig } = await import("./conditions");
+    configureConditionsFetch({
+      apiBase: "https://paddletowater.com/",
+      headers: { "User-Agent": "paddle-to-water-ios" },
+    });
+    expect(conditionsFetchConfig()).toEqual({
+      apiBase: "https://paddletowater.com",
+      headers: { "User-Agent": "paddle-to-water-ios" },
+    });
+    // Restore the web default so later tests in this file see web behavior.
+    configureConditionsFetch({ apiBase: "", headers: {} });
+    expect(conditionsFetchConfig()).toEqual({ apiBase: "", headers: {} });
+  });
+});
