@@ -44,7 +44,7 @@ def edited_text(tool_input):
 def touches_instrumentation(tool_input):
     path = (tool_input or {}).get("file_path", "") if isinstance(tool_input, dict) else ""
     norm = path.replace("\\", "/")
-    if norm.endswith("lib/analytics.ts"):
+    if norm.endswith("lib/analytics.ts") or norm.endswith("lib/analytics-events.ts") or norm.endswith("native/src/lib/analytics.ts"):
         return True
     text = edited_text(tool_input)
     return any(tok in text for tok in CALL_TOKENS)

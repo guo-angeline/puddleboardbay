@@ -12,7 +12,7 @@ const manifest = JSON.parse(
   >;
 };
 const drawer = fs.readFileSync(path.join(ROOT, "components", "SpotDrawer.tsx"), "utf-8");
-const analytics = fs.readFileSync(path.join(ROOT, "lib", "analytics.ts"), "utf-8");
+const analytics = fs.readFileSync(path.join(ROOT, "lib", "analytics-events.ts"), "utf-8");
 
 describe("item 31 spot photos", () => {
   it("every manifest photo file exists on disk and lives under /spot-photos/", () => {

@@ -1,6 +1,9 @@
+import * as Linking from "expo-linking";
 import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   StyleSheet,
@@ -22,8 +25,12 @@ import FilterBar, { type Filters } from "../components/FilterBar";
 import MapPane from "../components/MapPane";
 import SpotList from "../components/SpotList";
 import SpotSheet from "../components/SpotSheet";
-import { setPersona, trackIntent } from "../lib/analytics";
-import { emit } from "../state/events";
+import { isInternalDevice, setInternalDevice, setPersona, trackIntent } from "../lib/analytics";
+import AlertInterstitial from "../push/AlertInterstitial";
+import AlertPrompt from "../push/AlertPrompt";
+import { parseDeepLink } from "../push/deepLink";
+import { readStashedToken, reportAlertOpen, syncWatchedSpots } from "../push/register";
+import { emit, on } from "../state/events";
 import {
   loadFavorites,
   loadRecentIds,
@@ -83,6 +90,86 @@ export default function HomeScreen() {
   useEffect(() => {
     emit("drawerchange", { open: !!selected });
   }, [selected]);
+
+  // Alert-tap interstitial context: set when the app opened from a push naming
+  // a window; cleared on dismiss or when the user navigates elsewhere.
+  const [alertBanner, setAlertBanner] = useState<{ spotId: number; windowLabel: string } | null>(
+    null
+  );
+
+  // Whether push alerts are on, for the Watching header's "Turn on alerts".
+  const [alertsOn, setAlertsOn] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    const sync = () => {
+      void readStashedToken().then((t) => {
+        if (!cancelled) setAlertsOn(!!t);
+      });
+    };
+    sync();
+    const off = on("alertsenabled", sync);
+    return () => {
+      cancelled = true;
+      off();
+    };
+  }, []);
+
+  // Deep links: cold-start initial URL, foreground links, and push-notification
+  // taps (the payload's data.url is a site-relative link, same shape as web).
+  const handledInitialUrl = useRef(false);
+  function handleLink(url: string | null | undefined) {
+    if (!url) return;
+    const link = parseDeepLink(url);
+    if (!link || link.spotId === null) return;
+    const found = ALL_SPOTS.find((s) => s.id === link.spotId);
+    if (!found) return;
+    setSelected(found);
+    if (link.from === "alert") {
+      trackIntent("alert_clicked", {
+        spot_id: found.id,
+        spot_name: found.water,
+        region: found.region,
+        reminder_tap: !link.windowLabel,
+      });
+      if (link.token) reportAlertOpen(link.token, found.id);
+      if (link.windowLabel) setAlertBanner({ spotId: found.id, windowLabel: link.windowLabel });
+    }
+    trackIntent("spot_viewed", {
+      spot_id: found.id,
+      spot_name: found.water,
+      region: found.region,
+      difficulty: found.difficulty,
+      has_fee: found.has_fee,
+      source: link.from === "alert" ? "alert" : link.from === "share" ? "share" : "deeplink",
+    });
+  }
+  const url = Linking.useURL();
+  useEffect(() => {
+    // useURL covers both the cold-start initial URL and foreground links; the
+    // ref just keeps a re-render from re-handling the same URL.
+    if (handledInitialUrl.current === (url != null)) {
+      if (url == null) return;
+    }
+    handledInitialUrl.current = url != null;
+    handleLink(url);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as { url?: string } | null;
+      handleLink(data?.url);
+    });
+    return () => sub.remove();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-POST the watched set when it changes (no-ops while unsubscribed).
+  const savedIdsKey = [...favorites].sort((a, b) => a - b).join(",");
+  useEffect(() => {
+    if (!favoritesLoaded) return;
+    void syncWatchedSpots([...favorites]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedIdsKey, favoritesLoaded]);
 
   useEffect(() => {
     if (!favoritesLoaded) return;
@@ -178,6 +265,7 @@ export default function HomeScreen() {
 
   function deselect() {
     setSelected(null);
+    setAlertBanner(null);
   }
 
   function handleSelect(spot: Spot, source: string = "list") {
@@ -299,7 +387,24 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={goHome} style={styles.wordmarkRow} accessibilityRole="button">
+        <Pressable
+          onPress={goHome}
+          onLongPress={() => {
+            // Hidden internal-device toggle (owner exclusion, mirrors the web's
+            // ptw-internal localStorage flag). Long-press the wordmark.
+            void setInternalDevice(!isInternalDevice()).then(() => {
+              Alert.alert(
+                isInternalDevice() ? "Internal device" : "Internal off",
+                isInternalDevice()
+                  ? "Analytics from this device are now excluded."
+                  : "Analytics from this device are now included."
+              );
+            });
+          }}
+          delayLongPress={1200}
+          style={styles.wordmarkRow}
+          accessibilityRole="button"
+        >
           <Image source={icon} style={styles.headerIcon} />
           <Text style={styles.wordmark}>Paddle to Water</Text>
         </Pressable>
@@ -393,6 +498,8 @@ export default function HomeScreen() {
             condBySpot={condBySpot}
             recentSpots={recentSpots}
             recentCondBySpot={recentCond}
+            alertsOn={alertsOn}
+            onEnableAlerts={() => emit("enablealerts")}
           />
         </View>
         <View style={[styles.pane, activeTab !== "map" && styles.paneHidden]}>
@@ -433,7 +540,18 @@ export default function HomeScreen() {
             onToggleFavorite={toggleFavorite}
           />
         )}
+
+        {/* Push-tap interstitial over the sheet, when the alert named a window */}
+        {selected && alertBanner && alertBanner.spotId === selected.id && (
+          <AlertInterstitial
+            spot={selected}
+            windowLabel={alertBanner.windowLabel}
+            onDismiss={() => setAlertBanner(null)}
+          />
+        )}
       </View>
+
+      <AlertPrompt watchedSpotIds={[...favorites]} />
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </SafeAreaView>

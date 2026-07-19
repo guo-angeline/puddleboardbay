@@ -17,7 +17,7 @@ import { launchDirectionTip } from "@/lib/launchDirection";
  * map-legend-stacking.test.ts).
  */
 const interstitialSrc = fs.readFileSync(path.resolve(__dirname, "AlertInterstitial.tsx"), "utf-8");
-const analyticsSrc = fs.readFileSync(path.resolve(__dirname, "..", "lib", "analytics.ts"), "utf-8");
+const analyticsSrc = fs.readFileSync(path.resolve(__dirname, "..", "lib", "analytics-events.ts"), "utf-8");
 
 describe("AlertInterstitial launch-direction tip contract", () => {
   it("renders/reports true for a qualifying direction and wind", () => {

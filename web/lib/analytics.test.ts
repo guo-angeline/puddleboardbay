@@ -4,8 +4,10 @@ import path from "node:path";
 import posthog from "posthog-js";
 import { trackIntent, trackSystem } from "@/lib/analytics";
 
+// Event unions + prop contracts moved to analytics-events.ts (2026-07-19,
+// shared with the native emitter); the source assertions read that file.
 const analyticsSrc = fs.readFileSync(
-  path.resolve(__dirname, "analytics.ts"),
+  path.resolve(__dirname, "analytics-events.ts"),
   "utf-8"
 );
 
@@ -183,9 +185,16 @@ describe("enrollment_prompt_suppressed source placement", () => {
     const entryEnd = propMapBlock.indexOf("};", entryStart) + 2;
     const entry = propMapBlock.slice(entryStart, entryEnd);
 
-    expect(entry).toMatch(/platform:\s*"standalone"\s*\|\s*"ios"\s*\|\s*"android"\s*\|\s*"desktop"\s*\|\s*"unknown"/);
-    expect(entry).toMatch(
-      /trigger:\s*"first_save"\s*\|\s*"standalone_relaunch"\s*\|\s*"manual"\s*\|\s*"return_session"\s*\|\s*"conditions_interest"/
+    // Since the 2026-07-19 native split the web platforms live in the shared
+    // OptInPlatform union; this entry adds "unknown" on top of it. Assert both
+    // halves so the members can't silently vanish from either place.
+    expect(entry).toMatch(/platform:\s*OptInPlatform\s*\|\s*"unknown"/);
+    expect(analyticsSrc).toMatch(
+      /OptInPlatform\s*=\s*"standalone"\s*\|\s*"ios"\s*\|\s*"android"\s*\|\s*"desktop"\s*\|\s*"native_ios"/
+    );
+    expect(entry).toMatch(/trigger:\s*OptInTrigger/);
+    expect(analyticsSrc).toMatch(
+      /OptInTrigger\s*=\s*\|?\s*"first_save"\s*\|\s*"standalone_relaunch"\s*\|\s*"manual"\s*\|\s*"return_session"\s*\|\s*"conditions_interest"/
     );
     expect(entry).toMatch(/reconciled_this_session:\s*boolean/);
     expect(entry).not.toMatch(/channel:/);

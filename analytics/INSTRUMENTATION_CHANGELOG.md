@@ -922,3 +922,15 @@ Safari-censored past ~7 days and must be labelled as such. GLOSSARY gains a
 The React Native (Expo) iOS app landed in `native/`. Its `native/src/lib/analytics.ts` is a NO-OP stub: `trackIntent`/`trackSystem`/`setPersona` exist so call sites compile, but nothing is emitted from the native app yet. The real posthog-react-native wrapper (shared typed event unions, `display_mode: "native_ios"`) ships in a later milestone with its own entry here.
 
 - **Comparability:** none. Zero events are emitted by the native app as of this entry; every PostHog series is untouched. When native emission begins (future entry), `display_mode` gains a `"native_ios"` value and volumes rise from added surface, not behavior change.
+
+---
+
+## 2026-07-19 (2): native iOS app emits real events; shared contracts split to lib/analytics-events.ts; display_mode gains "native_ios" (props-changed)
+
+Supersedes today's earlier "stubs only" entry. Three changes, one shipping unit:
+
+1. **Shared contracts.** The event-name unions + `EventPropMap` moved from `web/lib/analytics.ts` to `web/lib/analytics-events.ts`; both the web emitter (posthog-js) and the new native emitter (`native/src/lib/analytics.ts`, posthog-react-native) compile against them, so names/props cannot drift between platforms. No event was renamed and no prop removed.
+2. **`display_mode` gains `"native_ios"`** (super property; previously `standalone` | `browser`). The `platform` prop on the enrollment events (`alert_optin_shown`/`_result`/`_dismissed`, `email_capture_submitted`, `enrollment_prompt_suppressed`) gains the same `"native_ios"` member (typed via the new shared `OptInPlatform`).
+3. **Native emission starts** once the owner sets `EXPO_PUBLIC_POSTHOG_KEY` in `native/.env` (until then the native app emits nothing). Native events stamp `event_category` identically. Native's "genuine view" dwell gate is a 1000ms mount-dwell inside the always-full-screen sheet (`useGenuineDwell`), mirroring the web's IntersectionObserver+1000ms; `conditions_loaded.trigger` is always `"mount"` on native (no foreground-refresh port yet). Owner exclusion on native is the `ptw-internal` AsyncStorage flag gated inside the wrapper (no `before_send` in posthog-react-native); the owner's native `person_id` must ALSO be added to analytics/EXCLUDED_PERSONS.md once first seen.
+
+- **Comparability:** every event's total volume can rise from the date native emission begins, because a new surface starts reporting, not because web behavior changed. Segment by `display_mode` for apples-to-apples web series (`standalone`/`browser` slices are unaffected). `alert_optin_shown.channel` on native is always `"push"` (single-channel card; the web dual-CTA `"both"` value never appears on native). Simulator/dev traffic before the owner's device exclusion lands should be treated as internal.
