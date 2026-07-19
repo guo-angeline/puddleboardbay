@@ -5,7 +5,7 @@ layout: TWO PACKAGES since 2026-07-19: the Next.js site lives in web/ (web/app, 
 test: npm test (root proxy for `npm --prefix web test`; native tests: npm run test:native)
 lint: npm run lint
 build: npm run build (must pass before every deploy)
-deploy: vercel --prod --yes --cwd web (CLI is the ONLY path to production; there is no git integration, a commit without a deploy changes nothing live). The Vercel project link lives in web/.vercel. After a verified deploy, move the pointer: git tag -f deployed-prod HEAD. The predeploy-gate.py hook diffs deployed-prod against the tree and stops a deploy that touches gated paths (a CHANGE to an existing spot's lat/lng per D19/D23, push/cron/subscription code, or any path on a Gates: line of an OPEN decision).
+deploy: vercel --prod --yes --cwd web (CLI is the ONLY path to production; there is no git integration, a commit without a deploy changes nothing live). The Vercel project link lives in web/.vercel. After a verified deploy, move the pointer: git tag -f deployed-prod HEAD. The predeploy-gate.py hook diffs deployed-prod against the tree and stops a deploy that touches gated paths (a CHANGE to an existing spot's lat/lng per D19/D23, push/cron/subscription code, or any path on a Gates: line of an OPEN decision). When the OWNER explicitly approves a push-surface deploy in chat, write the HEAD sha to a repo-root DEPLOY_APPROVAL file (gitignored): it releases ONLY the PROTECTED reason, only for that exact sha, and must be deleted right after the deploy. Never write it without a live owner approval.
 previewDeploy: vercel --cwd web (non-prod preview URL for verifier checks)
 liveUrl: https://paddletowater.com
 protectedBranches: [main]
