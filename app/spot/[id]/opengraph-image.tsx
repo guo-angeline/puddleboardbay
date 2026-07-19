@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { ALL_SPOTS } from "@/lib/spots";
 import { DIFFICULTY_LABEL } from "@/lib/types";
 
@@ -6,6 +8,10 @@ import { DIFFICULTY_LABEL } from "@/lib/types";
 export const alt = "Paddleboard and kayak launch spot details on Paddle to Water";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+const markSrc =
+  "data:image/png;base64," +
+  readFileSync(join(process.cwd(), "public/og-mark.png")).toString("base64");
 
 export function generateStaticParams() {
   return ALL_SPOTS.map((s) => ({ id: String(s.id) }));
@@ -20,7 +26,7 @@ export default async function OGImage(
   if (!spot) {
     return new ImageResponse(
       (
-        <div style={{ background: "#3730A3", width: "100%", height: "100%", display: "flex" }} />
+        <div style={{ background: "#0B2A47", width: "100%", height: "100%", display: "flex" }} />
       ),
       { ...size }
     );
@@ -43,7 +49,7 @@ export default async function OGImage(
         style={{
           width: "100%",
           height: "100%",
-          background: "#3730A3",
+          background: "#0B2A47",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
@@ -53,6 +59,8 @@ export default async function OGImage(
         <div
           style={{
             display: "flex",
+            alignItems: "center",
+            gap: 16,
             fontSize: 22,
             color: "rgba(255,255,255,0.6)",
             letterSpacing: 3,
@@ -61,6 +69,7 @@ export default async function OGImage(
             fontFamily: "sans-serif",
           }}
         >
+          <img src={markSrc} width={44} height={44} alt="" style={{ display: "flex" }} />
           {`Paddle to Water  ·  ${spot.region}`}
         </div>
         <div

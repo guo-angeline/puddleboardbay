@@ -562,9 +562,11 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
         <button
           type="button"
           onClick={goHome}
-          className="font-['Newsreader'] text-xl font-bold text-(--dark) rounded-sm hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
+          className="flex items-center gap-2 font-['Newsreader'] text-xl font-bold text-(--dark) rounded-sm hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
           aria-label="Paddle to Water, return home"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 shrink-0 rounded-[22%]" />
           Paddle to Water
         </button>
         <div className="flex items-center gap-2 md:gap-3">
