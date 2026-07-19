@@ -33,9 +33,9 @@ import fnmatch
 import subprocess
 
 DEPLOY_TAG = "deployed-prod"
-SPOTS = "data/spots.json"
+SPOTS = "web/data/spots.json"
 # Push / cron send behavior and subscription storage (studio.md PROTECTED).
-PROTECTED_PATTERNS = ("app/api/cron/*", "app/api/alerts/*")
+PROTECTED_PATTERNS = ("web/app/api/cron/*", "web/app/api/alerts/*")
 
 
 def git(cwd, *args):
@@ -52,11 +52,26 @@ def tag_exists(cwd):
 
 def changed_files(cwd):
     """Files differing between the deploy tag and the working tree (the deploy
-    ships the tree, so compare against the tree, not just HEAD)."""
-    out = git(cwd, "diff", DEPLOY_TAG, "--name-only")
+    ships the tree, so compare against the tree, not just HEAD).
+
+    Rename-aware (2026-07-19 web/ restructure): a content-identical rename
+    (R100, e.g. app/api/cron/x.ts -> web/app/api/cron/x.ts) is NOT a change to
+    send behavior and does not gate. A rename WITH edits (R<100) reports the
+    new path as changed, so real content changes still gate."""
+    out = git(cwd, "diff", DEPLOY_TAG, "--name-status", "-M100%")
     if out.returncode != 0:
         return []
-    return [ln.strip().replace("\\", "/") for ln in out.stdout.splitlines() if ln.strip()]
+    files = []
+    for ln in out.stdout.splitlines():
+        parts = ln.strip().split("\t")
+        if len(parts) < 2:
+            continue
+        status = parts[0]
+        if status == "R100":
+            continue  # pure rename, content identical
+        # For renames/copies the last column is the new path; else it's the path.
+        files.append(parts[-1].replace("\\", "/"))
+    return files
 
 
 def matches(path, pattern):
@@ -119,7 +134,7 @@ def find_block(cwd):
 
     reasons = []
     if SPOTS in files and spots_latlng_changed(cwd):
-        reasons.append("data/spots.json lat/lng changed (D19: owner reads the coordinate diff before it reaches the alert crons)")
+        reasons.append("web/data/spots.json lat/lng changed (D19: owner reads the coordinate diff before it reaches the alert crons)")
 
     protected_hits = sorted({f for f in files for p in PROTECTED_PATTERNS if matches(f, p)})
     if protected_hits:

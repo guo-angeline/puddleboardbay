@@ -2,13 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Repo layout (since 2026-07-19)
+
+Two packages, intentionally NOT npm workspaces (hoisting would let the native app's Metro bundler resolve the web app's React copy):
+
+- **`web/`**: the Next.js site (everything that used to live at the repo root: `web/app`, `web/components`, `web/lib`, `web/data`, `web/public`, `web/scripts`, its `package.json` + lockfile + `node_modules`, `vercel.json`, `.vercel` link, `.env.local`). Any repo-root-relative path in older notes/docs (`lib/...`, `app/...`, `data/spots.json`) now means `web/lib/...` etc.
+- **`native/`**: the Expo iOS app. It imports the pure shared modules (`web/lib/conditions`, `web/lib/spots`, `web/lib/search`, types, alert evaluator, `web/data/*.json`) directly from `web/` via a Metro `@/` alias, so spot data and conditions logic have one source of truth. Keep shared `web/lib` modules free of DOM/Next imports at module scope.
+- Root: studio state (ROADMAP/DECISIONS/BRIEFINGS), `analytics/`, `reports/`, `docs/`, `raw-data/`, `supabase/migrations/`, `.claude/`, hook scripts in `scripts/`, and a proxy `package.json` so `npm run dev` / `npm test` etc. still work from the root.
+
 ## Commands
 
 ```bash
-npm run dev       # start dev server at http://localhost:3000
+npm run dev       # start web dev server at http://localhost:3000 (proxies into web/)
 npm run build     # production build (run before every deploy)
 npm run lint      # ESLint check
-vercel --prod --yes  # deploy to production (https://sup-spots.vercel.app)
+npm run ios       # run the Expo iOS app (proxies into native/)
+vercel --prod --yes --cwd web  # deploy to production (https://sup-spots.vercel.app)
 ```
 
 Unit tests run with `npm test` (vitest; covers the alert evaluator, selection, and subscribe validation). Playwright is installed (`@playwright/test`) for manual browser smoke tests when verifying UI changes.
@@ -95,7 +104,7 @@ When you produce an analytics report (user counts, retention, funnels, adoption)
 
 ## Deployment
 
-Vercel project is linked via `.vercel/project.json` (gitignored). Run `vercel --prod --yes` from the project root. Pages build static (`○` in the build output); the two `/api` routes are server functions (`ƒ`). Deploying is the only way changes go live: there is no git integration, so a commit without a `vercel --prod` deploy changes nothing in production (this bit us once: instrumentation sat undeployed for 3 days and the analytics window was polluted).
+Vercel project is linked via `web/.vercel/project.json` (gitignored). Run `vercel --prod --yes --cwd web` from the repo root (the CLI uploads `web/` as the project root; `web/vercel.json` carries the crons). Pages build static (`○` in the build output); the two `/api` routes are server functions (`ƒ`). Deploying is the only way changes go live: there is no git integration, so a commit without a `vercel --prod` deploy changes nothing in production (this bit us once: instrumentation sat undeployed for 3 days and the analytics window was polluted).
 
 ### Scheduled jobs (two schedulers, do not lose the second one)
 
