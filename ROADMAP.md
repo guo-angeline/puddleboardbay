@@ -266,7 +266,9 @@ Escape-to-close already works, and the × back button has a label, those parts a
 
 **Acceptance:** opening a mobile spot sheet moves focus into it, traps Tab within it, exposes it as a modal dialog to AT, and returns focus on close; desktop side-panel behavior unchanged; no console errors.
 
-## 69. [ready] Alert email grammar: "a 8-hour window" should be "an 8-hour window" (a/an agreement on the window length)
+## 69. [done] Alert email grammar: "a 8-hour window" now reads "an 8-hour window" (a/an agreement on the window length, deployed 2026-07-20)
+
+**Shipped 2026-07-20 (studio loop, owner-requested).** Added `indefiniteArticle(n)` to `lib/email/templates.ts` (returns "an" for numbers spoken with a leading vowel, 8/11/18 and the 80s; "a" otherwise) and fed it into `fill()` as `{a}` (and `{A}` for the sentence-initial weather-nerd variant) rather than hand-editing 16 strings. Replaced the hardcoded article before `{lengthHours}-hour` in the 4 affected variants (baseline, friendly-local, weather-nerd, pencil-it-in); the other 3 phrase it without an article. One placeholder covers the body + preheader and the HTML + text/plain twins (they share the variant strings), so a future variant can't re-introduce the bug. 6 new tests (an 8-/11-hour, a 3-hour regression, capitalized "An 8-hour run" sentence start, and a guard that "a 8/11/18" never renders); 430 tests total, lint + tsc + build clean. Not a gated path (email copy, not cron/send behavior); no legal element touched (unsubscribe, postal, safety line all unchanged). Deployed `09c4dce`. Real-inbox rendering across clients is the owner's final eyeball per the email-verification convention, but the rendered strings are asserted in the suite.
 
 **Found by the 2026-07-18 verify loop, rendering the redesigned alert email (item 68).** 4 of the 7 alert copy variants hardcode the indefinite article "a" before "{lengthHours}-hour", so an 8-hour window (common) renders "**a 8-hour window**", and 11- or 18-hour windows would read "a 11-hour" / "a 18-hour". English wants "an" before those (they start with a vowel sound: eight, eleven, eighteen). Confirmed visible in the shipped email render.
 
