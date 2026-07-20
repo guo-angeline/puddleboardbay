@@ -47,6 +47,10 @@ const NOTES_TRUNCATE = 220;
 const PEEK = 0.58; // default resting height
 const FULL = 0.92; // dragged-up / expanded height
 
+// Item 70: tabbable elements for the full-screen sheet's focus trap.
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite, startExpanded }: Props) {
   const [copied, setCopied] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -133,6 +137,72 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Item 70: full-screen mobile sheet is a modal dialog. It covers the whole
+  // viewport, so a keyboard user must not be able to Tab "behind" it and AT
+  // must be told a dialog opened. Scoped to the full-screen mobile branch only
+  // (`forceFull`); the desktop side panel is a persistent non-modal region and
+  // keeps interacting with the map/list beside it, so it gets NONE of this.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const forceFull = isMobile && fullScreen;
+    const panel = panelRef.current;
+    if (!forceFull || !panel) return;
+
+    // Move focus into the dialog on open (the container carries role=dialog +
+    // aria-labelledby, so a screen reader announces the spot name). Remember
+    // what opened it (the list row / map pin) to restore on close.
+    const opener = document.activeElement as HTMLElement | null;
+    panel.focus({ preventScroll: true });
+
+    // Make everything behind the dialog inert (removed from tab order + hidden
+    // from AT). The panel + backdrop are siblings of the background content
+    // under HomeClient's root; inert the siblings, skip the drawer's own nodes.
+    const root = panel.parentElement;
+    const backdrop = root?.querySelector<HTMLElement>("[data-sheet-backdrop]");
+    const inerted: HTMLElement[] = [];
+    if (root) {
+      for (const child of Array.from(root.children)) {
+        const el = child as HTMLElement;
+        if (el === panel || el === backdrop) continue;
+        if (!el.hasAttribute("inert")) {
+          el.setAttribute("inert", "");
+          inerted.push(el);
+        }
+      }
+    }
+
+    // Trap Tab / Shift+Tab within the dialog.
+    function onTrap(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !panel) return;
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      ).filter((el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement);
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.focus({ preventScroll: true });
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onTrap);
+
+    return () => {
+      document.removeEventListener("keydown", onTrap);
+      inerted.forEach((el) => el.removeAttribute("inert"));
+      // Restore focus to whatever opened the sheet, if it's still in the DOM.
+      if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+    };
+  }, [isMobile, fullScreen]);
 
   // Item 39: the owner's own rating, on the spots that carry one. Shipped at
   // 100% by owner directive 2026-07-17 (D20), so it renders unconditionally
@@ -222,6 +292,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     <>
       {/* Backdrop (mobile) — tap to dismiss (a non-drag dismiss path, item 57). */}
       <div
+        data-sheet-backdrop
         className="fixed inset-0 bg-black/20 md:hidden"
         style={{ zIndex: 1100 }}
         onClick={() => dismiss("backdrop")}
@@ -229,9 +300,16 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
 
       {/* Drawer panel. Item 63: full-screen mode drops the rounded top + shadow
           (a viewport-covering surface clips its own corners and has no edge to
-          shadow); rollback keeps them (it's still a partial sheet). */}
+          shadow); rollback keeps them (it's still a partial sheet). Item 70: in
+          the full-screen mobile branch this is a modal dialog (role + labelled
+          by the spot name + focusable container for the open-focus move); the
+          desktop side panel (md:static) gets none of those, it is not modal. */}
       <div
-        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full md:shadow-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
+        ref={panelRef}
+        {...(forceFull
+          ? { role: "dialog", "aria-modal": true, "aria-labelledby": "spot-sheet-title", tabIndex: -1 }
+          : {})}
+        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full md:shadow-none focus:outline-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
         style={{
           zIndex: 1200,
           ...(forceFull
@@ -319,7 +397,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
-              <h2 className="font-['Newsreader'] text-xl font-bold text-(--dark) leading-tight">
+              <h2 id="spot-sheet-title" className="font-['Newsreader'] text-xl font-bold text-(--dark) leading-tight">
                 {spot.water}
               </h2>
               {/*
