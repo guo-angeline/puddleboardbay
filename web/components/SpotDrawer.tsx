@@ -104,7 +104,16 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     const info = spot ? { spot_id: spot.id, spot_name: spot.water, region: spot.region } : {};
     // Dragged well below the peek height -> dismiss; else snap to nearer point.
     if (h < peek * 0.6) {
-      trackIntent("spot_sheet_dismissed", { ...info, method: "drag" });
+      // spot_sheet_dismissed now requires the spot fields (item 71 typed the
+      // method union + required spot_id/name/region); only log with a spot.
+      if (spot) {
+        trackIntent("spot_sheet_dismissed", {
+          spot_id: spot.id,
+          spot_name: spot.water,
+          region: spot.region,
+          method: "drag",
+        });
+      }
       onClose();
       return;
     }
