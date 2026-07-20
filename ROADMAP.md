@@ -226,7 +226,9 @@ Remaining owner steps (see `native/README.md` runbook): run `supabase/migrations
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
 
-## 73. [ready] Custom 404 page: a stale/hidden spot link dead-ends on the bare Next.js 404 with no way back
+## 73. [done] Custom 404 page: a stale/hidden spot link dead-ends on the bare Next.js 404 with no way back (deployed 2026-07-20)
+
+**Shipped 2026-07-20 (studio loop).** Added `app/not-found.tsx` (App Router convention), so `notFound()` from `spot/[id]` (hidden ids like 54/79 and out-of-range ids) and any unmatched route now render a branded page instead of the bare Next.js default, keeping the real 404 status (no soft-200). Meltwater palette + house fonts (Newsreader heading, Hanken body), the paddle-mark masthead linking home, a "404" eyebrow, one friendly shared line ("We couldn't find that spot. The link may be old, or the spot was taken down. The rest of the map is still here."), and an azure `Browse all spots` CTA to `/`. Copy claims no region/count (spots span beyond the Bay Area; a hardcoded number would drift). Verified LIVE on paddletowater.com: `/spot/54`, `/spot/99999`, and a bogus route all return HTTP 404 with the branded content; a valid spot still 200; the CTA navigates home. 418 tests (6 new grep-guard, incl. a no-em-dash assert), lint + tsc + `npm run build` clean (`/_not-found` prerendered static). No legal surface (cosmetic page, no data/claims/privacy). Deployed `a74ce60`.
 
 **Found by the 2026-07-19 verify loop.** There is no `app/not-found.tsx`, so every 404 renders the bare Next.js default. Confirmed on production for `https://paddletowater.com/spot/54` (spot 54, just hidden via D26): a centered "404 / This page could not be found." with **no branding and zero links** in the body (an anchor grep returned nothing). The user hits a dead end with no path back to the app.
 
