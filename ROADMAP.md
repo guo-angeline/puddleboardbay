@@ -552,7 +552,10 @@ All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
 - New intent events for submit / view, with `spot_id`+`region` and an `INSTRUMENTATION_CHANGELOG.md` entry. Rollout flag-gated per the major-update directive.
 - Lawyer gate (data collection, UGC moderation, marketing claims, FTC) returns `clear` before deploy. Likely an `escalate` on the moderation-policy and aggregate-display questions.
 
-## 44. [ready] Optional sign-in to sync spots and alerts across devices (now REQUIRED for reviews per D24; ships before item 43)
+## 44. [blocked(D28)] Optional sign-in to sync spots and alerts across devices (now REQUIRED for reviews per D24; ships before item 43)
+
+**Escalated to D28 (2026-07-20):** an auth/personal-data surface the loop cannot autonomously build or deploy. Blocked on owner OAuth-app creation + credentials (Q1), the Google-vs-Google+Apple provider decision given the native app (Q2), the analytics-identity approach (Q3), and the Supabase migration model (Q4). Not started until D28 is answered.
+
 
 **Blocked on D24: its identity model is the same decision as item 43's (the spec sequences the identity decision across both), and item 44's scope depends on the answer, if reviews go anonymous, item 44 is a pure cross-device sync feature; if reviews require sign-in, item 44 is the account foundation they build on. It is also an OAuth/personal-data surface (escalation-class), so once D24 sets the direction it gets its own lawyer gate + the analytics-identity strategy its acceptance requires. Not started to avoid building an auth system that D24 could re-scope.**
 

@@ -581,3 +581,26 @@ If silent: item 57 stays blocked on the read. No layout change ships without the
 Blocks: item 57.
 
 Answer: (owner, 2026-07-18) **REMOVE the drag function; every mobile spot sheet opens FULL SCREEN.** This is a stronger call than the pre-scoped conditional auto-expand and does NOT need the PostHog drag-rate read, so Q1/Q2 are moot: don't run the query, don't build the rate-gated variant. Implementation: mobile spot sheets always open at full height (reuse the item-9/42 `startExpanded` at 100%; drop the peek snap and the drag-to-resize handle). Implementer note: drag-to-dismiss goes away with the handle, so keep a non-drag dismiss path (the existing close control / backdrop tap / back gesture) so the sheet is still closable. Ship behind the `sheet-auto-expand` kill switch (no A/B, DAU<100).
+
+## D28 [OPEN] 2026-07-20 · Item 44 (Google sign-in) is an auth surface the loop cannot autonomously build or deploy
+
+D24 unblocked item 44 (required sign-in), and it is now the top `[ready]` item. But it is an **auth/personal-data surface**, which the ship escalation policy lists as pause-and-escalate, and item 44's own spec calls it "escalation-class." The studio loop cannot build or deploy it without owner decisions and owner-only infrastructure. This is not a "the loop is stuck" note; it is the auth gate working as intended. Four things are yours; the rest an implementer does once you answer.
+
+**Q1 (blocking, owner-only infra).** Google sign-in requires a **Google Cloud OAuth client** (client ID + secret), an OAuth consent screen (app name, scopes = email/profile, the live privacy-policy URL), and authorized redirect URIs. The loop cannot create this (account creation + a secret it must never handle). Will you create the Google Cloud OAuth app and drop the client ID + secret into the deploy env vars? Nothing can be built or tested until this exists.
+- Recommended: **yes**, and use **Supabase Auth** (GoTrue) as the auth stack, the backend is already Supabase (push + email subscriptions), so its built-in Google provider + row-level security is the least-new-surface path versus adding NextAuth. Confirm the Supabase Auth choice or name an alternative.
+
+**Q2 (provider set, native-app implication).** The native iOS app (item 72) already exists, and Apple App Store Guideline 4.8 requires offering **Sign in with Apple** if an iOS app offers any third-party social login (Google). Options:
+- (a) [recommended] **Google only, web first.** Ship accounts on the website now; hold native-app sign-in until item 43/reviews actually need it on native, which defers the Apple-sign-in build. The native app stays anonymous for now.
+- (b) **Google + Apple from the start**, so native can offer sign-in immediately (more build now).
+
+**Q3 (analytics identity, confirm the approach).** Item 44's acceptance requires the identity strategy documented before build. Recommended, and it needs your ok because it is load-bearing for every existing metric: keep **`anon_id` as the analytics primary key**, NEVER call `posthog.identify()`/`reset()` (CLAUDE.md rule, it reshuffles experiment buckets and would corrupt the owner-exclusion + retention queries), and attach the account only as a person property via `setPersona` (e.g. `signed_in=true`). Confirm.
+
+**Q4 (migration model, touches Supabase schema = PROTECTED).** An anonymous user who signs in must **keep** their saved spots (localStorage today) and push subscription (Supabase, keyed on `anon_id`), not start empty. That means a schema change: a `users`/accounts table, a `user_id` FK linking existing `push_subscriptions`, and a `user_saved_spots` table synced from localStorage on first sign-in. Confirm you want this migration-not-reset behavior (recommended, it is in the item's acceptance), and note the schema change will itself be owner-reviewed at deploy per the PROTECTED gate.
+
+Scope reminder (no decision needed): build item 44 as **optional** account sync, anonymous use stays fully functional and is never forced; it is the account foundation reviews (item 43) will later require. A privacy-policy update + an auth lawyer-gate (`clear` before deploy) are already in the acceptance and will run in the ship pipeline once you answer.
+
+If silent: item 44 stays blocked and the `[ready]` queue is dry (item 43 waits on 44 + the attorney ToS; everything else is `[proposed]` awaiting promotion). Deferring accounts behind the retention work is also legitimate, this is the same retention-first-vs-reviews tension you already weighed when you promoted 43/44.
+
+Blocks: item 44 (and transitively item 43).
+
+Answer:
