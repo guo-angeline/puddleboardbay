@@ -21,6 +21,7 @@ import { useKillSwitch } from "@/lib/experiments";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
 import { reportEmailOpen } from "@/lib/email/client";
 import { cacheEmailSubscriptionState } from "@/lib/email/subscriptionState";
+import { BACK_SWIPE_CONFIG } from "@/lib/backGesture";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -31,6 +32,21 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 function isMobileViewport(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
 }
+
+// Item 71: history state for the mobile pushState/popstate back model.
+// Module-scoped (a plain `let`, not React state or a ref) because both the
+// popstate handler and deselect() need to read/write them synchronously
+// outside React's render pass, and the react-hooks/refs rule is an ERROR gate
+// against reading/writing ref.current during render. There is only ever one
+// HomeClient mounted at a time, so a module singleton is safe here.
+// `backNavReason` records why a programmatic history.back() was issued, so
+// the single popstate handler below can tell a gesture-driven close, a UI
+// close routed through history, and a genuine hardware/browser Back apart.
+let backNavReason: "gesture" | "ui" | null = null;
+// Whether a `?spot=` entry is currently the live top-of-stack history entry
+// (pushed by the sync effect below). deselect() only routes through history
+// when this is true; otherwise there is no entry to pop.
+let sheetEntryPushed = false;
 
 
 function applyFilters(spots: Spot[], filters: Filters): Spot[] {
@@ -280,16 +296,111 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Item 71: mobile/touch gets a pushState/popstate history model behind a
+  // default-ON kill switch, so hardware/browser Back (and, from a later task,
+  // an edge-swipe gesture) closes the sheet instead of leaving the site.
+  // Desktop and the killed path keep the plain replaceState sync below,
+  // byte-for-byte. `mobileMount` is captured once on mount (not re-read on
+  // resize) so a mid-session viewport change can't switch history models
+  // under an open sheet.
+  const [mobileMount] = useState(() => isMobileViewport());
+  const backSwipeKillSwitchOn = useKillSwitch("back-swipe-gesture");
+  const mobileHistory = mobileMount && backSwipeKillSwitchOn;
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstSheetOpenSeededRef = useRef(false);
+  const prevSelectedForHistoryRef = useRef<Spot | null>(null);
+
+  // Issues a programmatic Back (used by deselect() below, and by the future
+  // edge-swipe gesture handler) instead of clearing state directly, so the
+  // resulting popstate is what actually closes the sheet. Falls back to a
+  // direct clear if no popstate arrives within POPSTATE_FALLBACK_MS (bfcache /
+  // seeding race on a cold /spot/[id]).
+  function goBackProgrammatically(reason: "gesture" | "ui") {
+    backNavReason = reason;
+    window.history.back();
+    fallbackTimerRef.current = setTimeout(() => {
+      fallbackTimerRef.current = null;
+      sheetEntryPushed = false;
+      backNavReason = null;
+      setSelected(null);
+      setAlertBanner(null);
+    }, BACK_SWIPE_CONFIG.popstateFallbackMs);
+  }
+
   // Sync URL to selected spot. On spot pages, rebase to root so the URL
   // stays honest as the user explores other spots.
   useEffect(() => {
-    if (initialSpotId !== undefined) {
-      window.history.replaceState(null, "", selected ? `/?spot=${selected.id}` : "/");
-    } else {
-      window.history.replaceState(null, "", selected ? `?spot=${selected.id}` : window.location.pathname);
+    if (!mobileHistory) {
+      if (initialSpotId !== undefined) {
+        window.history.replaceState(null, "", selected ? `/?spot=${selected.id}` : "/");
+      } else {
+        window.history.replaceState(null, "", selected ? `?spot=${selected.id}` : window.location.pathname);
+      }
+      prevSelectedForHistoryRef.current = selected;
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected]);
+    const prev = prevSelectedForHistoryRef.current;
+    if (!prev && selected) {
+      if (!firstSheetOpenSeededRef.current) {
+        // First sheet open of this mount: rebase the CURRENT entry to bare
+        // "/" (dropping every param, including a share/alert/email `from`/`t`
+        // and, on /spot/[id], the whole /spot/<id> path) before pushing the
+        // sheet entry. One Back from here always lands on bare "/", never
+        // back into the referrer or a re-loop, and never resurrects a live
+        // unsubscribe token.
+        firstSheetOpenSeededRef.current = true;
+        window.history.replaceState(null, "", "/");
+        window.history.pushState(null, "", `/?spot=${selected.id}`);
+      } else {
+        window.history.pushState(null, "", `?spot=${selected.id}`);
+      }
+      sheetEntryPushed = true;
+    } else if (prev && selected && prev.id !== selected.id) {
+      // Switch while open: replace, don't push (one entry = one open sheet).
+      window.history.replaceState(null, "", `?spot=${selected.id}`);
+    }
+    // spot -> null: no URL write here, popstate already updated the URL.
+    prevSelectedForHistoryRef.current = selected;
+  }, [selected, mobileHistory, initialSpotId]);
+
+  // Single popstate handler for the mobile history model. Registered only
+  // when mobileHistory, so desktop/killed never attach it (their sync is pure
+  // replaceState, no entries to pop). Never calls history.back() or
+  // deselect() itself, to avoid ping-ponging with goBackProgrammatically.
+  useEffect(() => {
+    if (!mobileHistory) return;
+    function onPopState() {
+      if (fallbackTimerRef.current !== null) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+      sheetEntryPushed = false;
+      const closing = selected;
+      if (closing && backNavReason === "gesture") {
+        trackIntent("spot_sheet_dismissed", {
+          spot_id: closing.id,
+          spot_name: closing.water,
+          region: closing.region,
+          method: "edge_swipe",
+        });
+      } else if (closing && backNavReason === null) {
+        // Genuine hardware/browser Back: nothing else logged this dismiss.
+        trackIntent("spot_sheet_dismissed", {
+          spot_id: closing.id,
+          spot_name: closing.water,
+          region: closing.region,
+          method: "os_back",
+        });
+      }
+      // "ui" reason: the ×/backdrop/app-bar-arrow close already logged its
+      // own event at the call site; emitting again here would double-count.
+      setSelected(null);
+      setAlertBanner(null);
+      backNavReason = null;
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [mobileHistory, selected]);
 
   useEffect(() => {
     // Don't write until we've loaded, or the empty initial set would clobber
@@ -334,6 +445,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   // the user navigates elsewhere it would be stale context, so every path that
   // changes or clears `selected` below also clears it.
   function deselect() {
+    // Item 71: on mobile with the sheet's history entry still live, route the
+    // close through history so the popstate handler does the actual clearing
+    // (and logs os_back/edge_swipe correctly); otherwise (desktop, killed, or
+    // no live entry) clear state directly, exactly as before.
+    if (mobileHistory && sheetEntryPushed) {
+      goBackProgrammatically("ui");
+      return;
+    }
     setSelected(null);
     setAlertBanner(null);
   }
