@@ -1,5 +1,17 @@
 # Briefings: the board log
 
+## 2026-07-20 · Item 73 shipped: a branded 404 page instead of a dead end
+
+**Your move:** Nothing needed.
+
+**TL;DR:** Stale, hidden, and search-cached spot links used to dump people on the bare Next.js "404, this page could not be found" with no branding and no way back, on the exact URLs that word-of-mouth growth depends on. Now they land on a branded page with a "Browse all spots" button home. Still a real 404 for search engines, not a fake 200.
+
+**Appendix:**
+- **Item 73 -> done** (deployed `a74ce60`, verified live). Added `app/not-found.tsx`: Meltwater palette, paddle-mark masthead, one friendly line that works for both a removed spot and a plain typo, and an azure home CTA. Verified on prod that `/spot/54` (hidden), an out-of-range id, and a bogus route all return HTTP 404 with the branded page and a working home link, while real spots still return 200.
+- **Copy accuracy:** dropped an early "139 Bay Area launches" line, the spots reach past the Bay Area (Sierra, Central Coast) and a hardcoded count would drift. The page makes no number/region claim.
+- **Gates:** 418 tests (6 new, including a no-em-dash guard), lint + tsc + production build clean, `/_not-found` prerenders static. No legal surface (a cosmetic page, no data, claims, or privacy), so no lawyer gate needed.
+- **Right-sized the process:** this was a single static page, so I built and verified it directly rather than spinning up the full multi-agent ship pipeline again, faster and cheaper for a trivial item, same verification bar (live 404-status + branding + working CTA checks).
+
 ## 2026-07-20 · Item 71 shipped: mobile left-edge back-swipe + the history fix under it
 
 **Your move:** one optional check, open the installed PWA on your phone and (a) swipe from the left edge to leave a spot, (b) press the hardware/OS Back after opening a spot. Both should return you to the map instead of exiting the app. I verified the underlying history behavior on the live site, but the true installed-PWA edge-swipe feel is the one thing an emulator can't reproduce. Otherwise nothing.
