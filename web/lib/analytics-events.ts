@@ -167,6 +167,19 @@ export interface EventPropMap {
     had_window: boolean;
   };
   experiment_exposed: { experiment: string; variant: string };
+  // Item 71: `method` is a compile-enforced union so a wrong value can't ship
+  // silently (this prop was previously an untyped Record<string, unknown>).
+  // "back" is item 64's on-screen app-bar arrow; "os_back" (hardware/browser
+  // Back) and "edge_swipe" (left-edge gesture) are item 71's new mobile
+  // in-app back paths, kept distinct from "back" so the three don't collapse
+  // into one bucket. "close"/"backdrop" are the button and tap-outside paths;
+  // "drag" is the legacy drag-to-dismiss path (item 57).
+  spot_sheet_dismissed: {
+    spot_id: number;
+    spot_name: string;
+    region: string;
+    method: "edge_swipe" | "os_back" | "back" | "close" | "backdrop" | "drag";
+  };
   email_capture_submitted: {
     platform: OptInPlatform;
     trigger: OptInTrigger | "push_denied";

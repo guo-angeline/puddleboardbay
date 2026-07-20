@@ -14,6 +14,35 @@ without touching this file.
 
 ---
 
+## 2026-07-20 (item 71): spot_sheet_dismissed `method` gains `os_back` and `edge_swipe`, typed as a compile-enforced union (props-values-changed)
+
+Item 71 adds two new mobile in-app back paths for the spot sheet: a left-edge
+swipe gesture and genuine hardware/browser Back (via `pushState`/`popstate`),
+both closing the sheet instead of leaving the site. `spot_sheet_dismissed`
+(INTENT, `SpotDrawer`) gains two new `method` values to cover them: `"os_back"`
+for the hardware/browser Back path, `"edge_swipe"` for the left-edge drag
+gesture. Both split out of what would otherwise have landed in item 64's
+`method:"back"`, which stays scoped to the on-screen app-bar back arrow only
+(`SpotDrawer.tsx`, unchanged). The `method` prop is now typed as a literal
+union (`"edge_swipe" | "os_back" | "back" | "close" | "backdrop" | "drag"`) in
+`EventPropMap` (`lib/analytics-events.ts`), replacing an untyped
+`Record<string, unknown>` bag, so a future wrong or misspelled value fails to
+compile instead of shipping silently.
+
+- **Comparability:** `method` is now the compile-enforced segmentation axis
+  for this event: any dismiss breakdown should group by `method` rather than
+  treating `spot_sheet_dismissed` as one undifferentiated count. `"os_back"`
+  and `"edge_swipe"` have no prior series (they did not exist before item 71);
+  a rise in total `spot_sheet_dismissed` volume from 2026-07-20 forward is
+  added coverage from these two new dismiss paths, not more dismissal per
+  session. `"back"`'s historical series (item 64, app-bar arrow) is unaffected
+  and stays comparable across this date since it never captured hardware/
+  gesture dismissals. Segment further by `display_mode` (`standalone` |
+  `browser`) and `$device_type`, since edge-swipe and OS-back are mobile/touch
+  paths and will read as zero on desktop.
+
+---
+
 ## 2026-07-18: spot_photo_viewed `license` gains sentinel `"owner"` (semantics-changed); owner first-party photos added
 
 Twelve owner-supplied first-party photos were added to the spot-photo manifest (`source: "owner"`, spots 6, 22, 28, 30, 32, 33, 34, 64, 65, 70, 82, 99). They render with no attribution overlay (the owner took them; no CC credit is owed). `spot_photo_viewed` (INTENT, `SpotDrawer`, dwell-gated) previously logged `license` as the CC license string of a Wikimedia photo; owner photos have no license, so the event now logs `license: "owner"` for them.
