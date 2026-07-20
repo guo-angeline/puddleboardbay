@@ -1,5 +1,16 @@
 # Briefings: the board log
 
+## 2026-07-20 · Item 69 shipped: "a 8-hour window" is now "an 8-hour window"
+
+**Your move:** One optional eyeball, next alert email you get, check the window-length sentence reads naturally. The rendered strings are asserted in tests, but real-inbox rendering is always your final check.
+
+**TL;DR:** Four of the seven alert-email copy variants wrote "a 8-hour window" (also "a 11-hour", "a 18-hour"), which is grammatically wrong. Fixed with a small helper that picks "a" vs "an" by how the number is spoken, so it's right everywhere and can't regress when a new variant is added.
+
+**Appendix:**
+- **Item 69 -> done** (deployed `09c4dce`). Added `indefiniteArticle(n)` and fed it into the templates as an `{a}`/`{A}` placeholder, instead of hand-editing 16 strings. Covers the body + preheader and the HTML + plain-text twins in one place. The other three variants phrase it without an article and were already fine.
+- **Gates:** 430 tests (6 new: an 8-/11-hour, a 3-hour regression, the capitalized sentence-start form, and a guard that "a 8/11/18" can never render again), lint + tsc + build clean. Not a gated path (email copy, not the cron send loop), and no legal element touched (unsubscribe, postal address, safety line all unchanged), so no lawyer gate.
+- Fourth item shipped today (71 back-swipe, 73 404 page, 70 dialog a11y, 69 this). All the verify-loop findings that were `[ready]` are now cleared; the remaining `[ready]` queue is empty except items 43/44, which are blocked on your D24 answer.
+
 ## 2026-07-20 · Item 70 shipped: the full-screen mobile spot sheet is now a real accessible dialog
 
 **Your move:** Nothing needed.
