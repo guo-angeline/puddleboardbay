@@ -582,7 +582,7 @@ Blocks: item 57.
 
 Answer: (owner, 2026-07-18) **REMOVE the drag function; every mobile spot sheet opens FULL SCREEN.** This is a stronger call than the pre-scoped conditional auto-expand and does NOT need the PostHog drag-rate read, so Q1/Q2 are moot: don't run the query, don't build the rate-gated variant. Implementation: mobile spot sheets always open at full height (reuse the item-9/42 `startExpanded` at 100%; drop the peek snap and the drag-to-resize handle). Implementer note: drag-to-dismiss goes away with the handle, so keep a non-drag dismiss path (the existing close control / backdrop tap / back gesture) so the sheet is still closable. Ship behind the `sheet-auto-expand` kill switch (no A/B, DAU<100).
 
-## D28 [OPEN] 2026-07-20 · Item 44 (Google sign-in) is an auth surface the loop cannot autonomously build or deploy
+## D28 [RESOLVED] 2026-07-20 · Item 44 (Google sign-in) is an auth surface the loop cannot autonomously build or deploy
 
 D24 unblocked item 44 (required sign-in), and it is now the top `[ready]` item. But it is an **auth/personal-data surface**, which the ship escalation policy lists as pause-and-escalate, and item 44's own spec calls it "escalation-class." The studio loop cannot build or deploy it without owner decisions and owner-only infrastructure. This is not a "the loop is stuck" note; it is the auth gate working as intended. Four things are yours; the rest an implementer does once you answer.
 
@@ -603,4 +603,10 @@ If silent: item 44 stays blocked and the `[ready]` queue is dry (item 43 waits o
 
 Blocks: item 44 (and transitively item 43).
 
-Answer:
+Answer: (owner, 2026-07-20, in chat).
+- **Q1 YES** as recommended: owner creates the Google Cloud OAuth app and provides the client ID + secret to the deploy env; auth stack = **Supabase Auth** (GoTrue Google provider + RLS), least-new-surface since the backend is already Supabase.
+- **Q2 = (b) Google + Apple from the start.** Sign in with Apple is included so the native iOS app can offer sign-in immediately. NOTE (build prerequisite, flagged to owner): Sign in with Apple requires an Apple Developer Program App ID + Services ID + key, which depends on the **still-pending Apple Developer Program enrollment** (native runbook, item 72). The Google/web half can be built and shipped independently; the Apple half is gated on that enrollment. Sequence Google/web first, layer Apple when enrollment lands.
+- **Q3 (analytics identity):** proceed on the mandated approach, `anon_id` stays the analytics primary key, NEVER `posthog.identify()`/`reset()` (standing CLAUDE.md rule; no owner deviation possible without breaking bucketing + the owner-exclusion/retention queries), account attached only via `setPersona`. (The owner's "Q3" text actually acked Q4's migration behavior; recorded there.)
+- **Q4 = migration-not-reset, acked.** On first sign-in an anonymous user keeps their saved spots (localStorage -> `user_saved_spots`) and push subscription (link existing `push_subscriptions` rows via a `user_id` FK); add a `users`/accounts table. Owner acknowledges the Supabase schema change is owner-reviewed at deploy per the PROTECTED gate.
+
+Build prerequisites before item 44 can DEPLOY a working sign-in: (1) Google OAuth client id + secret in env (owner, Q1); (2) auth lawyer-gate `clear` (privacy-policy update for the new PII, run in the ship pipeline); (3) for the Apple half only, Apple Developer Program enrollment complete. The loop may start building the Google/web + Supabase-Auth + migration code now (tests with mocked auth) and escalate the deploy for the real credentials + lawyer gate.
