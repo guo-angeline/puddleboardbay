@@ -450,7 +450,7 @@ Fix (shipped this iteration): the gate now fires ONLY when an EXISTING spot's co
 
 Answer: gate only modified/removed existing coordinates, not new-spot additions (owner directive). Implemented in `scripts/predeploy-gate.py`; D19 and `.claude/studio.md` notes updated to match.
 
-## D24 [OPEN] 2026-07-17 · Item 43 (user reviews): three decisions gate the build before any review can post
+## D24 [RESOLVED] 2026-07-17 · Item 43 (user reviews): three decisions gate the build before any review can post
 
 The lawyer gate returned **escalate** on item 43 (crowd reviews). It is buildable, but publishing the first user review turns the static site into a UGC platform that hosts stranger-written text about named private businesses, on a site that already carries drowning-risk/wrongful-death exposure. Before the first review renders, four legal artifacts must exist and three questions are yours to decide. Nothing is illegal to build; it is illegal-shaped to publish before the gating pieces exist. Item 43 is blocked on your answers below.
 
@@ -469,7 +469,11 @@ If silent: item 43 stays blocked and nothing builds, because the identity answer
 
 Blocks: item 43, and item 44 (its identity model is the same decision, per item 44's spec "sequence the identity decision across both"). Q2's answer sets the direction for both; once it lands, item 44 gets its own auth lawyer-gate + analytics-identity strategy (how account identity composes with `anon_id` without reshuffling experiment buckets or the retention/exclusion queries).
 
-Answer:
+Answer: (owner, 2026-07-20, in chat).
+- **Q1 YES:** engage a licensed CA attorney to review the UGC Terms of Service (content license + liability limitation + user representations, interlocked with the item-34/35 safety/assumption-of-risk disclaimer). The studio `lawyer` agent produced a first-draft ToS + a prioritized attorney redline-question list (saved under `docs/legal/`) so the engagement is a markup job, not a from-blank draft. No review publishes until the attorney-reviewed ToS is live.
+- **Q2 REQUIRED SIGN-IN:** posting a review requires an authenticated account (Google sign-in, item 44), 18+. This SEQUENCES item 44 (auth) BEFORE item 43 can post. Item 44 -> `[ready]`; it carries its own auth lawyer-gate (privacy-policy update, PII/COPPA/CCPA surface) + analytics-identity strategy (account identity vs `anon_id`, no bucket reshuffle, preserve the owner-exclusion/retention queries).
+- **Q3:** binary publish/reject moderation queue, email-on-submit to the owner, NO auto-publish ever, launched to ALL spots. (Owner chose all spots over the recommended soft-launch; the no-auto-publish-ever rule keeps the §230/FTC gate intact even if the queue backs up, reviews simply wait rather than pressure an auto-publish.)
+- **Sequencing result:** item 44 is `[ready]` now. Item 43 stays blocked on TWO real-world artifacts, not a decision: (a) the attorney-reviewed UGC ToS exists and is live, and (b) item 44's required sign-in has shipped. Re-blocked as `[blocked(44 + attorney-ToS)]`.
 
 ## D25 [RESOLVED] 2026-07-18 · Item 35 (assented Terms + assumption-of-risk waiver): four decisions before the waiver is a real defense
 

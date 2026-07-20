@@ -529,7 +529,10 @@ All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
 
 **Owner promoted both to `[ready]` on 2026-07-17, with the tension above understood.** This is the owner exercising the call the note reserves, not a default. Recorded so a later reader does not mistake it for the thesis changing: retention is still the bottleneck; the retention read is still the number that matters. Both items carry a lawyer gate before deploy (43: FTC fake-review rule + UGC moderation + Section 230; 44: personal data + OAuth + privacy-policy update). Items 39, 40, 41, 42, 45 never carried this tension.
 
-## 43. [blocked(D24)] Real user reviews on a spot (the crowd-sourced half of ratings)
+## 43. [blocked(44 + attorney-ToS)] Real user reviews on a spot (the crowd-sourced half of ratings)
+
+**D24 RESOLVED 2026-07-20.** Q1 yes (attorney reviews the UGC ToS; studio lawyer drafted it under `docs/legal/`), Q2 required sign-in (so this needs item 44's auth to ship first), Q3 binary queue + email-on-submit + no auto-publish ever, all spots. No longer decision-gated; now gated on two real artifacts: (a) the attorney-reviewed ToS live, (b) item 44 shipped. Do not build the review-post path until both exist.
+
 
 **Lawyer gate returned `escalate` (2026-07-17). Blocked on D24: three owner decisions (counsel spend for the UGC terms, identity model, moderation commitment) plus four legal artifacts must land before the first review can post. The implementer-can-do list and the cleared aggregate-display design are captured in D24.**
 
@@ -549,7 +552,7 @@ All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
 - New intent events for submit / view, with `spot_id`+`region` and an `INSTRUMENTATION_CHANGELOG.md` entry. Rollout flag-gated per the major-update directive.
 - Lawyer gate (data collection, UGC moderation, marketing claims, FTC) returns `clear` before deploy. Likely an `escalate` on the moderation-policy and aggregate-display questions.
 
-## 44. [blocked(D24)] Optional sign-in to sync spots and alerts across devices
+## 44. [ready] Optional sign-in to sync spots and alerts across devices (now REQUIRED for reviews per D24; ships before item 43)
 
 **Blocked on D24: its identity model is the same decision as item 43's (the spec sequences the identity decision across both), and item 44's scope depends on the answer, if reviews go anonymous, item 44 is a pure cross-device sync feature; if reviews require sign-in, item 44 is the account foundation they build on. It is also an OAuth/personal-data surface (escalation-class), so once D24 sets the direction it gets its own lawyer gate + the analytics-identity strategy its acceptance requires. Not started to avoid building an auth system that D24 could re-scope.**
 
