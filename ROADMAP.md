@@ -75,6 +75,23 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## 75. [proposed] Review moderation cannot depend on an email that can bounce silently
+
+**Found 2026-07-21 by a real bounce.** The first genuine user review (spot 18, from `qg47`) submitted fine, but the moderation notice to `hello@paddletowater.com` **bounced** ("Generic Temporary Delivery Failure"). `hello@` is a Cloudflare Email Routing alias that forwards onward, and the onward hop rejected it. The review sat `pending` with nobody told.
+
+**The failure is invisible by construction.** Resend accepts the send and returns 200; the bounce arrives asynchronously afterwards. `app/api/reviews/route.ts` only sees the 200, so it logs success. There is no path by which the app learns the operator was never notified. Approve/reject links are the ONLY way to publish a review, so a silent bounce means the whole UGC pipeline stops and looks healthy.
+
+**Partly mitigated 2026-07-21 (deploy `24f97cc`):** `MODERATOR_EMAIL` is now an env var pointed at a directly-delivering mailbox instead of the forwarding alias. That removes the known-broken hop. It does NOT make a future bounce visible.
+
+**Still needed:**
+1. **A moderation queue in the app.** A signed-in owner-only view listing `status='pending'` with approve/reject. Email becomes a notification, not the only door. This is the real fix: it cannot bounce.
+2. **Bounce visibility.** A Resend webhook writing delivery failures somewhere the owner sees, or a periodic "N reviews pending older than 24h" nudge. Either turns a silent stall into a signal.
+3. **Do not route operator mail through `hello@`.** It is a forwarding alias, appropriate as a public contact address, not as a delivery target for anything the product depends on.
+
+**Related compliance exposure, verify separately.** The Privacy Policy and the Contributor Terms both tell users to email `hello@paddletowater.com` to request account/content deletion, and the deletion runbook is built on that address receiving. The 2026-07-21 bounce is evidence that address may not currently deliver. If it does not, the deletion promise is inoperable, which is the exact FTC Act Section 5 problem the item-44 lawyer gate flagged. Confirm `hello@` receives, in the Cloudflare Email Routing dashboard, and re-verify D17.
+
+---
+
 ## Studio finding, added 2026-07-21 (auth defect found while diagnosing a real failed sign-in)
 
 ## 74. [proposed] Email sign-in is broken for anyone on Microsoft 365 or Google Workspace: link scanners burn the one-time code
