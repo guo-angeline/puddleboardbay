@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 94,
+  "total_with_photo": 106,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -64,6 +64,16 @@
       "title": "File:Palo Alto Duck Pond February 2013 002.jpg",
       "distance_m": 139,
       "score": 11
+    },
+    "8": {
+      "file": "/spot-photos/8.jpg",
+      "author": "F ASTILY",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Calero_Reservoir_1_2016-08-15.jpg",
+      "title": "File:Calero Reservoir 1 2016-08-15.jpg",
+      "distance_m": 596
     },
     "9": {
       "file": "/spot-photos/9.jpg",
@@ -184,6 +194,16 @@
       "title": "File:Pillar Point Harbor 2.jpg",
       "distance_m": 724
     },
+    "24": {
+      "file": "/spot-photos/24.jpg",
+      "author": "BrokenSphere",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Stanford_Rowing_%26_Sailing_Center_pier_1.jpg",
+      "title": "File:Stanford Rowing & Sailing Center pier 1.jpg",
+      "distance_m": 371
+    },
     "26": {
       "file": "/spot-photos/26.jpg",
       "author": "Jeanjung212",
@@ -247,6 +267,25 @@
       "title": "File:Swimming Beach at Heart's Desire.jpg",
       "distance_m": 14,
       "score": 18
+    },
+    "37": {
+      "file": "/spot-photos/37.jpg",
+      "author": "Haha169",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Lake_Berryessa_Napa_Valley.jpg",
+      "title": "File:Lake Berryessa Napa Valley.jpg"
+    },
+    "38": {
+      "file": "/spot-photos/38.jpg",
+      "author": "alex roberts from San Francisco, USA",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Marshall_California_shoreline.jpg",
+      "title": "File:Marshall California shoreline.jpg",
+      "distance_m": 2536
     },
     "39": {
       "file": "/spot-photos/39.jpg",
@@ -333,6 +372,16 @@
       "title": "File:Sausalito - panoramio (7).jpg",
       "distance_m": 59,
       "score": 11
+    },
+    "56": {
+      "file": "/spot-photos/56.jpg",
+      "author": "Frank Schulenburg",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:View_from_Strawberry_over_Richardson_Bay.jpg",
+      "title": "File:View from Strawberry over Richardson Bay.jpg",
+      "distance_m": 401
     },
     "57": {
       "file": "/spot-photos/57.jpg",
@@ -623,6 +672,16 @@
       "title": "File:Lake Tahoe - panoramio - photophat (3).jpg",
       "distance_m": 2015
     },
+    "104": {
+      "file": "/spot-photos/104.jpg",
+      "author": "brewbooks from near Seattle, USA",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Lower_Echo_Lake_(3072628994).jpg",
+      "title": "File:Lower Echo Lake (3072628994).jpg",
+      "distance_m": 88
+    },
     "105": {
       "file": "/spot-photos/105.jpg",
       "author": "USFS Region 5",
@@ -652,6 +711,15 @@
       "source_page": "https://commons.wikimedia.org/wiki/File%3ABig%20Hill%20Lookout%20-%20panoramio.jpg",
       "title": "File:Big Hill Lookout - panoramio.jpg"
     },
+    "108": {
+      "file": "/spot-photos/108.jpg",
+      "author": "Bureau of Reclamation",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:New_Melones_Lake_(10742814595).jpg",
+      "title": "File:New Melones Lake (10742814595).jpg"
+    },
     "110": {
       "file": "/spot-photos/110.jpg",
       "author": "U.S. Army Corps of Engineers Sacramento District",
@@ -662,6 +730,15 @@
       "title": "File:Hiking down to fish New Hogan Lake) (17837696071).jpg",
       "distance_m": 217,
       "score": 13
+    },
+    "112": {
+      "file": "/spot-photos/112.jpg",
+      "author": "Eric Polk",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Morro_Bay_from_Marina_Peninsula.jpg",
+      "title": "File:Morro Bay from Marina Peninsula.jpg"
     },
     "113": {
       "file": "/spot-photos/113.jpg",
@@ -705,6 +782,16 @@
       "distance_m": 353,
       "score": 16
     },
+    "117": {
+      "file": "/spot-photos/117.jpg",
+      "author": "U.S. Fish and Wildlife Service",
+      "license": "Public domain",
+      "license_url": null,
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Belden%27s_Landing_on_the_Sacramento_River_-_DPLA_-_0d48a116d95300bc071a9bc8933b2f61.jpg",
+      "title": "File:Belden's Landing on the Sacramento River - DPLA - 0d48a116d95300bc071a9bc8933b2f61.jpg",
+      "attribution_required": false
+    },
     "118": {
       "file": "/spot-photos/118.jpg",
       "author": "--t-bo--",
@@ -739,6 +826,16 @@
       "title": "File:Santa Cruz Harbor.jpg",
       "distance_m": 45,
       "score": 22
+    },
+    "124": {
+      "file": "/spot-photos/124.jpg",
+      "author": "Federico Pizano",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Carquinez_Regional_Shoreline_-_panoramio.jpg",
+      "title": "File:Carquinez Regional Shoreline - panoramio.jpg",
+      "distance_m": 3826
     },
     "126": {
       "file": "/spot-photos/126.jpg",
@@ -792,6 +889,16 @@
       "title": "File:Abandoned grain silos at Pier 90, San Francisco 3.jpg",
       "distance_m": 194
     },
+    "137": {
+      "file": "/spot-photos/137.jpg",
+      "author": "jimpp",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:McNear_Channel_Petaluma,_CA_-_panoramio.jpg",
+      "title": "File:McNear Channel Petaluma, CA - panoramio.jpg",
+      "distance_m": 868
+    },
     "138": {
       "file": "/spot-photos/138.jpg",
       "author": "jimpp",
@@ -834,6 +941,17 @@
       "title": "File:Marina Yacht Harbor, San Francisco, California, US.jpg",
       "distance_m": 91,
       "score": 17
+    },
+    "142": {
+      "file": "/spot-photos/142.jpg",
+      "author": "U.S. Army Corps of Engineers Sacramento District",
+      "license": "Public domain",
+      "license_url": null,
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:A_lazy_summer_morning_in_the_delta_on_Twitchell_Island.jpg",
+      "title": "File:A lazy summer morning in the delta on Twitchell Island.jpg",
+      "distance_m": 3541,
+      "attribution_required": false
     },
     "143": {
       "file": "/spot-photos/143.jpg",
@@ -891,5 +1009,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage. | 2026-07-18 owner first-party import: +12 owner-supplied photos (source:\"owner\", no attribution overlay). | 2026-07-21 owner first-party import: +2 owner-supplied photos (spots 101, 120; source:\"owner\", no attribution overlay)."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage. | 2026-07-18 owner first-party import: +12 owner-supplied photos (source:\"owner\", no attribution overlay). | 2026-07-21 owner first-party import: +2 owner-supplied photos (spots 101, 120; source:\"owner\", no attribution overlay). | 2026-07-21 wide re-sweep of the 45 photo-less spots (Commons category traversal + Wikipedia lead images + wider geosearch, all coordinate-verified, vision-reviewed): +12 (8,24,37,38,56,104,108,112,117,124,137,142). 33 still have no usable free-licensed photo."
 }
