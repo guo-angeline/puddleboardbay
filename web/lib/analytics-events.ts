@@ -101,6 +101,12 @@ export type IntentEventName =
   | "account_sign_in_started"
   | "account_sign_in_completed"
   | "account_sign_out"
+  // Item 78: account management. _opened is the tap on the header identity that
+  // opens the account sheet; _name_saved is a deliberate rename; _deleted is a
+  // confirmed self-service account deletion (the destructive, irreversible act).
+  | "account_sheet_opened"
+  | "account_name_saved"
+  | "account_deleted"
   // Item 43: crowd reviews. _opened is the tap on "Write a review" (fires for
   // signed-out users too, so the sign-in wall is measurable); _submitted is a
   // real submission landing in the moderation queue, NOT a publication;

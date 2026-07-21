@@ -14,6 +14,21 @@ without touching this file.
 
 ---
 
+## 2026-07-21 (item 78): account-management INTENT events (added)
+
+Three new INTENT events for the account sheet:
+- `account_sheet_opened` — tap on the header identity that opens the sheet.
+- `account_name_saved` — a deliberate display-name change (rename).
+- `account_deleted` — a CONFIRMED self-service account deletion. This is the
+  irreversible destructive act; count it as churn, not engagement.
+
+**Comparability:** all new, no history, so nothing breaks. `account_deleted` is
+a PostHog proxy for a backend fact and, like the rest of the account/alert tail,
+should be reconciled against Supabase (`auth.users` count) rather than trusted
+alone. Volume is bounded by the signed-in population (3 accounts today).
+
+---
+
 ## 2026-07-21 (item 76): `saved_spots_synced` (added)
 
 SYSTEM event, fired when a signed-in device finishes reconciling its saved spots

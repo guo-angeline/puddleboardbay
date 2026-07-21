@@ -114,3 +114,7 @@ Before turning the `accounts` kill switch on:
 4. Confirm Step 6 returns zero for everything except `spot_reviews`, where the row must survive as `status='removed'` with a null `display_name`, and confirm the review is gone from the spot page. Confirm no further alert email arrives.
 
 Record the date you did this. That is what makes the privacy-policy deletion promise true rather than aspirational.
+
+### Done: 2026-07-21 (item 78, in-product self-service deletion)
+
+Exercised end to end against the real `DELETE /api/account` handler (not the manual SQL), with a seeded account holding rows in every table: two reviews (one published, one pending), a saved spot, and a confirmed email subscription. Result matched Step 6 exactly: `auth.users` gone, `user_saved_spots` / `email_subscriptions` / `push_subscriptions` all zero, and both reviews retained as `status='removed'` with `display_name=null` and `user_id` nulled via the FK. No row of theirs left public or bylined. The self-service DELETE now also checks each write and aborts on the first failure, so a partial deletion cannot leave a bylined public review pointing at a half-deleted account; every step is idempotent, so a client retry after an abort completes cleanly. Legal gate (lawyer agent) returned `needs-changes` with this pre-enable test as the gating action; run once more with a hand-clicked Google sign-in before relying on it for a real request.

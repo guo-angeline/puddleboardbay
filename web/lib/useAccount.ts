@@ -53,6 +53,11 @@ export interface AccountState {
   displayName: string;
   /** Persist a chosen display name. Resolves to an error string, or null. */
   saveDisplayName: (name: string) => Promise<string | null>;
+  /**
+   * Item 78: delete this account and its data (the runbook's "everything"
+   * scope), then sign out locally. Resolves to an error string, or null.
+   */
+  deleteAccount: () => Promise<string | null>;
   /** Primary path: email a 6-digit code. Resolves to an error string, or null on success. */
   sendEmailCode: (email: string) => Promise<string | null>;
   /** Second step of the email path. Resolves to an error string, or null on success. */
@@ -178,13 +183,48 @@ export function useAccount(): AccountState {
     if (!supabase) return "Sign-in is unavailable right now.";
     const checked = validateDisplayName(name);
     if (!checked.ok) return checked.error;
-    const { data, error } = await supabase.auth.updateUser({
-      data: { display_name: checked.value },
-    });
-    if (error) return error.message;
-    // updateUser does not always emit onAuthStateChange, so adopt the returned
-    // user directly or the form would still see the old (empty) name.
+    // Server-authoritative: PATCH writes the account metadata AND propagates the
+    // byline to existing reviews in one place (item 78). Doing the metadata
+    // write on the client would leave those review rows stale.
+    let res: Response;
+    try {
+      res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ displayName: checked.value }),
+      });
+    } catch {
+      return "Could not reach the server. Try again.";
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      return j.error ?? "Could not save that name.";
+    }
+    // Refresh the local session so `user.user_metadata.display_name` reflects
+    // the admin-side change (the JWT is reissued with the new metadata).
+    const { data } = await supabase.auth.refreshSession();
     if (data.user) setUser(data.user);
+    return null;
+  }
+
+  async function deleteAccount(): Promise<string | null> {
+    const supabase = getBrowserSupabase();
+    if (!supabase) return "Sign-in is unavailable right now.";
+    let res: Response;
+    try {
+      res = await fetch("/api/account", { method: "DELETE" });
+    } catch {
+      return "Could not reach the server. Try again.";
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      return j.error ?? "Could not delete the account.";
+    }
+    trackIntent("account_deleted", {});
+    // The server already removed the auth user; clear the local session so the
+    // UI returns to the anonymous state.
+    await supabase.auth.signOut();
+    setUser(null);
     return null;
   }
 
@@ -194,6 +234,7 @@ export function useAccount(): AccountState {
     loading,
     displayName,
     saveDisplayName,
+    deleteAccount,
     sendEmailCode,
     verifyEmailCode,
     signInWithGoogle,

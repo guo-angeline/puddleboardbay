@@ -64,10 +64,17 @@ describe("sign-in is email-first (item 44 revision)", () => {
     expect(button).toMatch(/if \(!enabledSwitch \|\| !enabled \|\| loading\) return null/);
   });
 
-  it("signed-in state separates identity from the Sign out action", () => {
-    // The first version rendered one pill reading "name Sign out", which read
-    // as a single ambiguous control.
-    expect(button).toMatch(/>\s*Sign out\s*<\/button>/);
-    expect(button).toMatch(/title=\{user\.email \?\? undefined\}/);
+  it("signed-in identity opens the account sheet (item 78)", () => {
+    // The identity is now a single button that opens AccountSheet; Sign out and
+    // Delete live inside that sheet, not in the header.
+    expect(button).toContain("AccountSheet");
+    expect(button).toMatch(/setAccountOpen\(true\)/);
+    expect(button).toContain('trackIntent("account_sheet_opened"');
+  });
+
+  it("prefers the chosen display name over the email in the header (item 78)", () => {
+    // The email local part must never be the published byline (item 77); in the
+    // header it is only a private fallback when no display name is set.
+    expect(button).toMatch(/displayName \|\| user\.email\?\.split\("@"\)\[0\]/);
   });
 });
