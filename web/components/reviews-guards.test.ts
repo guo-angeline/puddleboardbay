@@ -53,6 +53,20 @@ describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
     expect(submitRoute).toMatch(/if \(hasText\) \{[\s\S]*sendOperatorEmail/);
   });
 
+  it("an auto-published rating carries NO byline", () => {
+    // The display name is contributor-typed free text. On the auto-publish path
+    // no human sees it before it is live, so publishing it would contradict the
+    // v1.1 s6.1 rationale that nothing written reaches the page unreviewed.
+    expect(submitRoute).toContain("display_name: hasText ? displayName : null");
+  });
+
+  it("refuses a submission stamped with a terms version we are not serving", () => {
+    // A cached bundle would otherwise stamp the assent record with text the
+    // contributor never saw, at exactly the moment a version boundary exists.
+    expect(submitRoute).toContain("termsVersion !== TERMS_VERSION");
+    expect(submitRoute).toMatch(/status: 409/);
+  });
+
   it("the amended promise is the one users assent to (version bumped)", () => {
     // The stored terms hash must move whenever s6.1 changes in substance, or the
     // assent record points at text the contributor never saw.
