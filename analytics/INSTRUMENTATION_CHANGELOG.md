@@ -14,6 +14,26 @@ without touching this file.
 
 ---
 
+## 2026-07-21 (item 43 follow-up): `review_form_opened` now fires from the action row (semantics-changed)
+
+The review trigger moved out of the reviews section (a lone "Write a review"
+button below the list) into the spot sheet's action row, relabelled **"Review"**
+and sitting beside Share with identical styling. `review_form_opened` is
+unchanged in name and props (`spot_id`, `region`) and still fires for signed-OUT
+users, so the sign-in wall stays measurable, but the control it measures is a
+different one: more prominent, always in the same place, and no longer requiring
+the user to scroll past the review list to find it.
+
+**Comparability:** `review_form_opened` volume is discontinuous from
+2026-07-21. Expect it to rise for reasons of placement, not of intent, so do not
+read a jump as growing appetite to review. The downstream ratio that stays
+comparable is `review_submitted / review_form_opened` (did opening the form lead
+to a submission), since both endpoints are unchanged. The prior placement was
+live for roughly three hours on 2026-07-21 and accumulated no meaningful volume,
+so there is no useful pre-period to compare against.
+
+---
+
 ## 2026-07-22 (item 43): three new crowd-review INTENT events (added)
 
 `review_form_opened` (tap on "Write a review", fires for signed-OUT users too so

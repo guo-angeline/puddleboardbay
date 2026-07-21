@@ -24,7 +24,15 @@ import { useAccount } from "@/lib/useAccount";
 const MIN_CODE_LENGTH = 6;
 const MAX_CODE_LENGTH = 10;
 
-export default function SignInSheet({ onClose }: { onClose: () => void }) {
+// The sheet is opened from more than one place, so the subhead says why THIS
+// tap needs an account. Defaults to the header's reason.
+export default function SignInSheet({
+  onClose,
+  reason = "Sync your saved spots and alerts across devices.",
+}: {
+  onClose: () => void;
+  reason?: string;
+}) {
   const { sendEmailCode, verifyEmailCode, signInWithGoogle } = useAccount();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -97,9 +105,7 @@ export default function SignInSheet({ onClose }: { onClose: () => void }) {
 
         {step === "email" ? (
           <>
-            <p className="mt-1 text-sm text-(--muted)">
-              Sync your saved spots and alerts across devices.
-            </p>
+            <p className="mt-1 text-sm text-(--muted)">{reason}</p>
 
             <form onSubmit={onSendCode} className="mt-4">
               <label htmlFor="signin-email" className="block text-sm font-medium text-(--dark)">

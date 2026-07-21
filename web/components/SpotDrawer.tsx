@@ -9,6 +9,8 @@ import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
 import ConditionsPanel from "@/components/ConditionsPanel";
 import ReviewsSection from "@/components/ReviewsSection";
+import SignInSheet from "@/components/SignInSheet";
+import { useAccount } from "@/lib/useAccount";
 import { useReviewAggregates } from "@/lib/useReviewAggregates";
 
 interface Props {
@@ -71,6 +73,13 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // Item 43: crowd rating (present only at 5+ published reviews).
   const reviewsOn = useKillSwitch("reviews");
   const aggregates = useReviewAggregates();
+  const { user, enabled: authOn } = useAccount();
+  // Which spot the review form / sign-in prompt is open for, NOT a boolean.
+  // Storing the id makes "close when the sheet switches spots" a derived fact
+  // rather than a reset effect (setState-in-effect is a lint error here).
+  const [reviewFormFor, setReviewFormFor] = useState<number | null>(null);
+  const [signInFor, setSignInFor] = useState<number | null>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -296,6 +305,18 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  }
+
+  // "Review" sits in the action row next to Share, so the tap target and the
+  // form it opens are in different places. Scroll the reviews section back into
+  // view so the form is never opened off-screen above the fold.
+  function handleReview() {
+    trackIntent("review_form_opened", { spot_id: spot!.id, region: spot!.region });
+    if (user) setReviewFormFor(spot!.id);
+    else setSignInFor(spot!.id); // signed out is a prompt, not a dead end
+    requestAnimationFrame(() =>
+      reviewsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    );
   }
 
   return (
@@ -554,8 +575,15 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
           <ConditionsPanel spot={spot} />
 
           {/* Item 43: crowd reviews, below conditions so the retention
-              differentiator keeps the higher position. */}
-          <ReviewsSection key={spot.id} spot={spot} />
+              differentiator keeps the higher position. The trigger lives in the
+              action row; this renders the list and the form. */}
+          <ReviewsSection
+            key={spot.id}
+            ref={reviewsRef}
+            spot={spot}
+            formOpen={reviewFormFor === spot.id}
+            onCloseForm={() => setReviewFormFor(null)}
+          />
 
           {/* Actions — hierarchy optimizes for Save (retention) first, Share
               (virality) second; Get Directions + Photos are demoted to a neutral
@@ -576,13 +604,28 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 <span>{isFavorite ? "Watching" : "Watch this spot"}</span>
               </button>
             )}
-            <button
-              onClick={handleShare}
-              className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
-              style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-            >
-              {copied ? "Copied!" : "Share"}
-            </button>
+            {/* Share + Review are peers: same weight, same outline, one row.
+                Review used to be a lone bordered button buried in the reviews
+                section, which read as a different kind of control than every
+                other thing you can do to a spot. */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleShare}
+                className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
+                {copied ? "Copied!" : "Share"}
+              </button>
+              {reviewsOn && authOn && (
+                <button
+                  onClick={handleReview}
+                  className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50"
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                >
+                  Review
+                </button>
+              )}
+            </div>
             <div className="flex gap-2">
               <a
                 href={mapsUrl}
@@ -609,6 +652,13 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
 
         </div>
       </div>
+
+      {signInFor === spot.id && (
+        <SignInSheet
+          reason="Signing in keeps it to one review per paddler, per spot."
+          onClose={() => setSignInFor(null)}
+        />
+      )}
     </>
   );
 }

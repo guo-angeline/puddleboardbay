@@ -82,8 +82,34 @@ describe("deleting an account keeps the promise (item 43)", () => {
 
 describe("signed-out users get a way in, not a wall (item 43)", () => {
   it("opens the sign-in sheet instead of dead-ending", () => {
-    expect(section).toContain("SignInSheet");
-    expect(section).toMatch(/else setSignInOpen\(true\)/);
+    const drawer = read("./SpotDrawer.tsx");
+    expect(drawer).toContain("SignInSheet");
+    expect(drawer).toMatch(/else setSignInFor\(spot!\.id\)/);
+  });
+});
+
+describe("Review is a peer of Share, not a stray control (item 43)", () => {
+  const drawer = read("./SpotDrawer.tsx");
+
+  it("sits in the action row with Share, sharing its exact treatment", () => {
+    // Share and Review must be the ONLY two controls carrying this exact
+    // half-width accent-outline treatment. Counting is what makes the guard
+    // bite: restyle either one and the count drops to 1.
+    // Indentation differs (Review is inside a conditional), so normalize it.
+    const flat = drawer.replace(/\s+/g, " ");
+    const TREATMENT =
+      'className="flex-1 flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-gray-50" ' +
+      'style={{ borderColor: "var(--accent)", color: "var(--accent)" }}';
+    expect(flat.split(TREATMENT).length - 1).toBe(2);
+  });
+
+  it("is labelled Review, not the old lone-button copy", () => {
+    expect(drawer).toMatch(/>\s*Review\s*</);
+    expect(section).not.toContain("Write a review");
+  });
+
+  it("scrolls the form into view, since the trigger is not next to it", () => {
+    expect(drawer).toContain("scrollIntoView");
   });
 });
 

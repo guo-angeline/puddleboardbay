@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Ref } from "react";
 import type { Spot } from "@/lib/types";
 import { useAccount } from "@/lib/useAccount";
 import { trackIntent } from "@/lib/analytics";
 import { useGenuineView } from "@/lib/useGenuineView";
 import { useKillSwitch } from "@/lib/experiments";
 import ReviewForm from "@/components/ReviewForm";
-import SignInSheet from "@/components/SignInSheet";
 
 export interface PublishedReview {
   id: string;
@@ -17,19 +16,25 @@ export interface PublishedReview {
   created_at: string;
 }
 
-// Item 43: published crowd reviews for one spot, plus the submit path.
+interface Props {
+  spot: Spot;
+  /** Owned by SpotDrawer: the "Review" trigger sits in the action row. */
+  formOpen: boolean;
+  onCloseForm: () => void;
+  ref?: Ref<HTMLDivElement>;
+}
+
+// Item 43: published crowd reviews for one spot, plus the submit form.
 // The spot pages are statically generated, so reviews load client-side on open,
 // the same way ConditionsPanel loads conditions.
-export default function ReviewsSection({ spot }: { spot: Spot }) {
-  const { user, enabled: authEnabled } = useAccount();
+export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Props) {
+  const { enabled: authEnabled } = useAccount();
   // Reversibility, per the "no A/B until DAU > 100" directive: ship at 100%
   // behind a kill switch, default ON. `authEnabled` is only a config check, so
   // without this there is no way to pull reviews without a redeploy, and this
   // is the surface most likely to need pulling in a hurry (UGC).
   const reviewsOn = useKillSwitch("reviews");
   const [reviews, setReviews] = useState<PublishedReview[] | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [signInOpen, setSignInOpen] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
 
   // No state reset here: SpotDrawer mounts this with key={spot.id}, so React
@@ -63,16 +68,19 @@ export default function ReviewsSection({ spot }: { spot: Spot }) {
       }),
   });
 
-  function onWriteClick() {
-    trackIntent("review_form_opened", { spot_id: spot.id, region: spot.region });
-    if (user) setFormOpen(true);
-    else setSignInOpen(true); // signed out is a sign-in prompt, not a dead end
-  }
-
   if (!authEnabled || !reviewsOn) return null;
 
   return (
-    <div ref={viewRef} className="mt-5 border-t border-(--border) pt-4">
+    <div
+      // Two refs on one node: the dwell observer (a callback ref) and the
+      // drawer's scroll target.
+      ref={(node) => {
+        viewRef(node);
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
+      className="mt-5 mb-5 border-t border-(--border) pt-4"
+    >
       <h3 className="font-['Newsreader'] text-base font-bold text-(--dark)">
         Paddler reviews
         {reviews && reviews.length > 0 && (
@@ -110,28 +118,16 @@ export default function ReviewsSection({ spot }: { spot: Spot }) {
         </ul>
       )}
 
-      {!formOpen && !justSubmitted && (
-        <button
-          type="button"
-          onClick={onWriteClick}
-          className="mt-3 rounded-lg border border-(--border) px-3 py-2 text-sm font-medium text-(--dark) hover:bg-(--fill) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
-        >
-          Write a review
-        </button>
-      )}
-
       {formOpen && (
         <ReviewForm
           spot={spot}
           onSubmitted={() => {
-            setFormOpen(false);
             setJustSubmitted(true);
+            onCloseForm();
           }}
-          onCancel={() => setFormOpen(false)}
+          onCancel={onCloseForm}
         />
       )}
-
-      {signInOpen && <SignInSheet onClose={() => setSignInOpen(false)} />}
     </div>
   );
 }
