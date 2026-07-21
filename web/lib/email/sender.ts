@@ -68,3 +68,31 @@ export async function sendEmail(
     return { ok: false, error: err instanceof Error ? err.message : "send failed" };
   }
 }
+
+/**
+ * Send one OPERATOR email: mail to the site owner about running the site, not
+ * mail to a subscriber. Item 43's moderation queue is the first of these.
+ *
+ * Deliberately separate from sendEmail() because that function attaches
+ * List-Unsubscribe headers keyed to a real subscription token. Operator mail has
+ * no subscription behind it, and an unsubscribe affordance on your own
+ * moderation queue is worse than useless: acting on it would silently stop
+ * review approvals with no way to notice. CAN-SPAM's unsubscribe requirement
+ * targets commercial messages to recipients, which this is not.
+ */
+export async function sendOperatorEmail(to: string, msg: EmailMessage): Promise<SendEmailResult> {
+  try {
+    const { data, error } = await getResend().emails.send({
+      from: FROM,
+      to,
+      replyTo: REPLY_TO,
+      subject: msg.subject,
+      html: msg.html,
+      text: msg.text,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, id: data?.id };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "send failed" };
+  }
+}

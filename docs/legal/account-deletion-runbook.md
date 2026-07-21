@@ -15,6 +15,7 @@ Read this before running anything. From `supabase/migrations/20260721_accounts.s
 | `user_saved_spots` | `on delete cascade` | Saved spots are deleted. Good. |
 | `push_subscriptions.user_id` | `on delete set null` | **Row survives.** Push alerts keep sending, now "anonymous". |
 | `email_subscriptions.user_id` | `on delete set null` | **Row survives, including their email address.** Email alerts keep sending. |
+| `spot_reviews.user_id` | `on delete set null` | **Row survives and STAYS PUBLISHED**, still showing their display name. Deliberate: the Contributor Terms retain a moderation record for three years. But the same terms promise the review is unpublished and dissociated, so step 4c is mandatory. |
 
 Deleting only the `auth.users` row therefore leaves their email address in your database and keeps mailing them. That would make the deletion promise false. **Always do Step 4 as well.**
 
@@ -55,6 +56,16 @@ delete from email_subscriptions
 
 delete from push_subscriptions where user_id = ':uid';
 
+-- 4c. Reviews (ALWAYS run this, for either scope in step 3).
+--     The Contributor Terms promise two things at once: the review is removed
+--     from public display and dissociated from the person, AND a moderation
+--     record survives for up to three years for legal defence. So do NOT delete
+--     the row: unpublish it and strip the byline. The auth.users delete in 4b
+--     then nulls user_id via the FK, completing the dissociation.
+update spot_reviews
+   set status = 'removed', display_name = null
+ where user_id = ':uid';
+
 -- 4b. The account itself. Cascades user_saved_spots.
 --     (Or use Authentication -> Users -> "Delete user" in the dashboard.)
 delete from auth.users where id = ':uid';
@@ -76,6 +87,18 @@ select count(*) from auth.users            where id = ':uid';
 select count(*) from user_saved_spots      where user_id = ':uid';
 select count(*) from email_subscriptions   where user_id = ':uid' or lower(email) = lower(':email');
 select count(*) from push_subscriptions    where user_id = ':uid';
+select count(*) from spot_reviews          where user_id = ':uid';
+-- And confirm nothing of theirs is still public or still bylined:
+select count(*) from spot_reviews          where user_id = ':uid' and status = 'published';
+```
+
+The moderation records are *supposed* to survive. Confirm they did, and that they
+carry no byline, by checking that this returns rows all reading `removed` with a
+null `display_name` (run it BEFORE the `auth.users` delete, while `:uid` still
+matches, or search by the review ids you noted):
+
+```sql
+select id, status, display_name from spot_reviews where user_id = ':uid';
 ```
 
 Then reply to the requester confirming what was deleted and what (if anything) was intentionally kept. Record the request date, completion date, and scope in your own log.
@@ -86,8 +109,8 @@ Then reply to the requester confirming what was deleted and what (if anything) w
 
 Before turning the `accounts` kill switch on:
 1. Sign in with a throwaway Google account on the live site.
-2. Save a spot and subscribe to email alerts so all three tables have rows.
+2. Save a spot, subscribe to email alerts, and submit a review and approve it, so every table has rows.
 3. Run this runbook against it end to end.
-4. Confirm Step 6 returns all zeros, and that no further alert email arrives.
+4. Confirm Step 6 returns zero for everything except `spot_reviews`, where the row must survive as `status='removed'` with a null `display_name`, and confirm the review is gone from the spot page. Confirm no further alert email arrives.
 
 Record the date you did this. That is what makes the privacy-policy deletion promise true rather than aspirational.

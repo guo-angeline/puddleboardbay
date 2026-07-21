@@ -95,7 +95,14 @@ export type IntentEventName =
   // fires after the OAuth round-trip resolves to a signed-in session.
   | "account_sign_in_started"
   | "account_sign_in_completed"
-  | "account_sign_out";
+  | "account_sign_out"
+  // Item 43: crowd reviews. _opened is the tap on "Write a review" (fires for
+  // signed-out users too, so the sign-in wall is measurable); _submitted is a
+  // real submission landing in the moderation queue, NOT a publication;
+  // reviews_viewed is dwell-gated, never a fetch settle.
+  | "review_form_opened"
+  | "review_submitted"
+  | "reviews_viewed";
 
 export type EventName = SystemEventName | IntentEventName;
 
@@ -185,6 +192,12 @@ export interface EventPropMap {
     region: string;
     method: "edge_swipe" | "os_back" | "back" | "close" | "backdrop" | "drag";
   };
+  // Item 43. spot_id + region on all three so they segment with spot_viewed.
+  // `review_submitted` counts submissions into the moderation queue, NOT
+  // publications; a published-review count comes from Supabase, not PostHog.
+  review_form_opened: { spot_id: number; region: string };
+  review_submitted: { spot_id: number; region: string; rating: number; has_text: boolean };
+  reviews_viewed: { spot_id: number; region: string; count: number };
   email_capture_submitted: {
     platform: OptInPlatform;
     trigger: OptInTrigger | "push_denied";

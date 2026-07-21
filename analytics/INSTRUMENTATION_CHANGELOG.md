@@ -14,6 +14,27 @@ without touching this file.
 
 ---
 
+## 2026-07-22 (item 43): three new crowd-review INTENT events (added)
+
+`review_form_opened` (tap on "Write a review", fires for signed-OUT users too so
+the sign-in wall is measurable), `review_submitted` (`rating`, `has_text`), and
+`reviews_viewed` (dwell-gated via `useGenuineView`, never a fetch settle). All
+three carry `spot_id` + `region` so they segment with `spot_viewed`.
+
+**Read `review_submitted` as submissions into the MODERATION QUEUE, not as
+published reviews.** Every submission is held for human approval and many will
+be rejected, so this event is an upper bound on public content, never a count of
+it. **The published-review count and the crowd averages are Supabase facts, not
+PostHog ones**; query `spot_reviews where status='published'` for anything that
+claims what is actually on the site, the same rule that already applies to the
+alert-loop tail.
+
+**Comparability:** all three are new, zero volume before this date. Reviews ship
+visible immediately, so the first non-zero day is the real launch. Note the
+funnel is deliberately lossy between `review_form_opened` and `review_submitted`
+for signed-out users: they hit the sign-in sheet in between, so a gap there is
+the auth wall, not abandonment of the review itself.
+
 ## 2026-07-21 (item 44, email-first revision): account_sign_in_started / _completed gain a `method` prop (props-changed)
 
 Sign-in became email-first: a 6-digit emailed code is now the primary path and

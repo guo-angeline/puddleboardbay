@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL } from "@/lib/types";
+import type { SpotAggregate } from "@/lib/useReviewAggregates";
 
 interface Props {
   spot: Spot;
@@ -12,6 +13,8 @@ interface Props {
   isFavorite?: boolean;
   onToggleFavorite?: (id: number) => void;
   conditionsBadge?: ReactNode;
+  /** Item 43: crowd rating, present only once the spot has 5+ published reviews. */
+  crowd?: SpotAggregate;
 }
 
 const DIFF_STYLES: Record<string, string> = {
@@ -27,7 +30,7 @@ function formatDistance(miles: number): string {
     : `${miles.toFixed(1)} mi`;
 }
 
-export default function SpotCard({ spot, selected, onClick, distance, isFavorite, onToggleFavorite, conditionsBadge }: Props) {
+export default function SpotCard({ spot, selected, onClick, distance, isFavorite, onToggleFavorite, conditionsBadge, crowd }: Props) {
   return (
     // role="button" rather than a real <button>: this card contains the
     // favorite-toggle button, and a <button> nested in a <button> is invalid
@@ -54,13 +57,25 @@ export default function SpotCard({ spot, selected, onClick, distance, isFavorite
               note; the owner accepted the aggregate-read risk. sr-only "out of 5"
               is scale only. */}
           <p className="text-xs text-(--muted) mt-0.5">
-            {typeof spot.owner_rating === "number" && (
+            {/* Item 43 (owner decision): once a spot has 5+ published crowd
+                reviews the CROWD number takes this slot and the owner's rating
+                moves into the sheet body. One number per spot in the list, so a
+                bare star can never be mistaken for an aggregate it is not. The
+                count is always shown, so it reads as arithmetic, not a verdict. */}
+            {crowd ? (
+              <span className="font-semibold text-(--dark)">
+                <span aria-hidden className="text-(--accent)">&#9733;</span> {crowd.avg.toFixed(1)}
+                <span className="sr-only"> out of 5 from {crowd.count} paddler reviews</span>
+                <span aria-hidden className="font-normal text-(--muted)"> ({crowd.count})</span>
+                {" · "}
+              </span>
+            ) : typeof spot.owner_rating === "number" ? (
               <span className="font-semibold text-(--dark)">
                 <span aria-hidden className="text-(--accent)">&#9733;</span> {spot.owner_rating.toFixed(1)}
                 <span className="sr-only"> out of 5</span>
                 {" · "}
               </span>
-            )}
+            ) : null}
             {spot.city}
             {distance !== undefined
               ? <> &middot; <span className="font-medium text-(--accent)">{formatDistance(distance)}</span></>

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What Paddle to Water collects, why, who processes it, and how to get it deleted. Anonymous by default: no account is needed to use the map.",
 };
 
-const LAST_UPDATED = "July 21, 2026";
+const LAST_UPDATED = "July 22, 2026";
 
 // Every claim on this page must be verified against the code, not asserted.
 // The lawyer gate caught TWO false claims in the first draft of this page,
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <Section title="What we collect">
-            <p style={{ marginBottom: "0.75rem" }}>Only these five things, and four of them are your choice:</p>
+            <p style={{ marginBottom: "0.75rem" }}>Only these six things, and five of them are your choice:</p>
 
             <div style={rowStyle}>
               <strong>Analytics, on every visit.</strong> We use PostHog to count page views, clicks, and which
@@ -140,6 +140,17 @@ export default function PrivacyPage() {
               <strong>Your saved spots, if you save any.</strong> These live in your own browser&apos;s local
               storage. Unless you sign in (below), they are not sent to us, and they do not follow you to
               another device or browser.
+            </div>
+
+            <div style={rowStyle}>
+              <strong>Your review, only if you write one.</strong> If you submit a rating or review
+              for a spot, we store what you wrote, the rating, the display name shown on your
+              account, and a record that you accepted the Contributor Terms (which version, and
+              when). Reviews are read by a person before they appear, and we keep a record of that
+              decision for up to three years for dispute handling and legal defence, even for
+              reviews we reject. If you delete your account, your published reviews are removed from
+              public display and dissociated from your name; the moderation record is retained for
+              that period and is never publicly displayed.
             </div>
 
             <div style={rowStyle}>

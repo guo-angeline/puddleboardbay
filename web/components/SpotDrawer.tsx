@@ -8,6 +8,8 @@ import { getSpotPhoto } from "@/lib/spotPhotos";
 import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
 import ConditionsPanel from "@/components/ConditionsPanel";
+import ReviewsSection from "@/components/ReviewsSection";
+import { useReviewAggregates } from "@/lib/useReviewAggregates";
 
 interface Props {
   spot: Spot | null;
@@ -66,6 +68,8 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // resize handle is gone. Behind a kill switch (default ON, no A/B, DAU<100);
   // if disabled it falls back to the old peek + drag behavior for rollback.
   const fullScreen = useKillSwitch("sheet-auto-expand");
+  // Item 43: crowd rating (present only at 5+ published reviews).
+  const aggregates = useReviewAggregates();
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -211,6 +215,8 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // analytics. `spot_action` still carries owner_rating + owner_rating_shown,
   // so engagement with rated spots is still measurable without an experiment.
   const showOwnerRating = typeof spot?.owner_rating === "number";
+  // Item 43: present only once this spot has 5+ published reviews.
+  const crowd = spot ? aggregates[spot.id] : undefined;
 
   // Item 31: per-spot photo. Kill-switch flag (default ON, no A/B per the
   // DAU<100 rule); only ~57 spots have a vision-verified free-licensed photo,
@@ -411,15 +417,35 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 so a screen reader does not announce a bare "4.5".
               */}
               <p className="text-sm text-(--muted) mt-1">
-                {showOwnerRating && (
+                {/* Item 43 (owner decision): at 5+ published reviews the CROWD
+                    number takes this slot. The owner's own rating is not lost,
+                    it moves to its own labelled line below, so the two are
+                    never blended into one ambiguous star (D24). */}
+                {crowd ? (
+                  <span className="font-semibold text-(--dark)">
+                    <span aria-hidden className="text-(--accent)">&#9733;</span> {crowd.avg.toFixed(1)}
+                    <span className="sr-only"> out of 5 from {crowd.count} paddler reviews</span>
+                    <span aria-hidden className="font-normal text-(--muted)"> ({crowd.count})</span>
+                    {" · "}
+                  </span>
+                ) : showOwnerRating ? (
                   <span className="font-semibold text-(--dark)">
                     <span aria-hidden className="text-(--accent)">&#9733;</span> {spot.owner_rating!.toFixed(1)}
                     <span className="sr-only"> out of 5</span>
                     {" · "}
                   </span>
-                )}
+                ) : null}
                 {spot.city} &middot; {spot.region}
               </p>
+              {/* Once the crowd number is in the subtitle, the owner's rating is
+                  shown separately and explicitly attributed, so a reader can
+                  always tell which is which. */}
+              {crowd && showOwnerRating && (
+                <p className="text-xs text-(--muted) mt-0.5">
+                  <span aria-hidden className="text-(--accent)">&#9733;</span>{" "}
+                  {spot.owner_rating!.toFixed(1)} our take
+                </p>
+              )}
             </div>
             <button
               onClick={() => dismiss("close")}
@@ -522,6 +548,10 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
 
           {/* Live tide + wind — the reason to come back. */}
           <ConditionsPanel spot={spot} />
+
+          {/* Item 43: crowd reviews, below conditions so the retention
+              differentiator keeps the higher position. */}
+          <ReviewsSection key={spot.id} spot={spot} />
 
           {/* Actions — hierarchy optimizes for Save (retention) first, Share
               (virality) second; Get Directions + Photos are demoted to a neutral

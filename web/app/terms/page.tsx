@@ -177,6 +177,21 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* Item 43: the Contributor Terms bind only the subset of users who
+              submit a review, so they live on their own page and are surfaced at
+              the point of submission. This cross-reference makes them findable
+              from the general Terms without adding a fourth footer link. */}
+          <section>
+            <h2 style={h2Style}>If you submit a review</h2>
+            <p style={pStyle}>
+              Posting a review is covered by separate{" "}
+              <Link href="/contributor-terms" style={linkStyle}>Contributor Terms</Link>, which
+              add a content licence, your representations about what you post, and a moderation
+              policy. You accept those terms at the point of submission; they do not apply if you
+              only browse the Site.
+            </p>
+          </section>
+
           <section>
             <h2 style={h2Style}>10. Changes to these Terms</h2>
             <p style={pStyle}>

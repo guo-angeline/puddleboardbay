@@ -374,6 +374,80 @@ function extrasCardHtml(extras: AlertEmailInput["extras"], allSameDay: boolean):
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ptw-card-neutral" style="background:#F2F7FC;border:1px solid #DCE7F0;border-radius:8px;margin:0 0 14px"><tr><td style="padding:10px 14px 2px"><span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#0E6FD1">${heading}</span></td></tr>${rows}${moreRow}</table>`;
 }
 
+export function moderateUrl(token: string, action: "approve" | "reject"): string {
+  return `${SITE_URL}/api/reviews/moderate?t=${encodeURIComponent(token)}&action=${action}`;
+}
+
+export interface ReviewModerationInput {
+  spotName: string;
+  spotId: number;
+  rating: number;
+  body: string | null;
+  displayName: string | null;
+  moderationToken: string;
+}
+
+/**
+ * Item 43: the moderation queue, delivered as email. D24 settled on binary
+ * publish/reject with NO auto-publish, so this is the only thing standing
+ * between a stranger's text and the live site.
+ *
+ * Deliberately NOT built on shell(). That wrapper carries the CAN-SPAM postal
+ * address and a visible unsubscribe link, which belong on marketing mail sent
+ * to subscribers. This is operator mail to the site owner about their own
+ * queue; an unsubscribe link would be both meaningless and dangerous, since
+ * unsubscribing from your own moderation queue would silently stop review
+ * approvals. Kept plain and scannable so it can be actioned from a phone.
+ */
+export function composeReviewModerationEmail(input: ReviewModerationInput): EmailMessage {
+  const { spotName, spotId, rating, body, displayName, moderationToken } = input;
+  const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+  const who = displayName?.trim() || "a signed-in paddler";
+  const approve = moderateUrl(moderationToken, "approve");
+  const reject = moderateUrl(moderationToken, "reject");
+
+  const subject = `Review awaiting approval: ${spotName} (${rating}/5)`;
+
+  const bodyBlock = body
+    ? `<tr><td style="padding:0 0 18px"><div style="border-left:3px solid #DCE7F0;padding:2px 0 2px 14px;font-size:15px;line-height:1.65;color:#0B2A47;white-space:pre-wrap">${escapeHtml(body)}</div></td></tr>`
+    : `<tr><td style="padding:0 0 18px;font-size:14px;color:#556A7E;font-style:italic">No written review, rating only.</td></tr>`;
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px 16px;background:#EEF5FB;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0B2A47">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #DCE7F0;border-radius:10px">
+<tr><td style="padding:24px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0E6FD1">Awaiting approval</td></tr>
+  <tr><td style="padding:0 0 2px;font-family:Georgia,serif;font-size:20px;font-weight:700;color:#0B2A47">${escapeHtml(spotName)}</td></tr>
+  <tr><td style="padding:0 0 16px;font-size:14px;color:#556A7E">${stars} ${rating}/5 &middot; from ${escapeHtml(who)}</td></tr>
+  ${bodyBlock}
+  <tr><td style="padding:0 0 10px">
+    <a href="${approve}" style="display:block;background:#0E6FD1;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;text-align:center;padding:13px 20px;border-radius:8px">Approve and publish</a>
+  </td></tr>
+  <tr><td style="padding:0 0 16px">
+    <a href="${reject}" style="display:block;border:1px solid #DCE7F0;color:#0B2A47;text-decoration:none;font-size:15px;font-weight:600;text-align:center;padding:12px 20px;border-radius:8px">Reject</a>
+  </td></tr>
+  <tr><td style="font-size:13px;line-height:1.6;color:#556A7E;border-top:1px solid #DCE7F0;padding:14px 0 0">Nothing is public until you approve it. If a factual claim about a named business looks unverifiable, reject it.</td></tr>
+</table>
+</td></tr></table></body></html>`;
+
+  const text = [
+    `Review awaiting approval`,
+    ``,
+    `${spotName} (spot ${spotId})`,
+    `${rating}/5 from ${who}`,
+    ``,
+    body ? body : "No written review, rating only.",
+    ``,
+    `Approve and publish: ${approve}`,
+    `Reject:              ${reject}`,
+    ``,
+    `Nothing is public until you approve it. If a factual claim about a named business looks unverifiable, reject it.`,
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
 export function composeAlertEmail(input: AlertEmailInput): EmailMessage {
   const {
     spotName,

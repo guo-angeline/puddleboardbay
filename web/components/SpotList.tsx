@@ -7,6 +7,7 @@ import { readStashedSubscription } from "@/lib/push";
 import { isEmailConfirmed } from "@/lib/email/subscriptionState";
 import { useGenuineView } from "@/lib/useGenuineView";
 import SpotCard from "./SpotCard";
+import { useReviewAggregates } from "@/lib/useReviewAggregates";
 import { rankSavedSpotsByConditions, type SavedConditionState } from "@/lib/savedConditions";
 import ConditionsBadge from "./ConditionsBadge";
 
@@ -31,6 +32,8 @@ export default function SpotList({
   savedSpots = [], favorites = new Set(), onToggleFavorite, condBySpot = {},
   recentSpots = [], recentCondBySpot = {}, emptyState,
 }: Props) {
+  // Item 43: one aggregate fetch for the whole list, passed down per card.
+  const aggregates = useReviewAggregates();
   const selectedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -141,6 +144,7 @@ export default function SpotList({
             <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
               <SpotCard
                 spot={spot}
+                crowd={aggregates[spot.id]}
                 selected={selected?.id === spot.id}
                 onClick={() => onSelect(spot, "list")}
                 distance={distanceMap?.[spot.id]}
@@ -166,6 +170,7 @@ export default function SpotList({
             <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
               <SpotCard
                 spot={spot}
+                crowd={aggregates[spot.id]}
                 selected={selected?.id === spot.id}
                 onClick={() => {
                   trackIntent("recent_spot_clicked", { spot_id: spot.id, region: spot.region });
