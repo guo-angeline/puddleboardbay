@@ -1,3 +1,11 @@
+## 2026-07-21 — Backlog dry: the studio is waiting on promotion, not on ideas
+
+Item 43 was the last `[ready]` item. Nothing is `[in-progress]`, no decision is `[OPEN]`, and every owner item queued since 2026-07-13 has shipped. The loop stays alive on its 30-minute cron and will pick up whatever you promote; it will not keep pinging about this.
+
+Four items sit `[proposed]` and only you can promote them (the studio is not allowed to promote its own ideas, deliberately). Two more are blocked on inputs rather than on work: item 45 needs a spot registry outside the Bay Area, item 12 needs a screenshot from your phone.
+
+Not adding new proposals this iteration. A dry `[ready]` queue with a stocked `[proposed]` shelf means the constraint is your attention, and piling on more ideas would make that worse.
+
 ## 2026-07-21 — Item 43: crowd reviews are live
 
 **Your move.** One thing: run the account-deletion runbook once end to end on a throwaway account that has a published review (`docs/legal/account-deletion-runbook.md`, "Pre-enable test"). The privacy policy promises deletion; that test is what makes the promise true rather than aspirational.
