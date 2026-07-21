@@ -304,6 +304,24 @@ Remaining owner steps (see `native/README.md` runbook): run `supabase/migrations
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
 
+## 76. [ready] Tablet (md, 768-1023px) with a spot open: three panes do not fit, the map collapses to a 128px dead sliver
+
+**Found by the 2026-07-19 verify loop while verifying the item-"desktop card 1.5x wider" change (`0fe5758`).** That change is correct and verified (drawer 320px at md, 479px from lg, map 224px@1024 / 480px@1280 / 640px@1440, no horizontal overflow at any width). This item is about the **map pane at md**, which the commit deliberately left alone.
+
+**Measured at 768px (iPad portrait) with a spot open:** list 320 + map **128** + drawer 320. At 128px the map cannot do its job (you see 2-3 pins and clipped label fragments, no spatial orientation), yet it still consumes width the list and drawer could use. Screenshot confirms it reads as a broken sliver, not a map.
+
+**Concrete defect inside it:** the map pane's own footer links overflow that 128px pane, "Disclaimer" (right 461) and "Privacy" (right 522) extend past the map's right edge and are clipped behind the drawer. **Severity is limited**: the SAME links also render un-clipped in the list-panel footer (right <=249), so legal/policy access is NOT blocked; this is a visual defect, not an access problem. At 1024px (map 224px) nothing clips.
+
+**Options (design-lead's call, all reasonable):**
+- At md with a spot open, overlay the drawer on top of the map instead of squeezing it into the flex row.
+- Or hide the map pane entirely at md-with-spot-open and give the width to the drawer.
+- Or fall through to the mobile full-screen sheet behaviour at md.
+Whatever is chosen, the map should either be usable or absent, never a 128px sliver, and the map-pane footer links must not clip.
+
+**Weigh before building:** this is tablet-only (768-1023px) and does not affect phone or desktop, so check whether tablet traffic justifies it before spending a slot. It is filed so the measurement is not lost, not because it is urgent.
+
+**Acceptance:** at 768px and 1023px with a spot open, the map is either usable or intentionally hidden, no clipped footer links in the map pane, no horizontal overflow, and phone (390px) + desktop (>=1024px) layouts are unchanged.
+
 ## 73. [done] Custom 404 page: a stale/hidden spot link dead-ends on the bare Next.js 404 with no way back (deployed 2026-07-20)
 
 **Shipped 2026-07-20 (studio loop).** Added `app/not-found.tsx` (App Router convention), so `notFound()` from `spot/[id]` (hidden ids like 54/79 and out-of-range ids) and any unmatched route now render a branded page instead of the bare Next.js default, keeping the real 404 status (no soft-200). Meltwater palette + house fonts (Newsreader heading, Hanken body), the paddle-mark masthead linking home, a "404" eyebrow, one friendly shared line ("We couldn't find that spot. The link may be old, or the spot was taken down. The rest of the map is still here."), and an azure `Browse all spots` CTA to `/`. Copy claims no region/count (spots span beyond the Bay Area; a hardcoded number would drift). Verified LIVE on paddletowater.com: `/spot/54`, `/spot/99999`, and a bogus route all return HTTP 404 with the branded content; a valid spot still 200; the CTA navigates home. 418 tests (6 new grep-guard, incl. a no-em-dash assert), lint + tsc + `npm run build` clean (`/_not-found` prerendered static). No legal surface (cosmetic page, no data/claims/privacy). Deployed `a74ce60`.
