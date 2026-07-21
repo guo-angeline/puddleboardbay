@@ -75,6 +75,36 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## Studio finding, added 2026-07-21 (auth defect found while diagnosing a real failed sign-in)
+
+## 74. [proposed] Email sign-in is broken for anyone on Microsoft 365 or Google Workspace: link scanners burn the one-time code
+
+**Filed as a defect with direct evidence, not as an idea.** The studio does not add proposals to a stocked shelf, but this was found while diagnosing an actual sign-in the owner could not complete (`qg47@cornell.edu`, 2026-07-21), and losing it would leave a live P0 unrecorded.
+
+**What happens.** The Supabase auth email contains BOTH a clickable confirmation link and the `{{ .Token }}` code. Corporate and university mail systems pre-click every URL in inbound mail to scan it (Microsoft Defender **Safe Links**, Google Workspace equivalents). That click consumes the single-use token, so the code printed in the same message is dead before the human ever opens it. The user sees "the code doesn't work", or never registers that a code was there at all.
+
+**Evidence (2026-07-21, `qg47@cornell.edu`, Cornell is on `cornell-edu.mail.protection.outlook.com`, i.e. Microsoft 365):**
+- Supabase `confirmation_sent_at` 19:54:06.583Z; `email_confirmed_at` **19:55:28.058Z**, 82 seconds later.
+- Vercel logged `GET /` at **19:55:28.25Z**, 0.2s after that confirmation: the redirect landing after the link was followed.
+- `last_sign_in_at` on the account is still **empty**. The address was confirmed by something that never became a signed-in session.
+- 19:57:31 to 19:57:40: every link in one of our emails fetched 3-6 times each, plus a bare `OPTIONS /`. A scanner sweeping a message, not a person reading one.
+
+**Why it matters more than one user.** Microsoft 365 and Google Workspace are most corporate and university mail. Sign-in is now required to post a review (item 43), so this silently excludes a large class of users from the whole UGC feature, and there is no error message anywhere: the app reports the code as invalid, which reads as our bug to the user and as user error to us.
+
+**Fix, in order of leverage:**
+1. **Make the auth emails code-only.** Supabase Dashboard -> Authentication -> Emails -> **"Confirm signup"** and **"Magic Link"**: drop `{{ .ConfirmationURL }}`, keep `{{ .Token }}`. With no URL in the message there is nothing to detonate. This is an owner dashboard action, not code, and it fixes the failure outright.
+2. **Stop depending on the template.** The app should also survive a link click: today `createBrowserClient` uses PKCE, so a link followed from a mail client can never complete a session in the user's browser, and `/` has no handler for the landing. Either handle the `token_hash` + `type` landing in a route, or assert the code-only template in a test that fails loudly if a link ever reappears.
+3. **Surface the real failure.** "That code did not work" should distinguish an expired/consumed token from a wrong code, so the next occurrence is diagnosable from the UI instead of from Vercel logs.
+
+**Acceptance:**
+- A sign-in code sent to a Microsoft 365 address still verifies after the mail system has scanned the message.
+- A regression guard that fails if the auth email regains a clickable link, or if the app is left unable to complete a link landing.
+- The consumed-token case produces a distinct, honest error string.
+
+**Not fixed by the 2026-07-21 OTP-length fix.** That was a separate defect (client truncated a 6-10 digit code to 6). This one is independent and still live.
+
+---
+
 ## Owner items, added 2026-07-18 (enrollment-prompt tuning; all three [ready], queued top-most on purpose)
 
 *From the 2026-07-18 enrollment-funnel readout: the alert prompt reaches 59 unique users in the clean 9-day window (34% of visitors) but 83% dismiss it and ~2% enroll. The bottleneck is prompt quality and timing, not reach. These three items address timing (65), design + copy (66), and over-nagging (67). Work item 65 first (one-line, low-risk), then 66, then 67.*
