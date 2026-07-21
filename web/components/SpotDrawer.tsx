@@ -532,8 +532,10 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                   but it must not cost sheet space (owner directive 2026-07-18).
                   Small, legible over a subtle gradient; links to author source +
                   license. Owner first-party photos carry no author, so the credit
-                  line is omitted entirely for them. */}
-              {photo.author && (
+                  line is omitted entirely for them, as do CC0/public-domain
+                  photos, which record an author for provenance but waive the
+                  credit (`attribution_required: false`). */}
+              {photo.author && photo.attribution_required !== false && (
                 <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
                   <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.author}</a>
                   {" / "}

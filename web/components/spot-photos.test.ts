@@ -8,7 +8,14 @@ const manifest = JSON.parse(
 ) as {
   photos: Record<
     string,
-    { file: string; source?: string; author?: string; license?: string; source_page?: string }
+    {
+      file: string;
+      source?: string;
+      author?: string;
+      license?: string;
+      source_page?: string;
+      attribution_required?: boolean;
+    }
   >;
 };
 const drawer = fs.readFileSync(path.join(ROOT, "components", "SpotDrawer.tsx"), "utf-8");
@@ -48,6 +55,28 @@ describe("item 31 spot photos", () => {
       expect(p.author, `owner spot ${id} must have no author`).toBeFalsy();
       expect(p.license, `owner spot ${id} must have no license`).toBeFalsy();
     }
+  });
+
+  it("attribution is only ever waived on CC0 / public-domain photos", () => {
+    for (const [id, p] of Object.entries(manifest.photos)) {
+      if (p.attribution_required !== false) continue;
+      // A CC-BY / CC-BY-SA photo legally requires the credit line. Waiving it
+      // here would silently strip attribution the licence demands, so the only
+      // licences allowed to opt out are the ones that waive every condition.
+      expect(
+        p.license,
+        `spot ${id} waives attribution but is licensed "${p.license}"`
+      ).toMatch(/^(cc0|public domain|pdm)/i);
+      // Provenance must still be recorded even though nothing renders.
+      expect(p.author, `spot ${id} waives attribution but records no author`).toBeTruthy();
+      expect(p.source_page, `spot ${id} source_page`).toMatch(/^https:\/\/\S+$/);
+    }
+  });
+
+  it("the figcaption gate honours both the author and the waiver", () => {
+    // Guard the render path itself: a gate on `photo.author` alone would print
+    // a credit line on CC0 photos that deliberately waive it.
+    expect(drawer).toContain("photo.author && photo.attribution_required !== false");
   });
 
   it("only free licenses shipped (no fair-use / non-commercial / no-derivatives)", () => {
