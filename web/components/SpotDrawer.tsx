@@ -69,6 +69,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // if disabled it falls back to the old peek + drag behavior for rollback.
   const fullScreen = useKillSwitch("sheet-auto-expand");
   // Item 43: crowd rating (present only at 5+ published reviews).
+  const reviewsOn = useKillSwitch("reviews");
   const aggregates = useReviewAggregates();
 
   useEffect(() => {
@@ -216,7 +217,10 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // so engagement with rated spots is still measurable without an experiment.
   const showOwnerRating = typeof spot?.owner_rating === "number";
   // Item 43: present only once this spot has 5+ published reviews.
-  const crowd = spot ? aggregates[spot.id] : undefined;
+  // The `reviews` kill switch must pull the crowd number too, not just the
+  // reviews list: an average left standing with its source hidden is worse
+  // than no average.
+  const crowd = spot && reviewsOn ? aggregates[spot.id] : undefined;
 
   // Item 31: per-spot photo. Kill-switch flag (default ON, no A/B per the
   // DAU<100 rule); only ~57 spots have a vision-verified free-licensed photo,

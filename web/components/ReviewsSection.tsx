@@ -5,6 +5,7 @@ import type { Spot } from "@/lib/types";
 import { useAccount } from "@/lib/useAccount";
 import { trackIntent } from "@/lib/analytics";
 import { useGenuineView } from "@/lib/useGenuineView";
+import { useKillSwitch } from "@/lib/experiments";
 import ReviewForm from "@/components/ReviewForm";
 import SignInSheet from "@/components/SignInSheet";
 
@@ -21,6 +22,11 @@ export interface PublishedReview {
 // the same way ConditionsPanel loads conditions.
 export default function ReviewsSection({ spot }: { spot: Spot }) {
   const { user, enabled: authEnabled } = useAccount();
+  // Reversibility, per the "no A/B until DAU > 100" directive: ship at 100%
+  // behind a kill switch, default ON. `authEnabled` is only a config check, so
+  // without this there is no way to pull reviews without a redeploy, and this
+  // is the surface most likely to need pulling in a hurry (UGC).
+  const reviewsOn = useKillSwitch("reviews");
   const [reviews, setReviews] = useState<PublishedReview[] | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
@@ -63,7 +69,7 @@ export default function ReviewsSection({ spot }: { spot: Spot }) {
     else setSignInOpen(true); // signed out is a sign-in prompt, not a dead end
   }
 
-  if (!authEnabled) return null;
+  if (!authEnabled || !reviewsOn) return null;
 
   return (
     <div ref={viewRef} className="mt-5 border-t border-(--border) pt-4">

@@ -86,3 +86,14 @@ describe("signed-out users get a way in, not a wall (item 43)", () => {
     expect(section).toMatch(/else setSignInOpen\(true\)/);
   });
 });
+
+describe("reviews are reversible without a redeploy (item 43)", () => {
+  it("both the list and the crowd number sit behind the same kill switch", () => {
+    expect(section).toContain('useKillSwitch("reviews")');
+    expect(section).toMatch(/if \(!authEnabled \|\| !reviewsOn\) return null;/);
+    const drawer = read("./SpotDrawer.tsx");
+    expect(drawer).toContain('useKillSwitch("reviews")');
+    // A hidden list with a visible average would strand a number with no source.
+    expect(drawer).toMatch(/const crowd = spot && reviewsOn \? aggregates\[spot\.id\] : undefined;/);
+  });
+});
