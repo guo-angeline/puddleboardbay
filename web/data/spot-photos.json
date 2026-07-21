@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 94,
+  "total_with_photo": 92,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -89,14 +89,13 @@
     },
     "12": {
       "file": "/spot-photos/12.jpg",
-      "author": "Leijurv",
-      "license": "CC BY-SA 4.0",
-      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "SYPulau",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3APinecrest%20Lake%20California%201.jpg",
-      "title": "File:Pinecrest Lake California 1.jpg",
-      "distance_m": 438,
-      "score": 11
+      "source_page": "https://commons.wikimedia.org/wiki/File:Pinecrest_lake.JPG",
+      "title": "File:Pinecrest lake.JPG",
+      "distance_m": 852
     },
     "13": {
       "file": "/spot-photos/13.jpg",
@@ -122,12 +121,13 @@
     },
     "16": {
       "file": "/spot-photos/16.jpg",
-      "author": "Syced",
-      "license": "CC0",
-      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "author": "Almonroth",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AAquatic%20Cove.jpg",
-      "title": "File:Aquatic Cove.jpg"
+      "source_page": "https://commons.wikimedia.org/wiki/File:Aquatic_Park_Historic_District-3.jpg",
+      "title": "File:Aquatic Park Historic District-3.jpg",
+      "distance_m": 210
     },
     "17": {
       "file": "/spot-photos/17.jpg",
@@ -176,14 +176,13 @@
     },
     "23": {
       "file": "/spot-photos/23.jpg",
-      "author": "F ASTILY",
-      "license": "CC BY-SA 4.0",
-      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "Sausalitoarchitect",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AHalf%20Moon%20Bay%20State%20Beach%207%202023-03-03.jpeg",
-      "title": "File:Half Moon Bay State Beach 7 2023-03-03.jpeg",
-      "distance_m": 86,
-      "score": 21
+      "source_page": "https://commons.wikimedia.org/wiki/File:Pillar_Point_Harbor_2.jpg",
+      "title": "File:Pillar Point Harbor 2.jpg",
+      "distance_m": 724
     },
     "26": {
       "file": "/spot-photos/26.jpg",
@@ -348,12 +347,13 @@
     },
     "58": {
       "file": "/spot-photos/58.jpg",
-      "author": "jennheflin",
-      "license": "CC BY-SA 2.0",
-      "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
-      "source": "flickr",
-      "source_page": "https://www.flickr.com/photos/125063157@N02/23840958384",
-      "title": "Robert Crown Beach, Alameda, California"
+      "author": "Akos Kokai",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "source": "Wikimedia Commons",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Alameda_(8593376198).jpg",
+      "title": "File:Alameda (8593376198).jpg",
+      "distance_m": 1486
     },
     "59": {
       "file": "/spot-photos/59.jpg",
@@ -598,17 +598,6 @@
       "distance_m": 67,
       "score": 17
     },
-    "101": {
-      "file": "/spot-photos/101.jpg",
-      "author": "Noah_Loverbear",
-      "license": "CC BY-SA 3.0",
-      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
-      "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AGranite%20Bay%20Folsom%20Lake%20CA.%20-%20panoramio.jpg",
-      "title": "File:Granite Bay Folsom Lake CA. - panoramio.jpg",
-      "distance_m": 214,
-      "score": 16
-    },
     "102": {
       "file": "/spot-photos/102.jpg",
       "author": "Dicklyon",
@@ -622,14 +611,13 @@
     },
     "103": {
       "file": "/spot-photos/103.jpg",
-      "author": "DimiTalen",
-      "license": "CC0",
-      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "author": "photophat",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AKings%20Beach%20near%20Raccoon%20Street%20and%20North%20Lake%20Boulevard%2C%202011.jpg",
-      "title": "File:Kings Beach near Raccoon Street and North Lake Boulevard, 2011.jpg",
-      "distance_m": 194,
-      "score": 16
+      "source_page": "https://commons.wikimedia.org/wiki/File:Lake_Tahoe_-_panoramio_-_photophat_(3).jpg",
+      "title": "File:Lake Tahoe - panoramio - photophat (3).jpg",
+      "distance_m": 2015
     },
     "105": {
       "file": "/spot-photos/105.jpg",
@@ -733,15 +721,6 @@
       "source_page": "https://www.flickr.com/photos/7633518@N08/7901172638",
       "title": "silver lake from treasure island"
     },
-    "120": {
-      "file": "/spot-photos/120.jpg",
-      "author": "JazzD",
-      "license": "Public domain",
-      "license_url": null,
-      "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3ALake%20Folsom.JPG",
-      "title": "File:Lake Folsom.JPG"
-    },
     "123": {
       "file": "/spot-photos/123.jpg",
       "author": "Ponderosapine210",
@@ -755,14 +734,13 @@
     },
     "126": {
       "file": "/spot-photos/126.jpg",
-      "author": "Pi.1415926535",
-      "license": "CC BY-SA 4.0",
-      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "author": "MARELBU",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AMV%20Angel%20Island%20at%20Ayala%20Cove%20Ferry%20Terminal%2C%20June%202024.jpg",
-      "title": "File:MV Angel Island at Ayala Cove Ferry Terminal, June 2024.jpg",
-      "distance_m": 20,
-      "score": 18
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tiburon,_California_USA_(Angel_Island)_-_panoramio.jpg",
+      "title": "File:Tiburon, California USA (Angel Island) - panoramio.jpg",
+      "distance_m": 1775
     },
     "128": {
       "file": "/spot-photos/128.jpg",
@@ -798,14 +776,13 @@
     },
     "136": {
       "file": "/spot-photos/136.jpg",
-      "author": "Pi.1415926535",
+      "author": "Dllu",
       "license": "CC BY-SA 4.0",
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3AT%20Third%20Street%20train%20on%20Islais%20Creek%20bridge%20(1)%2C%20April%202021.jpg",
-      "title": "File:T Third Street train on Islais Creek bridge (1), April 2021.jpg",
-      "distance_m": 32,
-      "score": 17
+      "source_page": "https://commons.wikimedia.org/wiki/File:Abandoned_grain_silos_at_Pier_90,_San_Francisco_3.jpg",
+      "title": "File:Abandoned grain silos at Pier 90, San Francisco 3.jpg",
+      "distance_m": 194
     },
     "138": {
       "file": "/spot-photos/138.jpg",
@@ -831,14 +808,13 @@
     },
     "140": {
       "file": "/spot-photos/140.jpg",
-      "author": "Clotee Pridgen Alloc…",
+      "author": "Clotee Pridgen Allochuku",
       "license": "CC BY-SA 3.0",
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "source": "Wikimedia Commons",
-      "source_page": "https://commons.wikimedia.org/wiki/File%3APittsburg%20Marina%20-%20panoramio%20(7).jpg",
-      "title": "File:Pittsburg Marina - panoramio (7).jpg",
-      "distance_m": 129,
-      "score": 13
+      "source_page": "https://commons.wikimedia.org/wiki/File:Pittsburg_Marina_-_panoramio_(4).jpg",
+      "title": "File:Pittsburg Marina - panoramio (4).jpg",
+      "distance_m": 595
     },
     "141": {
       "file": "/spot-photos/141.jpg",
