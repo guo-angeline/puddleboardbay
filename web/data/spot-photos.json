@@ -1,7 +1,7 @@
 {
   "generated": "raw-data/select_photos.mjs (automated pick, owner directive 2026-07-18, no manual curation)",
   "source": "Wikimedia Commons, free licenses only, self-hosted sized derivatives",
-  "total_with_photo": 106,
+  "total_with_photo": 107,
   "photos": {
     "1": {
       "file": "/spot-photos/1.jpg",
@@ -986,6 +986,15 @@
       "distance_m": 95,
       "score": 21
     },
+    "148": {
+      "file": "/spot-photos/148.jpg",
+      "author": "gtrwndr87",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "source": "Flickr (via Openverse)",
+      "source_page": "https://www.flickr.com/photos/11440689@N03/2135826563",
+      "title": "Lakeshore Park"
+    },
     "149": {
       "file": "/spot-photos/149.jpg",
       "author": "MARELBU",
@@ -1009,5 +1018,5 @@
       "score": 20
     }
   },
-  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage. | 2026-07-18 owner first-party import: +12 owner-supplied photos (source:\"owner\", no attribution overlay). | 2026-07-21 owner first-party import: +2 owner-supplied photos (spots 101, 120; source:\"owner\", no attribution overlay). | 2026-07-21 wide re-sweep of the 45 photo-less spots (Commons category traversal + Wikipedia lead images + wider geosearch, all coordinate-verified, vision-reviewed): +12 (8,24,37,38,56,104,108,112,117,124,137,142). 33 still have no usable free-licensed photo."
+  "curation": "Vision-curated 2026-07-18: from 111 auto-picks, 57 verified as genuine location photos; 54 rejected (wildlife/objects/buildings/signs/maps that title-scoring could not filter). Rejected spot ids left photo-less for a later re-pick/backfill pass. | 2026-07-18 backfill slice A (item 56): +3 re-picked from rejects (19,86,128); top-alternate re-pick low-yield, rest need widened multi-source search. | slice B (item 56): +18 via Wikidata P18 (coord-verified, vision-checked; dropped aerials/satellite/dam/power-plant/sign). | slice C (item 56): +4 via Openverse/Flickr (text-search noisy, vision-kept 4 of 24). Free sources (Commons+Wikidata+Openverse) exhausted at this coverage. | 2026-07-18 owner first-party import: +12 owner-supplied photos (source:\"owner\", no attribution overlay). | 2026-07-21 owner first-party import: +2 owner-supplied photos (spots 101, 120; source:\"owner\", no attribution overlay). | 2026-07-21 wide re-sweep of the 45 photo-less spots (Commons category traversal + Wikipedia lead images + wider geosearch, all coordinate-verified, vision-reviewed): +12 (8,24,37,38,56,104,108,112,117,124,137,142). 33 still have no usable free-licensed photo. | 2026-07-21 keyless Openverse pass over the remaining 33: 14 spots returned hits, only 1 usable (148 Lakeshore Park, Flickr CC BY-SA). Rest were birds, big-wave surf, a Bahamas geology slide, a Ferrari dealership."
 }
