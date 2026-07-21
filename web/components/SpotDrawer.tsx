@@ -485,7 +485,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
             </button>
           </div>
 
-          {/* Badges */}
+          {/* Badges + tags — one wrapping row, not two stacked ones. */}
           <div className="flex flex-wrap gap-2 mb-3">
             <span
               className="px-2.5 py-1 rounded-full text-xs font-medium"
@@ -508,14 +508,8 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 Fee unknown
               </span>
             )}
+            {tags.map((t) => <Tag key={t} label={t} />)}
           </div>
-
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {tags.map((t) => <Tag key={t} label={t} />)}
-            </div>
-          )}
 
           {/* Item 31: spot photo. Modest height so the conditions panel (the
               reason to come back) still sits near the peek fold. CC-BY/BY-SA
