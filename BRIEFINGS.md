@@ -1,5 +1,17 @@
 # Briefings: the board log
 
+## 2026-07-21 · Item 44 built: optional Google sign-in (Google/web half), on a branch, deploy is yours
+
+**Your move:** To turn sign-in on, three things only you can do: (1) create the Google Cloud OAuth client and put the public Supabase keys + Google client secret in the deploy env; (2) do the two lawyer pre-enable items (a once-tested account-deletion runbook for hello@ requests, and point the OAuth consent screen at the live /privacy URL); (3) apply the accounts migration in the Supabase SQL editor. Then I merge the branch and deploy.
+
+**TL;DR:** The Google/web half of accounts is built, tested, and lawyer-reviewed, sitting on branch `studio/item-44-google-auth`. It is deliberately not merged or deployed: it stays completely inert (app byte-identical to today) until you provision credentials, and the privacy-policy change must not go live before sign-in is actually active.
+
+**Appendix:**
+- **Item 44 (Google/web half) -> built, not deployed** (`b0e68be`). Env-gated + behind an `accounts` kill switch. Verified live both ways: with no keys, no Sign in button and no console errors; with (fake) keys, the Sign in button renders. Supabase Auth (Google), `/auth/callback`, a `useAccount` hook + header button, and a migrate-on-sign-in route that claims this device's anonymous push/email subscriptions and uploads its saved spots (idempotent, verifies the caller, never touches another account's rows). Analytics keep `anon_id` primary (no `identify()`); privacy policy updated. 440 tests (+11), lint + tsc + build clean.
+- **Lawyer gate: needs-changes, now addressed in code** (privacy date bumped, Supabase processor line corrected, a low-risk anon_id note). It comes back clear once the two owner pre-enable items above are done. It confirmed the auth layer itself is well-scoped and that the genuinely heavy pieces (reviews, the 18+ ToS) stay correctly blocked on counsel.
+- **Why a branch, not main:** merging would ship the "we collect your Google account" privacy text on the next deploy of anything, before sign-in is live. The work is preserved on the branch until you deploy the whole feature together.
+- **Apple half deferred** (your Q2b): Sign in with Apple needs the still-pending Apple Developer Program enrollment; Google/web ships first, Apple layers on later.
+
 ## 2026-07-20 · Item 69 shipped: "a 8-hour window" is now "an 8-hour window"
 
 **Your move:** One optional eyeball, next alert email you get, check the window-length sentence reads naturally. The rendered strings are asserted in tests, but real-inbox rendering is always your final check.
