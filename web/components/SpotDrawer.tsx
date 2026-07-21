@@ -340,7 +340,11 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
         {...(forceFull
           ? { role: "dialog", "aria-modal": true, "aria-labelledby": "spot-sheet-title", tabIndex: -1 }
           : {})}
-        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 md:shrink-0 md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full md:shadow-none focus:outline-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
+        // Desktop sheet width: 1.5x the original 320px, applied from `lg` only.
+        // Tablet keeps 320px on purpose. At 820px the list (320) plus a wider
+        // sheet leaves the map ~116px, which is worse than the sheet is better;
+        // the full 480px lands at lg+ where there is room for all three panes.
+        className={`fixed bottom-0 left-0 right-0 md:static md:border-l md:border-gray-200 md:z-auto bg-white md:w-80 lg:w-[30rem] md:shrink-0 md:rounded-none overflow-y-auto max-h-[58vh] md:max-h-none md:h-full md:shadow-none focus:outline-none ${forceFull ? "" : "rounded-t-2xl shadow-2xl"}`}
         style={{
           zIndex: 1200,
           ...(forceFull
