@@ -558,7 +558,7 @@ All 47 SF Bay Water Trail designated trailheads were classified, none guessed:
 
 **DEPLOY is blocked on the OWNER (not the loop):**
 1. Create the Google Cloud OAuth client; put `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (and the Google provider client id/secret in Supabase Auth) in the deploy env.
-2. Two lawyer pre-enable actions: (a) a documented, once-tested account-deletion runbook for `hello@` requests; (b) point the OAuth consent screen at `https://paddletowater.com/privacy` with scopes limited to email/profile.
+2. Two lawyer pre-enable actions: (a) account-deletion runbook, **DRAFTED 2026-07-21 at `docs/legal/account-deletion-runbook.md`**, still needs the owner's one end-to-end test on a throwaway account (that test is what makes the privacy-policy deletion promise true); (b) point the OAuth consent screen at `https://paddletowater.com/privacy` with scopes limited to email/profile.
 3. Apply `supabase/migrations/20260721_accounts.sql` in the Supabase SQL editor (PROTECTED, owner-reviewed).
 Then: merge `studio/item-44-google-auth` to main, set `LAST_UPDATED` to the real go-live date if it drifts from 2026-07-21, and deploy (that deploy activates sign-in + the privacy disclosure together). The Apple half (D28 Q2b) is a later follow-up once Apple Developer enrollment lands.
 
