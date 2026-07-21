@@ -1,3 +1,17 @@
+## 2026-07-21 — Item 43: crowd reviews are live
+
+**Your move.** One thing: run the account-deletion runbook once end to end on a throwaway account that has a published review (`docs/legal/account-deletion-runbook.md`, "Pre-enable test"). The privacy policy promises deletion; that test is what makes the promise true rather than aspirational.
+
+**TL;DR.** Visitors can now rate a spot 1-5 and leave an optional comment. Nothing they write reaches the public site without you clicking Approve in an email. Verified on production, end to end, before this briefing.
+
+**What shipped.** Sign-in is required to submit (item 44's auth, which you tested yesterday). Every submission lands `pending`; there is no code path that publishes anything automatically. You get an email per submission with the spot, the stars, the full text, and two buttons. Approve publishes it, Reject does not, and a link only works once, so a forwarded or re-clicked email cannot flip a decision you already made.
+
+**The legal machinery is in the row, not in a doc.** Each review stores the terms version, a hash of the exact text shown, and the timestamp of assent. The checkbox is unchecked by default and submit is dead until it is ticked. If someone deletes their account, the review unpublishes and loses its byline but the moderation record survives, which is what the Contributor Terms promise in two different sections.
+
+**The crowd average is deliberately shy.** It does not appear at all until a spot has five published reviews, and when it appears it always carries its count. Below five, your own rating is what shows. No `aggregateRating` in search results yet: putting a star into Google off three reviews is the exact FTC surface the spec warns about, and it is easy to add later when the volume is real.
+
+**Verification.** 467 tests, lint and tsc clean. On production I seeded a pending row, confirmed it was invisible, approved it through the real email link, confirmed it appeared, replayed the link and confirmed it was refused, confirmed the aggregate stayed hidden at one review, then deleted the test row and confirmed it was gone. Unauthenticated POST returns 401.
+
 # Briefings: the board log
 
 ## 2026-07-21 · Item 44 built: optional Google sign-in (Google/web half), on a branch, deploy is yours
