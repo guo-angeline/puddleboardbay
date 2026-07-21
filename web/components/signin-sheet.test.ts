@@ -34,6 +34,14 @@ describe("sign-in is email-first (item 44 revision)", () => {
     expect(sheet).toContain("signInWithGoogle");
   });
 
+  it("verifies against every OTP type, not just 'email'", () => {
+    // Supabase issues "magiclink" for an address that already has an account
+    // and "signup" for a new one. Verifying only as "email" reports a fresh,
+    // correct code as "Token has expired or is invalid". Real failure, guarded.
+    expect(hook).toMatch(/const types = \["email", "magiclink", "signup"\] as const/);
+    expect(hook).toMatch(/for \(const type of types\)/);
+  });
+
   it("tags both sign-in paths with a method for comparison", () => {
     expect(hook).toContain('trackIntent("account_sign_in_started", { method: "email" })');
     expect(hook).toContain('trackIntent("account_sign_in_started", { method: "google" })');

@@ -116,12 +116,27 @@ export function useAccount(): AccountState {
   async function verifyEmailCode(email: string, code: string): Promise<string | null> {
     const supabase = getBrowserSupabase();
     if (!supabase) return "Sign-in is unavailable right now.";
-    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-    if (error) return error.message;
-    // onAuthStateChange fires SIGNED_IN, which sets the persona and runs the
-    // migrate-on-sign-in link, so nothing else to do here.
-    trackIntent("account_sign_in_completed", { method: "email" });
-    return null;
+    // Supabase issues a DIFFERENT OTP type depending on whether the address
+    // already has an account: "magiclink" for an existing user, "signup" for a
+    // brand-new one. The generic "email" type does not reliably verify both,
+    // and the mismatch surfaces as the maximally unhelpful "Token has expired
+    // or is invalid" even when the code is fresh and correct. That bit a real
+    // account which already existed from Google sign-in. So try each type in
+    // turn and only report failure once every one is rejected; a wrong-type
+    // attempt does not consume the token.
+    const types = ["email", "magiclink", "signup"] as const;
+    let lastError = "That code did not work. Request a new one and try again.";
+    for (const type of types) {
+      const { error } = await supabase.auth.verifyOtp({ email, token: code, type });
+      if (!error) {
+        // onAuthStateChange fires SIGNED_IN, which sets the persona and runs
+        // the migrate-on-sign-in link, so nothing else to do here.
+        trackIntent("account_sign_in_completed", { method: "email" });
+        return null;
+      }
+      lastError = error.message;
+    }
+    return lastError;
   }
 
   // SECONDARY path, kept alongside email.
