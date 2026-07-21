@@ -101,6 +101,17 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 - A regression guard that fails if the auth email regains a clickable link, or if the app is left unable to complete a link landing.
 - The consumed-token case produces a distinct, honest error string.
 
+**UPDATE 2026-07-21 20:44Z: it is a RACE, not a hard failure, which is worse.** The owner retried and succeeded, and the timings say why:
+
+| attempt | code sent | outcome | gap |
+|---|---|---|---|
+| 1 | 19:54:06.583Z | scanner consumed the token at 19:55:28.058Z, no session | **82s** |
+| 2 | 20:44:37.381Z | real sign-in at 20:44:51.734Z | **14s** |
+
+Whoever reaches the single-use token first wins. Act inside ~15 seconds and it works; leave the mail sitting while a scanner sweeps it and the code is dead on arrival. So this fails intermittently, by timing, for reasons invisible to the user: it will pass every hands-on test (the tester is fast and watching for the mail) and fail the ordinary user who reads mail a minute later. Do not treat "I retried and it worked" as evidence the defect is gone.
+
+Second attempt used the **Magic Link** template (`recovery_sent_at`), the first used **Confirm signup** (`confirmation_sent_at`), confirming both templates carry the link and both need the fix.
+
 **Not fixed by the 2026-07-21 OTP-length fix.** That was a separate defect (client truncated a 6-10 digit code to 6). This one is independent and still live.
 
 ---
