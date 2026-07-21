@@ -33,10 +33,32 @@ describe("assent is captured properly (item 43)", () => {
   });
 });
 
-describe("nothing publishes without a human (item 43)", () => {
-  it("submissions always land pending", () => {
-    expect(submitRoute).toContain('status: "pending"');
-    expect(submitRoute).not.toMatch(/status:\s*"published"/);
+describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
+  // Item 79 (owner, 2026-07-21) narrowed D24's "no auto-publish ever": a rating
+  // with NO text publishes immediately, because pre-publication review exists to
+  // catch defamatory or abusive WORDS and a bare number has none. The half that
+  // must never loosen is that anything with text is still held for a human.
+  it("routes on the presence of text, and text is always held", () => {
+    expect(submitRoute).toMatch(/const hasText = typeof body === "string" && body\.trim\(\) !== ""/);
+    expect(submitRoute).toMatch(/const status = hasText \? "pending" : "published"/);
+  });
+
+  it("never publishes text automatically, whatever else changes", () => {
+    // If someone ever inverts the ternary or hardcodes published, this bites.
+    expect(submitRoute).not.toMatch(/hasText \? "published"/);
+    expect(submitRoute).not.toMatch(/status:\s*"published"\s*,/);
+  });
+
+  it("only mails the moderator when there is actually a decision to make", () => {
+    expect(submitRoute).toMatch(/if \(hasText\) \{[\s\S]*sendOperatorEmail/);
+  });
+
+  it("the amended promise is the one users assent to (version bumped)", () => {
+    // The stored terms hash must move whenever s6.1 changes in substance, or the
+    // assent record points at text the contributor never saw.
+    expect(fs.readFileSync(path.resolve(__dirname, "../lib/reviews/validation.ts"), "utf-8"))
+      .toContain('TERMS_VERSION = "v1.1"');
+    expect(form).toContain('TERMS_HASH = "ugc-v1.1-2026-07-21"');
   });
 
   it("the public read path returns published rows only, and never a user_id", () => {
@@ -119,7 +141,17 @@ describe("the form carries no copy the owner cut (item 43)", () => {
     // /privacy still states it, and the post-submit confirmation still tells
     // the submitter. If both of those ever go, the promise is unstated.
     expect(section).toContain("goes to a person for review before it appears");
-    expect(read("../app/privacy/page.tsx")).toContain("read by a person before they appear");
+    expect(read("../app/privacy/page.tsx")).toContain("read by a person before it appears");
+  });
+
+  it("tells the truth about BOTH paths after item 79", () => {
+    // A text-less rating goes live at once; saying it was "sent for review"
+    // would be a false statement to the contributor.
+    expect(section).toContain("Thanks. Your rating is live.");
+    expect(section).toMatch(/justSubmitted === "published"/);
+    // And the published terms + privacy must disclose the immediate path.
+    expect(read("../app/privacy/page.tsx")).toContain("appears immediately");
+    expect(read("../app/contributor-terms/page.tsx")).toContain("appears immediately");
   });
 
   it("submits with the short label", () => {

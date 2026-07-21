@@ -14,6 +14,30 @@ without touching this file.
 
 ---
 
+## 2026-07-21 (item 79): `review_submitted` no longer means "queued" (semantics-changed)
+
+Owner decision amending D24: a rating submitted with **no text** is now published
+immediately; anything containing text is still held for a human. The event name
+and props are unchanged (`rating`, `has_text`, `spot_id`, `region`), but its
+MEANING splits on the existing `has_text` prop:
+
+- `has_text = false` -> the rating is **live on the site** at that moment.
+- `has_text = true`  -> the review entered the moderation queue, as before.
+
+**Comparability:** discontinuous from 2026-07-21 for any read that treated
+`review_submitted` as "submissions awaiting moderation". Always segment by
+`has_text` from this date. The prior changelog note (item 43) saying to read
+`review_submitted` as an upper bound on public content still holds ONLY for
+`has_text = true`; for `has_text = false` the event now equals published
+content. **The published-review count remains a Supabase fact**, not a PostHog
+one: query `spot_reviews where status='published'` for anything claiming what is
+actually on the site.
+
+Also expect the moderation-email volume to drop without any drop in submissions,
+because a text-less rating no longer sends one (there is no decision to make).
+
+---
+
 ## 2026-07-21 (item 78): account-management INTENT events (added)
 
 Three new INTENT events for the account sheet:

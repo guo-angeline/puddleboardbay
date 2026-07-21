@@ -20,7 +20,7 @@ import type { Spot } from "@/lib/types";
 
 // Identifies the exact published text. Bump both together whenever Part 1 of
 // docs/legal/ugc-contributor-terms.md changes in substance.
-const TERMS_HASH = "ugc-v1.0-2026-07-21";
+const TERMS_HASH = "ugc-v1.1-2026-07-21";
 
 export default function ReviewForm({
   spot,
@@ -28,7 +28,7 @@ export default function ReviewForm({
   onCancel,
 }: {
   spot: Spot;
-  onSubmitted: () => void;
+  onSubmitted: (status: "pending" | "published") => void;
   onCancel: () => void;
 }) {
   const { displayName, saveDisplayName } = useAccount();
@@ -69,7 +69,7 @@ export default function ReviewForm({
           termsHash: TERMS_HASH,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      const json = (await res.json().catch(() => ({}))) as { error?: string; status?: string };
       if (!res.ok) {
         setError(json.error ?? "Could not submit that. Try again.");
         setBusy(false);
@@ -81,7 +81,9 @@ export default function ReviewForm({
         rating,
         has_text: body.trim().length > 0,
       });
-      onSubmitted();
+      // Item 79: a text-less rating is published immediately; anything with
+      // text is held. The server decides, so trust its answer over our guess.
+      onSubmitted(json.status === "published" ? "published" : "pending");
     } catch {
       setError("Could not reach the server. Try again.");
       setBusy(false);

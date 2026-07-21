@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  * Item 43: the crowd rating shown in the list and the spot sheet.
  *
  * MIN_REVIEWS is the legally cleared threshold from D24: show a crowd rating
- * only past a handful of genuine moderated reviews, as a plain arithmetic fact.
+ * only past a handful of genuine reviews (note since item 79: star-only ratings feed this average without human review; written reviews are still held), as a plain arithmetic fact.
  * Below it, a "4.0 average" off one review is noise that reads as a verdict, and
  * on a site carrying drowning-risk exposure an average that looks like a safety
  * judgement is the thing to avoid. Spots under the threshold are simply absent

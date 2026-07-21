@@ -146,7 +146,7 @@ export default function PrivacyPage() {
               <strong>Your review, only if you write one.</strong> If you submit a rating or review
               for a spot, we store what you wrote, the rating, the display name shown on your
               account, and a record that you accepted the Contributor Terms (which version, and
-              when). Reviews are read by a person before they appear, and we keep a record of that
+              when). Any review you write is read by a person before it appears (a star rating with no text appears immediately), and we keep a record of that
               decision for up to three years for dispute handling and legal defence, even for
               reviews we reject. If you delete your account, your published reviews are removed from
               public display and dissociated from your name; the moderation record is retained for

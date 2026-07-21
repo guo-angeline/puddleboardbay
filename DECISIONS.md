@@ -584,6 +584,18 @@ Blocks: item 57.
 
 Answer: (owner, 2026-07-18) **REMOVE the drag function; every mobile spot sheet opens FULL SCREEN.** This is a stronger call than the pre-scoped conditional auto-expand and does NOT need the PostHog drag-rate read, so Q1/Q2 are moot: don't run the query, don't build the rate-gated variant. Implementation: mobile spot sheets always open at full height (reuse the item-9/42 `startExpanded` at 100%; drop the peek snap and the drag-to-resize handle). Implementer note: drag-to-dismiss goes away with the handle, so keep a non-drag dismiss path (the existing close control / backdrop tap / back gesture) so the sheet is still closable. Ship behind the `sheet-auto-expand` kill switch (no A/B, DAU<100).
 
+## D29 [RESOLVED] 2026-07-21 · Star-only ratings publish immediately (narrows D24's "no auto-publish ever")
+
+**Context.** D24 settled item 43's shape as "binary queue + email-on-submit + **no auto-publish ever**, all spots". That was written before any review existed. In practice it means a paddler who taps five stars and nothing else waits for a human to approve a number.
+
+**Decision (owner, 2026-07-21, in chat):** a rating submitted with **no text** is logged and published directly. Anything containing text still goes to a human, always.
+
+**Why it is safe.** Pre-publication review exists to catch defamatory, unlawful, or abusive *words*. A bare numeric rating carries none of that risk: there is nothing to libel with, nothing to moderate, and holding it added delay without adding safety. The controls that make a rating genuine are unchanged: sign-in required, one rating per spot per account (enforced by a partial unique index), and the crowd average still withheld below 5 published reviews.
+
+**What this required beyond the code.** The published Contributor Terms said "Every review is reviewed by a human first. Nothing you submit is published automatically", and every submission stores a hash of the exact text its author assented to. Shipping the behaviour without amending that text would have made a live promise false. So s6.1 was rewritten to distinguish text from a bare rating, the terms went to **v1.1**, `TERMS_VERSION` and `TERMS_HASH` were bumped so the assent record points at what people actually saw, and the Privacy Policy line plus the post-submit confirmation were corrected to match.
+
+**Guardrail.** A test now fails the build if text is ever auto-published, and it is pinned to the version constants: loosening this again requires amending the terms and bumping the version again, deliberately.
+
 ## D28 [RESOLVED] 2026-07-20 · Item 44 (Google sign-in) is an auth surface the loop cannot autonomously build or deploy
 
 D24 unblocked item 44 (required sign-in), and it is now the top `[ready]` item. But it is an **auth/personal-data surface**, which the ship escalation policy lists as pause-and-escalate, and item 44's own spec calls it "escalation-class." The studio loop cannot build or deploy it without owner decisions and owner-only infrastructure. This is not a "the loop is stuck" note; it is the auth gate working as intended. Four things are yours; the rest an implementer does once you answer.

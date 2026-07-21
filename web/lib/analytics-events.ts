@@ -109,7 +109,8 @@ export type IntentEventName =
   | "account_deleted"
   // Item 43: crowd reviews. _opened is the tap on "Write a review" (fires for
   // signed-out users too, so the sign-in wall is measurable); _submitted is a
-  // real submission landing in the moderation queue, NOT a publication;
+  // real submission, whose meaning SPLITS on `has_text` since item 79: text
+  // lands in the moderation queue, a text-less rating is published immediately;
   // reviews_viewed is dwell-gated, never a fetch settle.
   | "review_form_opened"
   | "review_submitted"
@@ -204,8 +205,9 @@ export interface EventPropMap {
     method: "edge_swipe" | "os_back" | "back" | "close" | "backdrop" | "drag";
   };
   // Item 43. spot_id + region on all three so they segment with spot_viewed.
-  // `review_submitted` counts submissions into the moderation queue, NOT
-  // publications; a published-review count comes from Supabase, not PostHog.
+  // `review_submitted`: segment by `has_text` (item 79). has_text=true is a
+  // submission into the moderation queue, NOT a publication; has_text=false IS
+  // published at that moment. A published-review count comes from Supabase.
   review_form_opened: { spot_id: number; region: string };
   review_submitted: { spot_id: number; region: string; rating: number; has_text: boolean };
   reviews_viewed: { spot_id: number; region: string; count: number };

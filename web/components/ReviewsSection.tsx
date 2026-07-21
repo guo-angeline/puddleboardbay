@@ -35,7 +35,10 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
   // is the surface most likely to need pulling in a hurry (UGC).
   const reviewsOn = useKillSwitch("reviews");
   const [reviews, setReviews] = useState<PublishedReview[] | null>(null);
-  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [reload, setReload] = useState(0);
+  // null = nothing submitted this session; otherwise the server-reported status,
+  // so the confirmation tells the truth for both paths (item 79).
+  const [justSubmitted, setJustSubmitted] = useState<"pending" | "published" | null>(null);
 
   // No state reset here: SpotDrawer mounts this with key={spot.id}, so React
   // gives us a fresh component per spot. Resetting in the effect body instead
@@ -53,7 +56,7 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
     return () => {
       active = false;
     };
-  }, [spot.id]);
+  }, [spot.id, reload]);
 
   // INTENT, dwell-gated: "did someone actually read the reviews", never a fetch
   // settle. Fires only for a spot that has something to read.
@@ -99,7 +102,9 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
 
       {justSubmitted && (
         <p className="mt-2 rounded-lg bg-(--fill) px-3 py-2 text-sm text-(--dark)">
-          Thanks. Your review goes to a person for review before it appears.
+          {justSubmitted === "published"
+            ? "Thanks. Your rating is live."
+            : "Thanks. Your review goes to a person for review before it appears."}
         </p>
       )}
 
@@ -124,9 +129,11 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
       {formOpen && (
         <ReviewForm
           spot={spot}
-          onSubmitted={() => {
-            setJustSubmitted(true);
+          onSubmitted={(status) => {
+            setJustSubmitted(status);
             onCloseForm();
+            // An auto-published rating should appear without a page reload.
+            if (status === "published") setReload((n) => n + 1);
           }}
           onCancel={onCloseForm}
         />

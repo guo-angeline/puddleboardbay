@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { getRequestUserId, getServerAuthSupabase } from "@/lib/supabase/server-auth";
-import { validateReviewSubmit } from "@/lib/reviews/validation";
+import { validateReviewSubmit, TERMS_VERSION } from "@/lib/reviews/validation";
 import { validateDisplayName } from "@/lib/account/displayName";
 import { composeReviewModerationEmail } from "@/lib/email/templates";
 import { sendOperatorEmail } from "@/lib/email/sender";
@@ -68,6 +68,18 @@ export async function POST(req: Request) {
   const spot = ALL_SPOTS.find((s) => s.id === spotId);
   if (!spot) return NextResponse.json({ error: "unknown spot" }, { status: 404 });
 
+  // A cached bundle can post the PREVIOUS terms version while /contributor-terms
+  // already serves the new one, which would stamp the assent record with text
+  // the contributor never saw. The cap and the class waiver bind only the
+  // version actually accepted, so a wrong stamp is a self-inflicted evidence
+  // problem. Refuse it and make them re-accept, which is what s11.1 promises.
+  if (termsVersion !== TERMS_VERSION) {
+    return NextResponse.json(
+      { error: "The contributor terms were updated. Reload the page and accept them to post." },
+      { status: 409 }
+    );
+  }
+
   // Byline comes from the verified session, never from the request body.
   //
   // Item 77: it is the name the person CHOSE, held in user metadata. It was
@@ -80,6 +92,16 @@ export async function POST(req: Request) {
   const chosen = validateDisplayName(userData?.user?.user_metadata?.display_name);
   const displayName = chosen.ok && chosen.value !== "" ? chosen.value : null;
 
+  // Owner decision 2026-07-21, amending D24's "no auto-publish ever": a rating
+  // submitted with NO TEXT publishes immediately. Pre-publication review exists
+  // to catch defamatory, unlawful, or abusive WORDS; a bare number carries none
+  // of that risk, so holding it added delay without adding safety. Anything with
+  // text still goes to a human, always. This distinction is a published promise
+  // (Contributor Terms v1.1 s6.1), so it must not be loosened to auto-publish
+  // text without amending those terms and bumping TERMS_VERSION again.
+  const hasText = typeof body === "string" && body.trim() !== "";
+  const status = hasText ? "pending" : "published";
+
   const db = getSupabaseAdmin();
   const { data: inserted, error } = await db
     .from("spot_reviews")
@@ -88,8 +110,14 @@ export async function POST(req: Request) {
       user_id: userId,
       rating,
       body,
-      status: "pending",
-      display_name: displayName,
+      status,
+      // Item 79 + legal gate: an auto-published rating publishes with NO name.
+      // The display name is contributor-typed free text, and on this path no
+      // human ever reads it before it goes live ("MarinaXdumpsfuel" fits in a
+      // byline). A held review still gets its byline, because approving it is
+      // the human check. This is what makes Contributor Terms v1.1 s6.1
+      // literally true: nothing written reaches the page unreviewed.
+      display_name: hasText ? displayName : null,
       terms_version: termsVersion,
       terms_hash: termsHash,
       assented_at: new Date().toISOString(),
@@ -105,19 +133,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "db" }, { status: 500 });
   }
 
-  // Notify the moderator. A failure here must NOT fail the submission: the row
-  // is safely pending and invisible either way, and telling the contributor
-  // their review vanished would be worse than a late approval.
-  const msg = composeReviewModerationEmail({
-    spotName: spot.water,
-    spotId,
-    rating,
-    body,
-    displayName,
-    moderationToken: inserted.moderation_token,
-  });
-  const sent = await sendOperatorEmail(MODERATOR_EMAIL, msg);
-  if (!sent.ok) console.error("[reviews] moderation email failed:", sent.error);
+  // Notify the moderator, but only when there is a decision to make. An
+  // auto-published rating has nothing to approve, so mailing about it would be
+  // pure noise. A failure here must NOT fail the submission: the row is safely
+  // pending and invisible either way, and telling the contributor their review
+  // vanished would be worse than a late approval.
+  if (hasText) {
+    const msg = composeReviewModerationEmail({
+      spotName: spot.water,
+      spotId,
+      rating,
+      body,
+      displayName,
+      moderationToken: inserted.moderation_token,
+    });
+    const sent = await sendOperatorEmail(MODERATOR_EMAIL, msg);
+    if (!sent.ok) console.error("[reviews] moderation email failed:", sent.error);
+  }
 
-  return NextResponse.json({ status: "pending" }, { status: 201 });
+  return NextResponse.json({ status }, { status: 201 });
 }

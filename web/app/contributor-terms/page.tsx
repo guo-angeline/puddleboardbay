@@ -14,7 +14,10 @@ export const metadata: Metadata = {
 // commit and bump TERMS_VERSION + TERMS_HASH (lib/reviews/validation.ts and
 // components/ReviewForm.tsx), because a contributor is bound only by the version
 // they actually saw and accepted.
-const VERSION = "Version 1.0. Last updated: July 21, 2026.";
+const VERSION =
+  "Version 1.1. Last updated: July 21, 2026. " +
+  "(v1.1: Section 6.1 amended so a star rating with no text publishes immediately, without a byline. " +
+  "v1.0, July 21, 2026: original.)";
 
 export default function ContributorTermsPage() {
   return (
@@ -122,7 +125,7 @@ export default function ContributorTermsPage() {
               native mobile app.
             </p>
             <p style={pStyle}>
-              <strong>Formatting only. We do not rewrite your words.</strong> The licence to
+              <strong>Formatting only. We do not rewrite your words.</strong> (See Section 6 for what is held before publication.) The licence to
               &ldquo;format&rdquo; is limited to non-substantive technical presentation: layout,
               truncation for previews, character escaping, and safe rendering. Our moderation is
               binary. We either publish your Content substantially as submitted, or we reject it in
@@ -192,8 +195,18 @@ export default function ContributorTermsPage() {
 
           <Section title="6. Moderation, and our role as a host">
             <p style={pStyle}>
-              Every review is held for human review before it can appear. Nothing you submit is
-              published automatically.
+              <strong>Anything you write is read by a person before it appears.</strong> If your
+              submission contains text, it is held and then either published substantially as
+              written or rejected in whole. It is never published automatically.
+            </p>
+            <p style={pStyle}>
+              <strong>
+                A star rating submitted on its own, with no review text, appears immediately, and it
+                is published with no name attached to it.
+              </strong>{" "}
+              There is nothing written for a person to read. We may remove any rating at any time
+              under Section 6.3. To have your own rating taken down, email{" "}
+              hello@paddletowater.com, or delete your account under Section 9.3.
             </p>
             <p style={pStyle}>
               We act as a host and distributor of Content created by users, not as its author or
