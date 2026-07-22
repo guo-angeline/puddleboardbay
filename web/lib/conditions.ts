@@ -524,6 +524,33 @@ export function formatTideTime(noaaTime: string): string {
 }
 
 /**
+ * Item 98. The tide as a DIRECTION rather than a table of times: which way the
+ * water is moving right now and when it turns. The next event tells you both:
+ * if the next event is a High, the tide is currently rising toward it; if a
+ * Low, it is falling toward it.
+ *
+ * HEIGHT VOCABULARY ONLY, and this is a safety constraint, not a style one. We
+ * predict tide HEIGHT. "Flood" and "ebb" are CURRENT (water movement) terms,
+ * and slack water lags the height turn, which is exactly why NOAA runs separate
+ * current stations. Saying "the current turns at 3:40 so you can ride it home"
+ * would be an inference we cannot support from height predictions. `rising` and
+ * `falling` describe the height, which is what we actually know.
+ * `conditions.test.ts` fails on "flood", "ebb", or "current" in this output.
+ *
+ * Returns null when there is no next event to key off (the caller keeps showing
+ * the raw list, or "No more tide changes today.").
+ */
+export function tideDirectionLine(next: TideEvent[]): string | null {
+  const e = next[0];
+  if (!e) return null;
+  const rising = e.type === "H";
+  const when = formatTideTime(e.time) + (isNextDay(e.time) ? " tomorrow" : "");
+  return rising
+    ? `Rising, turns to falling at ${when}.`
+    : `Falling, turns to rising at ${when}.`;
+}
+
+/**
  * True when a NOAA event time falls on a later calendar day than now. Late in
  * the evening the next tide events are tomorrow's (the fetch pulls a 2-day
  * window), so the UI labels them "tomorrow" instead of letting them read as

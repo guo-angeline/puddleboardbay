@@ -5,6 +5,7 @@ import type { Spot } from "@/lib/types";
 import {
   getConditionsRun,
   formatTideTime,
+  tideDirectionLine,
   formatFetchedAt,
   isNextDay,
   isStormyForecast,
@@ -344,13 +345,28 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
             }
             if (tideOutcome?.ok && tideOutcome.tide) {
               const tideData = tideOutcome.tide;
+              // Item 98: direction first ("Rising, turns to falling at 4:53pm"),
+              // then the raw event list demoted beneath it. Gated on the same
+              // conditions-readout switch as item 97, so a disable reverts to
+              // the raw-list-only presentation. The direction line needs a next
+              // event; with none, we fall through to the existing raw block,
+              // which shows "No more tide changes today."
+              const dirLine = readoutOn ? tideDirectionLine(tideData.next) : null;
               return (
                 <div className="border-t border-gray-100 pt-2.5">
+                  {dirLine && (
+                    <p className="text-sm font-semibold text-(--dark) mb-1">{dirLine}</p>
+                  )}
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {tideData.next.length > 0 ? (
                       tideData.next.slice(0, 2).map((t) => (
-                        <span key={t.time} className="text-sm text-(--dark)">
-                          <span className="font-semibold">{t.type === "H" ? "High" : "Low"}</span>{" "}
+                        <span
+                          key={t.time}
+                          className={dirLine ? "text-sm text-(--muted)" : "text-sm text-(--dark)"}
+                        >
+                          <span className={dirLine ? "font-normal" : "font-semibold"}>
+                            {t.type === "H" ? "High" : "Low"}
+                          </span>{" "}
                           {formatTideTime(t.time)}
                           {isNextDay(t.time) && <span className="text-(--muted)"> tomorrow</span>}
                           <span className="text-(--muted)"> &middot; {t.heightFt.toFixed(1)} ft</span>

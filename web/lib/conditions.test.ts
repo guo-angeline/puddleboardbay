@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
 import {
   precomputedForecastUrl,
   isStormyForecast,
   paddleabilityFromWind,
+  tideDirectionLine,
   nearestTideStation,
   TIDE_STATIONS,
   TIDE_STATION_IDS,
@@ -101,5 +103,40 @@ describe("storm gating (item 97)", () => {
     expect(paddleabilityFromWind(3)).toBe("calm");
     expect(isStormyForecast("Thunderstorms")).toBe(true);
     expect(paddleabilityFromWind(25)).toBe("windy");
+  });
+});
+
+describe("tide direction line (item 98)", () => {
+  const evt = (type: "H" | "L", time: string, heightFt = 3) => ({ type, time, heightFt });
+
+  it("reads a next HIGH as currently rising, turning at that time", () => {
+    const line = tideDirectionLine([evt("H", "2026-07-22 16:53")]);
+    expect(line).toContain("Rising, turns to falling at");
+  });
+
+  it("reads a next LOW as currently falling, turning at that time", () => {
+    const line = tideDirectionLine([evt("L", "2026-07-22 23:10")]);
+    expect(line).toContain("Falling, turns to rising at");
+  });
+
+  it("returns null when there is no next event to key off", () => {
+    expect(tideDirectionLine([])).toBeNull();
+  });
+
+  it("NEVER uses current vocabulary: height predictions cannot claim flood/ebb/current", () => {
+    // The safety constraint. We predict height; slack lags the height turn, so
+    // "flood"/"ebb"/"current" would assert water movement we do not know.
+    for (const e of [tideDirectionLine([evt("H", "2026-07-22 16:53")]),
+                     tideDirectionLine([evt("L", "2026-07-22 23:10")])]) {
+      expect(e).not.toMatch(/\b(flood|ebb|current)\b/i);
+    }
+  });
+
+  it("the source itself carries no current vocabulary in its output strings", () => {
+    // Belt and braces: assert the literal template strings, so a future edit
+    // that hardcodes "flood tide" is caught even if the runtime path is missed.
+    const src = fs.readFileSync(new URL("./conditions.ts", import.meta.url)).toString();
+    const fn = src.slice(src.indexOf("export function tideDirectionLine"), src.indexOf("export function tideDirectionLine") + 700);
+    expect(fn).not.toMatch(/`[^`]*\b(flood|ebb)\b[^`]*`/i);
   });
 });
