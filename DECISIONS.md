@@ -680,4 +680,8 @@ Why it is a counsel question: anti-SLAPP coverage is state by state, there is a 
 - **(b) [recommended]** Proceed, and bound the exposure now by forming the LLC before contributor prose volume grows. The only step that is cheap, helps against every version of this risk, and costs nothing to reverse.
 - **(c)** Engage a licensed attorney on the combined host-versus-co-author and anti-SLAPP question, answering D30 Q1 and this at once.
 
+**Added 2026-07-22 (item 84 re-gate), because it changes what you already agreed to.** You accepted the D30 Q1 risk while the blended number carried a visible label and the sheet showed both inputs. Two owner-directed removals then took both away, and the re-gate's sharpest finding was not the FTC one: **the visible label was doubling as your opinion defence.** A rating attributed to the site is opinion, which is the strongest answer if a named marina or private launch objects; an unattributed aggregate sitting under a "Paddler reviews N" heading reads as a factual report of what paddlers think, which is the actionable kind of statement. Removing it downgraded your legal position for a copy preference, without that trade being visible at the time.
+
+Item 84 shipped the floor as **"our take"**, which satisfies the owner's actual request (the rejected wording was "Paddle score", not the concept) and restores the labelled state your D30 Q1 acceptance was given on. **So this does not need re-deciding**: option (a) is now the status quo again. It is recorded here only so the trade is on the record if the label is ever removed a third time.
+
 Answer:

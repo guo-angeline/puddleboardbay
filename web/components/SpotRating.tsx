@@ -7,13 +7,20 @@ import type { DisplayRating } from "@/lib/rating";
  * Three different things can produce a number here, and they are not
  * interchangeable:
  *
- *  - BLENDED (owner rating + user reviews). Item 84 (owner-directed,
- *    2026-07-21) removed the visible "Paddle score" label, so this number now
- *    carries NO visible provenance. The screen-reader description still says
- *    what it combines, and it must keep doing so: a blended value must never
- *    carry a bare "(N)" or the visible words "paddler reviews", which would
- *    credit contributors with a number they did not produce. The legal gate
- *    returned needs-changes on exactly that (2026-07-21).
+ *  - BLENDED (owner rating + user reviews): labelled "our take". Item 84
+ *    (owner-directed) removed the previous "Paddle score" wording, and the
+ *    re-gate that followed made clear the WORDING was the owner's to choose
+ *    but the attribution itself is a floor, for two reasons. First, a bare
+ *    star and number beside a "Paddler reviews N" heading reads as the
+ *    verdict of those reviews when at one review it is 5/6 our own opinion.
+ *    Second, and the one with teeth: an attributed rating is OPINION, which
+ *    is the strongest defence if a named private business objects, while an
+ *    unattributed aggregate reads as a factual report of what paddlers think.
+ *    The label is that defence, not decoration. It must stay VISIBLE (never
+ *    sr-only, never a tooltip) and must sit before the " · " separator so the
+ *    city truncates before the attribution does. A blended value must also
+ *    never carry a bare "(N)" or the visible words "paddler reviews", which
+ *    would credit contributors with a number they did not produce.
  *  - PADDLERS ONLY (spots with no owner rating, past D24's threshold): a plain
  *    arithmetic average, so it keeps D24's count-always-shown display.
  *  - OWNER ONLY (no reviews yet): unchanged from item 39 / D21.
@@ -28,10 +35,15 @@ export default function SpotRating({ rating }: { rating: DisplayRating }) {
       {rating.value.toFixed(1)}
       {rating.blended ? (
         <>
-          {/* Keeps the sense, drops the brand term: a screen-reader user must
-              still learn the number is a blend, not a crowd average. */}
+          {/* Adequate for assistive tech, and deliberately NOT the fix for
+              sighted users: a disclosure only cures an impression for the
+              audience that receives it. */}
           <span className="sr-only">
             {` out of 5, combining our own rating with ${rating.count} paddler ${reviewWord}`}
+          </span>
+          <span aria-hidden className="font-normal text-(--muted)">
+            {" "}
+            our take
           </span>
         </>
       ) : rating.count > 0 ? (

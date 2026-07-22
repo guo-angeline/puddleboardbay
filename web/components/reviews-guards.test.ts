@@ -182,14 +182,18 @@ describe("the displayed rating only says what it can back up (item 43, D24 amend
     expect(blended).not.toMatch(/from \$\{rating\.count\}/);
   });
 
-  it("keeps the accessible description explaining what the number blends", () => {
-    // Item 84 (owner-directed) removed the visible "Paddle score" label, so a
-    // sighted reader now gets a bare star and number. The screen-reader
-    // description is the ONLY provenance left in this component: it must never
-    // shrink to a bare "out of 5", which would leave the number claiming
-    // nothing about where it came from on every surface at once.
-    expect(ratingUI).not.toMatch(/aria-hidden[\s\S]{0,80}Paddle score/);
-    expect(ratingUI).toMatch(/sr-only[\s\S]{0,160}combining our own rating with/);
+  it("attributes a blended number to us, in VISIBLE text", () => {
+    // Points in the protective direction on purpose. Item 84 removed the
+    // "Paddle score" wording, and the re-gate that followed drew the line:
+    // the wording is the owner's to choose, the attribution is a floor.
+    // A guard that only asserted the old label was GONE would have happily
+    // certified a bare star and number, which is the state the gate rejected.
+    const blended = ratingUI.slice(ratingUI.indexOf("rating.blended ? ("), ratingUI.indexOf(") : rating.count > 0"));
+    expect(blended).toMatch(/aria-hidden[\s\S]{0,120}our take/);
+    // sr-only alone does not clear the floor: a disclosure only cures an
+    // impression for the audience that receives it, and sighted users never
+    // receive this one. It must exist AND must not be the only attribution.
+    expect(blended).toMatch(/sr-only[\s\S]{0,160}combining our own rating with/);
   });
 
   it("keeps the plain-average display for spots the owner never rated", () => {
@@ -199,19 +203,20 @@ describe("the displayed rating only says what it can back up (item 43, D24 amend
     expect(crowdOnly).toMatch(/\(\{rating\.count\}\)/);
   });
 
-  it("tracks what is left carrying provenance after two owner removals", () => {
-    // Owner direction removed BOTH disclosures the legal gate asked for: the
-    // "Our take X · paddlers Y" breakdown plus the weighting sentence
-    // (2026-07-21), then the visible "Paddle score" label (item 84). This
-    // guard is deliberately a ledger of what remains, so the next removal
-    // cannot happen without someone reading this list:
-    //   1. the screen-reader description in SpotRating, and
-    //   2. the individual reviews listed in the sheet, from which a reader can
-    //      work out the paddler average themselves.
-    // If either goes, a blended number is presented with NOTHING marking it as
-    // ours anywhere. Re-gate with the lawyer before that ships.
-    expect(drawer).not.toContain("Our take");
+  it("keeps a ledger of what carries provenance, after two owner removals", () => {
+    // The sheet's breakdown line ("Our take X · paddlers Y" + the weighting
+    // sentence) went on 2026-07-21, and the "Paddle score" wording went with
+    // item 84. Both reversed required actions of the D30 gate. What carries
+    // the job now, and what the next removal has to read before deleting:
+    //   1. the VISIBLE "our take" attribution in SpotRating (the floor, and
+    //      also the opinion defence if a named business ever objects),
+    //   2. its screen-reader description, for the audience that gets no
+    //      visible text at all,
+    //   3. the individual reviews listed in the sheet.
+    // Item 1 is not optional. Re-gate before removing any of them.
+    expect(drawer).not.toContain("Our take ");
     expect(drawer).not.toContain("counts as five reviews");
+    expect(ratingUI).toMatch(/our take/);
     expect(ratingUI).toMatch(/combining our own rating with/);
     expect(drawer).toContain("<ReviewsSection");
   });

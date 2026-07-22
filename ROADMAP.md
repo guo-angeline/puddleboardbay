@@ -233,7 +233,9 @@ Deleting it while the app still awards marks for contributing removes a disclosu
 
 **Also note:** the reviews guards reference contributor terms (`reviews-guards.test.ts:45`, and `:98`/`:306` cover the `/contributor-terms` page). Removing the paragraph must not silently weaken those guards; update them to match whatever the lawyer approves, and leave the `/contributor-terms` page itself in place.
 
-**Acceptance:** the lawyer verdict is recorded (in DECISIONS.md if it escalates); the reviews section matches the approved outcome; guards updated to assert the new intended state and still passing; the review form's own disclosure and the Contributor Terms page are unaffected unless the lawyer says otherwise.
+**LAWYER VERDICT RECORDED (2026-07-22, re-gate run during item 84).** Removing the sentence is **defensible, with one condition**: marks are private, valueless and never conditioned on what a review says, so the material connection fails the Endorsement Guides materiality test in the direction of "disclosure not required". **The condition: keep a `/contributor-terms` link on the reviews surface.** A bare link with no sentence is fine. `ReviewsSection.tsx:186` is the ONLY reader-facing route to that document (`ReviewForm.tsx` is writer-only, behind the form), so deleting the whole block leaves a reader with no path from the number to the document explaining it. Also corrected by the gate: the review form carries an assent checkbox plus a terms link, NOT a marks disclosure, so "the writer already sees it" is not true today.
+
+**Acceptance:** the lawyer verdict is recorded (in DECISIONS.md if it escalates); the reviews section matches the approved outcome; **a `/contributor-terms` link survives on the reviews surface**; guards updated to assert the new intended state and still passing; the review form's own disclosure and the Contributor Terms page are unaffected unless the lawyer says otherwise.
 
 ## Owner items, added 2026-07-21 (header polish + label clarity; both [ready], queued top-most on purpose)
 
