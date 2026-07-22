@@ -16,7 +16,7 @@ notes: |
   - PROTECTED (always escalate): changes to push-notification/cron send behavior (real users get woken up; the 6am-alert incident is why the cron moved to 7pm), Supabase subscription rows, destructive migrations.
   - Never alter lat/lng in data/spots.json unless explicitly correcting coordinates with a verified source; verify unchanged before deploy.
   - Every material UX change ships with an analytics event (trackIntent/trackSystem discipline per CLAUDE.md) and an analytics/INSTRUMENTATION_CHANGELOG.md entry.
-  - BOARD DIRECTIVE (2026-07-02): every major product update (new user-facing surface, changed core flow) ships behind an A/B experiment via lib/experiments.ts, declared in docs/experiments/ before shipping. Never straight to 100%. Low traffic means a longer read window, not a reason to skip the flag. Small fixes and copy tweaks are exempt.
+  - BOARD DIRECTIVE (2026-07-17, SUPERSEDES the 2026-07-02 A/B rule this file used to carry): no A/B tests until DAU > 100. Ship major user-facing changes at 100% behind a `useKillSwitch` flag (default ON) for reversibility, and watch guardrails instead of reading a lift. Full reasoning in CLAUDE.md. Small fixes and copy tweaks are flag-exempt.
   - This project has its OWN palette (indigo accent #3730A3, Libre Baskerville + Nunito). Do not apply the Moss & Stone house palette here.
   - Deploy timing pollutes analytics windows: deploy promptly after verified merges, and note the deploy time in the briefing.
   - Spot notes stay general and evergreen, never phrased as replies to a specific person.
