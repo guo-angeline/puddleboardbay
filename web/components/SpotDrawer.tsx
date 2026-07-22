@@ -462,22 +462,13 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 ) : null}
                 {spot.city} &middot; {spot.region}
               </p>
-              {/* Both inputs, one line under the number, plus how they combine.
-                  The raw paddler average is the honest arithmetic fact and stays
-                  available: a reader (or a business asking about its spot) can
-                  always separate our opinion from theirs. Required by the
-                  2026-07-21 legal gate. */}
-              {rating?.blended && (
-                <p className="text-xs text-(--muted) mt-0.5">
-                  Our take {spot.owner_rating!.toFixed(1)} &middot; paddlers{" "}
-                  {(crowd!.sum / crowd!.count).toFixed(1)} from {rating.count}{" "}
-                  {rating.count === 1 ? "review" : "reviews"}.{" "}
-                  <span className="block mt-0.5">
-                    Our rating counts as five reviews, so the score moves toward the paddler
-                    average as more come in.
-                  </span>
-                </p>
-              )}
+              {/* Owner direction 2026-07-21: the breakdown line under the score
+                  (owner rating vs raw paddler average, plus the sentence about
+                  the 5-review weighting) is gone from the sheet. The blend is
+                  still labelled as ours by the "Paddle score" text in
+                  SpotRating, and every individual review is still listed below,
+                  so the inputs stay visible. reviews-guards.test.ts asserts the
+                  removed strings do not come back by accident. */}
             </div>
             <button
               onClick={() => dismiss("close")}

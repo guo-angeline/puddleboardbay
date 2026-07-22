@@ -176,14 +176,17 @@ describe("the displayed rating only says what it can back up (item 43, D24 amend
     expect(crowdOnly).toMatch(/\(\{rating\.count\}\)/);
   });
 
-  it("shows both inputs and the weighting wherever a blended number appears", () => {
-    // The raw paddler average is the honest arithmetic fact and must stay
-    // reachable next to the number that overrode it.
-    expect(drawer).toMatch(/rating\?\.blended && \(/);
-    expect(drawer).toContain("Our take");
-    expect(drawer).toContain("paddlers");
-    expect(drawer).toMatch(/crowd!\.sum \/ crowd!\.count/);
-    expect(drawer).toContain("counts as five reviews");
+  it("keeps the blend labelled as ours after the breakdown line was removed", () => {
+    // The owner removed the "Our take X · paddlers Y" breakdown and the
+    // weighting sentence from the sheet on 2026-07-21, after the legal gate
+    // had asked for them. What remains carrying that job: the visible
+    // "Paddle score" label on the number, and the individual reviews listed
+    // in the sheet. If either of those goes too, a blended number would be
+    // presented with nothing marking it as ours.
+    expect(drawer).not.toContain("Our take");
+    expect(drawer).not.toContain("counts as five reviews");
+    expect(ratingUI).toMatch(/aria-hidden[\s\S]{0,80}Paddle score/);
+    expect(drawer).toContain("<ReviewsSection");
   });
 
   it("gives EVERY card the review totals, not just the pinned strips", () => {
