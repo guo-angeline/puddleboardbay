@@ -1,3 +1,17 @@
+# 2026-07-22: Orange County live, and a trap the new test would have missed
+
+**Shipped.** 7 Orange County spots, 172 total. Newport Harbor plus Baby Beach at Dana Point.
+
+Orange is the best county the source has produced: 11 paddle-specific launches against San Diego's 6 and LA's 2. Coordinates were also the best corroborated yet, because Newport is well mapped: four CCC pins land within 41 metres of an independently mapped beach. That actually **corrects** a rule I had been applying, which said to distrust and re-derive every CCC coordinate. Too pessimistic, and blanket distrust risks replacing a good coordinate with my own estimate.
+
+**I refused four candidates**, which matters more than the seven. Balboa Island and Upper Newport Bay are places, not put-ins. Newport Island Park has no water within 245 metres of its pin, so I did not invent one. And the Newport Aquatic Center is a membership facility with its own dock, which is exactly the private-dock-as-public-launch mistake that reached production once before.
+
+**The thing worth your attention.** Orange County had no tide station, and unlike San Diego **it would not have failed**. The fallback station sits 9 to 12 miles away, inside the range cut, so every Newport spot would have shown a confident tide reading taken from a different harbor, and the coverage test I shipped this morning would have passed it. Fixed with two Newport stations. The lesson: a threshold is a floor, not a definition of correct. "In range" and "relevant" are different claims and only the first is checkable by machine.
+
+Also corrected British spellings I had written into these notes and into the live San Diego batch.
+
+**Your move:** four questions in `reports/oc-ingest-2026-07-22.md`, none blocking. The most valuable is where people actually launch on Upper Newport Bay, which is prime flatwater I could not find a public put-in for. D31 (LLC) still open.
+
 # 2026-07-22: San Diego is live, and it found a hole in the differentiator
 
 **Shipped.** 16 San Diego spots (165 total). 5 paddle launches plus the 11 ramps you asked to include, La Jolla Shores carrying an explicit surf caveat, Cardiff excluded.

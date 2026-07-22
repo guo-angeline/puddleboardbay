@@ -883,6 +883,24 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 **Acceptance:** a spot outside the Bay Area can be added with a valid region; the site title, description, keywords, tagline and `<h1>` no longer claim a coverage area the data contradicts; the region filter still fits at 390px without wrapping; `npm test`, lint and build pass; no existing `lat`/`lng` changes.
 
+## 95. [done] Orange County ingest: 7 spots live, 4 candidates refused (deployed 2026-07-22, a62f640)
+
+**172 records total.** Full analysis: `reports/oc-ingest-2026-07-22.md`.
+
+**Orange is the richest county CCC has produced:** 11 paddle-specific launches vs San Diego's 6 and LA's 2, almost all in Newport Harbor. Shipped Channel Place Park, Lido Park, 10th Street Beach, Montero Beach, Bayside Drive County Beach, China Cove Beach, Baby Beach.
+
+**Coordinate corroboration was the best of any batch, and it corrects a standing rule.** Newport is well mapped in OSM, so 4 of 7 CCC pins land **within 41 m** of an independently mapped beach and are fine as stored. The statewide inventory's "CCC coordinates are always locators, always re-derive" was too pessimistic. **Corroborate every pin and re-derive only the ones that fail.** Blanket distrust costs work and invites replacing a good coordinate with a hand-estimated one.
+
+**Four refused, each on an established precedent:** Balboa Island (pin mid residential block, nearest beach 358 m; an island is not a put-in, the "3 miles of frontage" case); Upper Newport Bay Ecological Reserve (pin 2,092 m from any water feature); Newport Island Park (imagery at 245 m shows housing and no water, so no put-in was invented); **Newport Aquatic Center** (CCC `FEE=Yes`, a membership facility with its own dock, i.e. the **spot 92 pattern**, the one failure class that has already reached production).
+
+**THE TRAP THIS BATCH NEARLY WALKED INTO.** Orange County had no tide station, and **it would not have failed**: Los Patos sits 9 to 12 miles away, inside `MAX_STATION_MI`, so every Newport spot would have shown a confident tide reading **taken from a different harbor**, and item 94's brand-new coverage test would have passed. Added Newport Bay Entrance and Balboa Pier (confirmed against the datagetter first); spots now resolve from 0.1 to 2.6 mi. No pre-existing spot changes station.
+
+**The lesson upgrades item 94's.** That one: a gating boolean needs a test that it can be honoured. This one: **the test's threshold is a floor, not a definition of correct.** "In range" and "relevant" are different claims and only the first is mechanically checkable. Applies anywhere a distance cut stands in for a quality judgment.
+
+**Also fixed:** British spellings ("harbour", "neighbourhood") written into the notes here and in the already-live San Diego batch. Notes-only edit, no coordinate churn.
+
+**Open for the owner** (in the report): is North Star Beach public separately from the Aquatic Center; where people actually put in on Upper Newport Bay; whether a specific Balboa Island beach should ship; and whether 6 spots inside one harbor reads as clutter.
+
 ## 94. [done] San Diego ingest: 16 spots live, and the tide fix the batch exposed (deployed 2026-07-22, 297c367)
 
 **Shipped 165 records total.** 5 paddle launches (El Carmel Point, Playa Pacifica, Crown Cove, Agua Hedionda, La Jolla Shores) + the 11 boat ramps the owner asked to include. Cardiff State Beach excluded as recommended.
