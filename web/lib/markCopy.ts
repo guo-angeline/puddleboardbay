@@ -67,5 +67,45 @@ export const LOG_LABELS = {
  * over-broad promise in published terms is the same Section 5 problem as an
  * under-disclosed one.
  */
+/**
+ * Item 89: the invitation shown on a spot with no published reviews.
+ *
+ * Every clause here is load-bearing and was required by the legal gate. Read
+ * before editing:
+ *
+ * - NON-PROMISSORY. Reviews are pre-moderated and someone may already be in the
+ *   queue, so this states what is true right now and never promises primacy
+ *   ("be the first") or publication. The owner asked for "be the first"; it
+ *   cannot be said truthfully on a moderated surface.
+ * - "Know this spot?" is the eligibility qualifier (16 CFR Part 465: do not
+ *   solicit reviews from people with no experience of the thing). It is
+ *   deliberately KNOWLEDGE-shaped. Past tense would be acceptable, but anything
+ *   with go / paddle / launch / visit / head out would reward getting on the
+ *   water, which item 83 forbids outright and no-inducement.test.ts sweeps.
+ * - The reward clause carries its own non-conditioning sentence. The incentive
+ *   now acts one screen EARLIER than the form, so the disclosure travels with
+ *   it. This ADDS to the writer-side DISCLOSURE below, it does not replace it.
+ * - The reward is named only when the reader can actually earn it. `first-report`
+ *   is a LIFETIME mark, so naming it to someone who already holds it is a plain
+ *   false statement repeated across ~176 spots.
+ */
+export function firstReviewPrompt(
+  spotName: string,
+  opts: { namesReward: boolean; needsAccount: boolean },
+): string {
+  const parts = [`No one has written about ${spotName} yet.`, "Know this spot?"];
+  if (opts.namesReward) parts.push(rewardClause());
+  if (opts.needsAccount) parts.push("You need an account to post.");
+  return parts.join(" ");
+}
+
+/**
+ * Built FROM the mark definition, never typed out, so renaming a mark can never
+ * leave this promising a mark by a name that no longer exists.
+ */
+export function rewardClause(): string {
+  return `Writing one earns your ${markById("first-report").name} mark. Marks are for taking part, never for your opinion of a spot or how you rate it.`;
+}
+
 export const DISCLOSURE =
   "We give marks for taking part. They never depend on your opinion of a spot or on how you rate it.";

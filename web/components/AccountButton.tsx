@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "@/lib/useAccount";
 import { useKillSwitch } from "@/lib/experiments";
 import { trackIntent } from "@/lib/analytics";
+import { deriveLog } from "@/lib/marks";
+import { exploredRegions } from "@/lib/exploredSpots";
 import SignInSheet from "@/components/SignInSheet";
 import AccountSheet from "@/components/AccountSheet";
 
@@ -32,6 +34,38 @@ const HEADER_BUTTON =
 export default function AccountButton() {
   const enabledSwitch = useKillSwitch("accounts");
   const { enabled, user, loading, displayName } = useAccount();
+  const collectablesOn = useKillSwitch("collectables");
+
+  // Item 89 half B, HEADER instance only. The legal gate cleared this half on
+  // its own and escalated the other one: a mark here is visible ONLY to the
+  // signed-in person it belongs to, so Contributor Terms s2.5 ("shown only to
+  // the contributor and to nobody else") stays literally true and no version
+  // bump or re-assent is needed. The byline instance, which readers would see,
+  // is D32 and is NOT built here.
+  //
+  // A count is permitted because there is no second person on screen to compare
+  // against. Item 83's bans still apply and are what this deliberately is not:
+  // no denominator, no distance-to-next-mark, no tier, no rank.
+  const [markCount, setMarkCount] = useState(0);
+  useEffect(() => {
+    if (!collectablesOn || !user) return;
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/account");
+        if (!res.ok) return;
+        const summary: { reviews?: { status: string; body: string | null }[]; savedCount?: number } =
+          await res.json();
+        const log = deriveLog(summary.reviews ?? [], exploredRegions(), [], summary.savedCount ?? 0);
+        if (active) setMarkCount(log.earned.length);
+      } catch {
+        /* a decoration must never break the header */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user, collectablesOn]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
@@ -79,6 +113,18 @@ export default function AccountButton() {
           <circle cx="12" cy="7" r="4" />
         </svg>
         <span className="hidden max-w-[7rem] truncate sm:inline">{label}</span>
+        {/* Sits beside the ICON, not inside the label span, because that span is
+            `hidden sm:inline` and most of this app's traffic is mobile: a mark
+            rendered inside it would be invisible to the people most likely to
+            have earned one. */}
+        {markCount > 0 && (
+          <span
+            className="ml-0.5 rounded-full bg-(--accent) px-1.5 text-[11px] font-semibold leading-[18px] text-white"
+            aria-label={`Your marks: ${markCount}`}
+          >
+            {markCount}
+          </span>
+        )}
       </button>
       {accountOpen && <AccountSheet onClose={() => setAccountOpen(false)} />}
     </>

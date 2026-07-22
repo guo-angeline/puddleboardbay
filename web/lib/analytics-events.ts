@@ -121,7 +121,15 @@ export type IntentEventName =
   // carries a rating, and neither ever will: rewarding sentiment is the FTC
   // line (16 CFR Part 465) and the derivation cannot read one.
   | "mark_shown"
-  | "log_viewed";
+  | "log_viewed"
+  // Item 89: the first-review invitation's IMPRESSION, dwell-gated. There is no
+  // matching `_clicked`, deliberately: the invitation is prose with no control
+  // of its own, and the act of writing is still the action-row button that
+  // already fires `review_form_opened`. The funnel is
+  // first_review_prompt_shown -> review_form_opened -> review_submitted, and
+  // inventing a click event for a paragraph would put a step in it that no user
+  // can perform.
+  | "first_review_prompt_shown";
 
 export type EventName = SystemEventName | IntentEventName;
 
@@ -223,6 +231,10 @@ export interface EventPropMap {
   // without joining back to Supabase.
   mark_shown: { mark: string; trigger: "submit" | "log"; reports: number };
   log_viewed: { reports: number; spots_known: number; marks: number };
+  // `named_reward` segments the two copy variants: the reward clause is only
+  // shown to a reader who can still earn `first-report` (a lifetime mark), so
+  // conversion must never be read across both arms as one number.
+  first_review_prompt_shown: { spot_id: number; region: string; named_reward: boolean };
   email_capture_submitted: {
     platform: OptInPlatform;
     trigger: OptInTrigger | "push_denied";

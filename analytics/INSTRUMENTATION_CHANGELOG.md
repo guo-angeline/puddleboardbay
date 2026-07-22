@@ -14,6 +14,50 @@ without touching this file.
 
 ---
 
+## 2026-07-22 (item 89): `first_review_prompt_shown` added; `reviews_viewed` changes meaning (added + semantics-changed)
+
+**Added: `first_review_prompt_shown`** (INTENT, dwell-gated via `useGenuineView`).
+Props: `spot_id`, `region`, `named_reward`. Fires when a reader actually dwells
+on the new invitation shown on a spot with no published reviews.
+
+**There is deliberately NO matching `_clicked`.** The invitation is prose with
+no control of its own; the act of writing is still the action-row button, which
+already emits `review_form_opened`. The funnel is
+`first_review_prompt_shown -> review_form_opened -> review_submitted`. Inventing
+a click event for a paragraph would have put a step in the funnel that no user
+can perform.
+
+**`named_reward` is not decoration, do not average across it.** The copy has two
+variants: readers who can still earn the `first-report` mark are told what they
+earn, readers who already hold it are not (it is a lifetime mark, so naming it
+to a holder would be false). Those are two different asks. Any conversion read
+must segment on this prop or it is comparing two populations.
+
+**Comparability: `reviews_viewed` is NOT affected, and this was checked rather
+than assumed.** Item 89's own spec predicted a discontinuity here, reasoning
+that the section now renders on spots with zero reviews. That prediction is
+wrong, and the reason matters: the `reviews_viewed` dwell observer is separately
+gated on `enabled: Boolean(reviews && reviews.length > 0)`
+(`components/ReviewsSection.tsx`), so it never arms on a zero-review spot no
+matter what the section renders. The event keeps its old meaning, "someone read
+a review", and its series is continuous across 2026-07-22.
+
+**That gate is now load-bearing.** If anyone later widens it to fire whenever the
+section is visible, `reviews_viewed` silently becomes a per-spot-open counter
+across ~176 spots and every historical comparison breaks. Change it only with a
+new entry in this file.
+
+**Goal metric is not from PostHog.** Reviews submitted per prompt shown: the
+numerator comes from Supabase (`spot_reviews`), per the house rule that the
+contribution tail is a backend record. PostHog supplies the denominator only.
+
+**Guardrail unchanged:** `spot_action{action:"directions"}` per spot open must
+not step up. Item 83 pre-registered it as the accidental-inducement check, and
+this item puts a reward-naming line on the highest-traffic surface in the app,
+which is exactly the change that would trip it.
+
+---
+
 ## 2026-07-22 (item 78): water-type LABELS renamed; two spots change `difficulty` value (semantics-changed)
 
 Owner-directed, from user feedback that nobody understood the vocabulary. The

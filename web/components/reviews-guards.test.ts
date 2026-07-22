@@ -8,6 +8,15 @@ import { confirmation } from "@/lib/markCopy";
 const read = (p: string) => fs.readFileSync(path.resolve(__dirname, p), "utf-8");
 const form = read("./ReviewForm.tsx");
 const section = read("./ReviewsSection.tsx");
+
+/**
+ * Strip comments before scanning prose. Same helper as no-inducement.test.ts.
+ * Without it a guard reads the comment that EXPLAINS the ban as a violation of
+ * it, and the suite fails on its own documentation. This has bitten here
+ * before; keep the strip, do not soften the pattern.
+ */
+const asProse = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ").replace(/\s+/g, " ");
 const submitRoute = read("../app/api/reviews/route.ts");
 const moderateRoute = read("../app/api/reviews/moderate/route.ts");
 const aggRoute = read("../app/api/reviews/aggregates/route.ts");
@@ -265,13 +274,75 @@ describe("signed-out users get a way in, not a wall (item 43)", () => {
   });
 });
 
-describe("the section stays hidden until a spot earns one (item 43)", () => {
-  it("renders nothing when there are no published reviews", () => {
-    expect(section).toMatch(/if \(!hasReviews && !formOpen && !justSubmitted\) return null;/);
+describe("the zero-review surface invites, honestly (item 89, reverses item 43)", () => {
+  // These two guards used to assert the OPPOSITE: that the section renders
+  // nothing without published reviews, and that no empty state exists. Item 89
+  // reversed that on the owner's instruction. They are rewritten to point at
+  // the new invariant rather than deleted, because a deleted guard protects
+  // nothing and a stale one certifies the state we just moved away from.
+
+  it("renders the invitation once reviews have LOADED and come back empty", () => {
+    // `reviews === null` is "still loading". Gating on it is what stops an
+    // invitation flashing at someone a tick before their reviews arrive.
+    expect(section).toMatch(/const showPrompt =\s*reviews !== null && !hasReviews && !formOpen && !justSubmitted;/);
   });
 
-  it("has no empty state left to show", () => {
-    expect(section).not.toContain("No reviews yet");
+  it("never promises primacy or publication", () => {
+    // Reviews are pre-moderated and someone may already be queued, so "be the
+    // first" cannot be said truthfully. The owner asked for it in those words;
+    // this is the guard that keeps the honest wording from drifting back.
+    const copy = asProse(read("../lib/markCopy.ts"));
+    for (const banned of [/be the first/i, /first to review/i, /will be published/i, /your review will appear/i]) {
+      expect(copy, `markCopy.ts must not promise: ${banned}`).not.toMatch(banned);
+    }
+    expect(copy).toContain("No one has written about");
+  });
+
+  it("only names the reward to someone who can still earn it", () => {
+    // `first-report` is a LIFETIME mark. Naming it to a holder is a false
+    // statement, repeated across every zero-review spot.
+    // Signed-out readers can always earn it, so they see the clause. Signed-in
+    // readers only when the lookup positively says they do not hold it;
+    // `null` (unknown) omits it rather than guessing.
+    expect(section).toContain("namesReward: collectablesOn && (!user || holdsFirstReport === false)");
+  });
+
+  it("carries the non-conditioning clause wherever the reward is named", () => {
+    // The incentive now acts a screen earlier than the form, so the disclosure
+    // travels with it. This ADDS to ReviewForm's DISCLOSURE, never replaces it.
+    const copy = asProse(read("../lib/markCopy.ts"));
+    expect(copy).toMatch(/never for your opinion of a spot or how you rate it/);
+    expect(read("./ReviewForm.tsx")).toContain("{DISCLOSURE}");
+  });
+
+  it("asks about knowledge, never about getting on the water", () => {
+    const copy = asProse(read("../lib/markCopy.ts"));
+    expect(copy).toContain("Know this spot?");
+    // The safety-inducement line from item 83: nothing may reward going.
+    for (const re of [/\b(go|paddle|launch|visit|head out|get out)\b[^"]{0,40}(there|here|and)/i]) {
+      expect(copy.match(/"[^"]{12,}"|`[^`]{12,}`/g)?.join(" ") ?? "").not.toMatch(re);
+    }
+  });
+
+  it("tells a signed-out reader an account is needed BEFORE they invest", () => {
+    expect(section).toContain("needsAccount: !user");
+    expect(asProse(read("../lib/markCopy.ts"))).toContain("You need an account to post.");
+  });
+
+  it("adds no second call to action next to the existing button", () => {
+    // SpotDrawer already renders a full-width filled "Write a review". The
+    // invitation is prose; if it ever grows a <button> the sheet has two
+    // competing asks and the quiet requirement is gone.
+    const prompt = section.slice(section.indexOf("{showPrompt && ("), section.indexOf("{justSubmitted && ("));
+    expect(prompt).not.toMatch(/<button/);
+  });
+
+  it("keeps the Contributor Terms link on the surface it now renders on", () => {
+    // Finding A1. The link was gated on `hasReviews`, i.e. absent from exactly
+    // the ~176 spots where the invitation shows. Item 85's removal of the
+    // in-line marks disclosure was cleared ON THE CONDITION this link survives.
+    expect(section).toContain("{(hasReviews || showPrompt) && (");
+    expect(section).toContain('href="/contributor-terms"');
   });
 
   it("still renders when the form is open, so the trigger is not a dead tap", () => {

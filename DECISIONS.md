@@ -692,3 +692,24 @@ Answer: (owner, 2026-07-22, in chat) **(a)**. No LLC now. The cost is not justif
 2. **The real surface is ~28 of 143 records, and it is not about launch access.** Those are public sites with a private business operating on them: spot 23 (launch from the public side of the Half Moon Bay Yacht Club), 26 (free public launch inside a private marina's lot), 135 (Emeryville Marina), 5 (Vasona, no outside watercraft so you must rent from the concessionaire), plus 31 records with `rentals_available: true`. The exposure is a reviewer writing about the *operator* (staff, rental quality, pricing) rather than the water. That is a moderation-and-copy problem, not a corporate-structure one, which is the second reason the entity was judged the wrong first spend.
 
 Also noted and not acted on: forming in Delaware or Wyoming saves nothing, because California taxes on doing business in California, so a non-CA entity run from SF owes the same $800 FTB minimum *plus* foreign-registration and second-state costs. If this is ever revisited, form in CA, and file in the last two weeks of December so the 15-day rule skips a tax year. Insurance (D25 Q3) was flagged as the better first dollar than the entity for this specific risk, since an LLC caps personal assets but does not pay defence costs, and defence cost is the realistic downside here. Not decided, still deferred.
+
+## D32 [OPEN] 2026-07-22 · Item 89: should an earned mark appear beside a public review byline?
+
+Item 89 asked for the mark to show "by your name" in two places. The **header identity** is self-visible only, keeps Contributor Terms s2.5 true as written, and **shipped today** with no terms change and no legal question. This decision is only about the **second** place: beside the byline on every published review, where readers see it. That half is NOT built.
+
+Three things follow from it, and the third is the actual decision.
+
+1. **It falsifies your own published terms.** Contributor Terms s2.5 says marks are "shown only to the contributor and to nobody else." That becomes a false statement the moment this deploys. Fixable: amend s2.5, bump to v1.4 in the four places carrying the version, ship in one commit.
+2. **It decorates reviews written under the old promise.** Marks derive from live counts, so existing bylines would gain a mark with no new assent. Fixable exactly and cheaply: display only beside reviews stamped `terms_version` v1.4 or later. The column already exists.
+3. **It re-opens D30 Q1, and that is your call.** A token the site places beside a contributor's name on a review of a named business is the site conferring credibility on third-party speech. Your own Contributor Terms name "you add editorial voice on top of user content" as the move most likely to turn you from a protected host into a co-author. You accepted that exposure in D30 Q1 **while marks were private**. This changes that condition. Realistic downside is unchanged in kind: a demand letter from one of the ~28 records where a private business operates on a public site, not a judgment. D31's corrections still apply, most visible launches are public land with no possible plaintiff.
+
+**There is also a shape contradiction to settle, because items 83 and 89 give incompatible instructions.** Item 83 v2 specifies a factual count ("Angeline · 6 reports"). Item 89 says "nothing that lets two bylines be compared." **Two counts in one review list are a comparison.** Both cannot hold.
+
+- **(a) [recommended] Header only, defer the byline.** Already shipped, no terms change, no retroactivity problem, no posture change. Item 83 staged the public half at 25 reviewing accounts; at 2 to 3 contributors today a byline mark would decorate a handful of reviews and buy no reputation. Revisit when there is a crowd for it to mean anything.
+- **(b) Byline as a non-numeric qualifier**, the same word on every qualifying byline, no count and no tier, so nothing is comparable. Requires v1.4 and the `terms_version` gate, and accepts a smaller version of the D30 Q1 exposure.
+- **(c) Byline as a count**, item 83's literal v2. Requires everything in (b), and you are choosing item 83's shape over item 89's no-comparison rule, knowingly.
+- **(d) Engage a licensed attorney** on the combined host-versus-co-author and anti-SLAPP question, answering D30 Q1, D31 and this at once.
+
+Gates: web/components/ReviewsSection.tsx (byline render), web/app/contributor-terms/page.tsx, docs/legal/ugc-contributor-terms.md, web/lib/reviews/validation.ts, web/components/ReviewForm.tsx
+
+Answer:
