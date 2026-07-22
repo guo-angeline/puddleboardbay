@@ -1,3 +1,17 @@
+# 2026-07-22: the conditions panel now tells you which way to come home
+
+**Shipped item 99, the last of the three conditions upgrades.** Live and verified.
+
+Every spot now shows a line about the wind direction and what it means for the return leg: "Wind is from the northwest. An upwind start leaves the downwind leg for the way back, where the shoreline allows." This is the single most useful thing in the whole conditions rethink, because it is the closest the app comes to answering "which way do I go so I get back safely", and until today it only appeared to the handful of people who had signed up for alerts. Everyone else saw a bare "from WNW", which is data, not help.
+
+It went through a second legal review for showing it publicly, and the review's changes are all in. The most important one is the trailing "where the shoreline allows": the app knows each spot's location but not which way its shoreline faces, so the advice is a general rule of thumb and the wording now says so, rather than implying it is tailored to the exact spot. The tip sits above the safety disclaimer, never below it, and disappears in light or variable wind.
+
+Adding the panel to the safety-copy check also caught a small pre-existing problem it had never been checked for: an error message that said "check back before you head out". Reworded.
+
+**That completes the set.** Over three items the panel went from "is it windy" to temperature, rain, storm warnings, tide direction, and now a return-leg tip, all from data the app was already fetching, all behind one off switch. The next step (item 100) is the intra-day picture, "calm now, building this afternoon", which is the piece most likely to actually change how often people come back.
+
+**Your move:** nothing blocking. D32 is still open from this morning.
+
 # 2026-07-22: the tide now tells you which way it is going
 
 **Shipped item 98**, the second of the three conditions upgrades. Live and verified.

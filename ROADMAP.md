@@ -236,7 +236,7 @@ Copy: "Rising, turns to falling at {time}." / "Falling, turns to rising at {time
 
 **Acceptance:** in the bundle; the vocabulary test bites; existing degraded states (no station in range, NOAA down, no further events) unchanged; no em dashes.
 
-## 99. [ready] Port the existing launch-direction tip into the conditions panel
+## 99. [done] Launch-direction tip on the conditions panel, reworded for the public context (deployed 2026-07-22, c5cb69b)
 
 One import. The highest-value line in this whole item, because it is the closest thing the codebase has to an answer to "which way do I go so I get back safely", and today only alert enrollees (single digits) ever see it.
 
