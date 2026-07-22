@@ -117,6 +117,17 @@ Two cron paths run on schedules, but they are triggered by **different** schedul
 
 ## Editing spot data
 
+### Adding spots in a new geography: the records are the smallest part
+
+A region is not just rows in `spots.json`. Two per-coordinate lookup tables are keyed to the Bay Area's geography, and **when a spot falls outside them the feature does not error, it silently renders nothing**:
+
+1. **NWS gridpoints.** Re-run `cd web && python3 scripts/precompute_gridpoints.py` in the same change. A test catches this one.
+2. **`TIDE_STATIONS` in `lib/conditions.ts`.** Nothing caught this one until it was live. The LA and San Diego batches shipped `tide_sensitive: true` on 20 spots while the nearest listed station was past `MAX_STATION_MI`, so the conditions engine, the differentiator, ran blind across two whole regions with lint, 582 tests, the build and a production deploy all green. Pull stations from NOAA's `mdapi .../stations.json?type=tidepredictions`, and **confirm each id returns hi/lo from the datagetter before adding it**: `/api/tides` allowlists against this list, and subordinate station ids are not numeric (`TWC0413` serves Mission Bay). `conditions.test.ts` now fails if a `tide_sensitive` spot has no station in range.
+
+Also extend `REGIONS` in `lib/types.ts` (**ADD a value, never rename one**: existing records and analytics are keyed to the strings) and check the site's own framing still tells the truth, since the title, description and `h1` name the covered area.
+
+**The generalizable rule: a boolean that gates a feature is a claim, and something must test that we can honour it.** When coverage expands, ask what silently degrades, not just what fails.
+
 ### Read spots through `lib/spots.ts`, never from `data/spots.json`
 
 `lib/spots.ts` is the single chokepoint. Import `ALL_SPOTS` from it; do **not** `import spotsData from "@/data/spots.json"` in a feature file. Nine files consume spot data and **two of them are the alert crons**, so a filter applied only to the UI would leave push and email still sending people to a spot that has been deliberately withheld. `lib/spots.test.ts` fails the build if any feature file imports the JSON directly. `ALL_SPOTS_INCLUDING_HIDDEN` exists for data tooling and audits only, never for a user-facing surface or an alert send.
