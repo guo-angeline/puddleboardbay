@@ -11,8 +11,9 @@ import type { DisplayRating } from "@/lib/rating";
  *    (owner-directed) removed the previous "Paddle score" wording, and the
  *    re-gate that followed made clear the WORDING was the owner's to choose
  *    but the attribution itself is a floor, for two reasons. First, a bare
- *    star and number beside a "Paddler reviews N" heading reads as the
- *    verdict of those reviews when at one review it is 5/6 our own opinion.
+ *    star and number beside a "Paddler reviews" heading, above the reviews
+ *    themselves, reads as the verdict of those reviews when at one review it
+ *    is 5/6 our own opinion.
  *    Second, and the one with teeth: an attributed rating is OPINION, which
  *    is the strongest defence if a named private business objects, while an
  *    unattributed aggregate reads as a factual report of what paddlers think.

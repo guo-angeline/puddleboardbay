@@ -161,12 +161,7 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
       className="mt-5 mb-5 border-t border-(--border) pt-4"
     >
       {hasReviews && (
-        <h3 className="font-['Newsreader'] text-base font-bold text-(--dark)">
-          Paddler reviews
-          <span className="ml-1.5 font-sans text-sm font-normal text-(--muted)">
-            {reviews!.length}
-          </span>
-        </h3>
+        <h3 className="font-['Newsreader'] text-base font-bold text-(--dark)">Paddler reviews</h3>
       )}
 
       {justSubmitted && (
