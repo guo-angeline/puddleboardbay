@@ -1,3 +1,17 @@
+## 2026-07-22 · Studio iteration: item 78 (one item, shipped)
+
+**Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.
+
+**Shipped.** The water types are now **Lake / Coast / River**, live (`73ba881`). Filter pills, map legend, spot badges and search all follow.
+
+**Your two corrections both changed the outcome.** "Ocean" would have mislabelled 52 of the 67 spots in that bucket, since it is mostly SF Bay, sloughs and estuary with only 15 genuinely coastal, so your revision to "Coast" is what shipped. And your question about why we were fixated on `difficulty` was right: the four Lake Tahoe spots were split two-and-two across the buckets with no principled difference between them. The field was a water-type taxonomy wearing a difficulty name. Sand Harbor and Waterman's Landing moved so Tahoe is one thing.
+
+**What I checked before moving them.** The argument for keeping Tahoe in the exposed bucket is that it has real fetch and cold water. It does, but none of the four Tahoe spots' notes mention wind, fetch or cold, so the label was not carrying that warning either. The live risk signal is the conditions panel and the notes. I have filed the note gap as a follow-up rather than fixing it inside this item.
+
+**Two stale things found in passing.** `verify-legend.mjs` was asserting "Ocean", a label the site stopped rendering at an earlier rename, so that guard had been green against a string nobody shipped. And nothing asserted the labels at all, so renaming them broke no test. Both are now covered, including the enum keys, which are the load-bearing part: renaming those would break pin colours and every historical analytics comparison at once.
+
+**Queue.** Items 81 and 76 remain `[ready]`. The 30-minute cron is running.
+
 ## 2026-07-22 · Studio iteration: item 77 (one item, shipped)
 
 **Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.

@@ -258,7 +258,7 @@ Three mismatches sit side by side in the header: **radius** (pill vs 8px, the ow
 
 **Shipped 2026-07-22.** Geometry matched (`rounded-lg`, `text-xs`, `px-3 py-1.5`, same 30px box); colour deliberately not, per this item's own design note, so Feedback keeps the single azure outline and the account button stays neutral. Both AccountButton variants now share one `HEADER_BUTTON` constant so they cannot drift apart again. **Measuring rather than eyeballing found a third mismatch this spec did not list:** the mobile search glyph rendered 38px tall beside two 30px buttons, because `text-base` gives it a 24px line box; `leading-none` holds it to 30. Verified at 1280px and 390px, signed in (long name truncating) and signed out, and at the `sm` breakpoint: all three controls 30px / 8px / 12px, one azure border among them, no overflow.
 
-## 78. [in-progress] 2026-07-22T08:31:11-07:00 Rename the "Flatwater" / "Open water" water-type labels
+## 78. [done] Rename the water-type labels to Lake / Coast / River (deployed 2026-07-22, 73ba881)
 
 **Owner-reported 2026-07-21, from user feedback.** The water-type vocabulary is not landing: people do not know what "Flatwater" and "Open water" mean. Replace with something understandable but **not wordy** (these render as compact filter pills and badges, so length is a hard constraint).
 
@@ -275,6 +275,14 @@ Three mismatches sit side by side in the header: **radius** (pill vs 8px, the ow
 - `river` and `unknown` probably stay as they are; the problem words are the first two.
 
 **Acceptance:** new labels render everywhere the old ones did (filter pills, spot badges, map legend, spot sheet, OG/JSON-LD if present) with no leftover instances of the old strings outside deliberate prose; pins keep their colours; search still matches the old terms; `verify-legend.mjs` and the test suite pass; verified at 390px and desktop with no pill wrapping. No em dashes.
+
+**Shipped 2026-07-22 as Lake / Coast / River**, after two owner revisions in chat. The owner first proposed **Lake / Ocean / River**; checked against the data, "Ocean" was wrong for 52 of the 67 spots in that bucket (36 SF Bay/estuary, 12 slough/marsh, only 15 genuinely ocean, 4 lakes/harbours), so the owner revised the middle label to "Coast".
+
+**The owner also rejected this item's framing**, asking why `difficulty` was treated as the only way to categorise when the point is to be intuitive. That critique was correct and the data proved it: the four Lake Tahoe spots were split 2/2 across `bay` and `flatwater` with no principled difference (Kings Beach and Fallen Leaf already `flatwater`; Sand Harbor and Waterman's Landing in `bay`). The field was a water-type taxonomy wearing a difficulty name, applied inconsistently, so naming it by water body is a correction rather than a loss. **Sand Harbor (#11) and Waterman's Landing (#15) moved to `flatwater`** so Tahoe is one thing. The spots.json diff is exactly two lines, both `difficulty`, lat/lng verified untouched.
+
+Enum keys untouched as this spec required, so pin colours, filter state and the `difficulty` analytics prop are unchanged. Search keeps the old vocabulary working alongside the new. `verify-legend.mjs` updated and **it was already stale** (it expected "Ocean", a label the site stopped rendering at the earlier rename). Nothing had asserted the labels, so the rename broke no test; the new guard covers labels, enum keys, search in both vocabularies, and Tahoe consistency, and was proven to bite on each.
+
+**Follow-up worth filing separately:** none of the four Tahoe spots' notes mention wind, fetch or cold, which is the actual risk there. The labels never carried that warning and still do not; the notes are where it belongs.
 
 ## Owner items, added 2026-07-18 (enrollment-prompt tuning; all three [ready], queued top-most on purpose)
 
