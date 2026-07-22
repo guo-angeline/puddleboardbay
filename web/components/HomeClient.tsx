@@ -917,7 +917,14 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
                 <span className="text-gray-600">{label}</span>
               </div>
             ))}
-            <div className="border-t border-gray-200 mt-0.5 pt-1.5 flex items-center gap-2">
+            {/* Owner-directed 2026-07-22: this row was eating a quarter of the
+                legend box for links nobody comes to the map to click. Shrunk to
+                10px, leading-none and a 3px gap.
+                This is the DENSE DUPLICATE, not the only route: the same three
+                links sit in the list-panel footer at a full 24px target
+                (SpotList.tsx), which is what keeps the small copy acceptable
+                under WCAG 2.5.8 rather than making the links unreachable. */}
+            <div className="border-t border-gray-200 mt-1 pt-1 flex items-center gap-[3px] text-[10px] leading-none">
               <a href="/terms" className="text-(--muted) hover:text-(--dark) transition-colors">
                 Terms
               </a>

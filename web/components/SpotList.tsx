@@ -211,20 +211,24 @@ export default function SpotList({
         </div>
       ))}
 
+      {/* The FULL-SIZE copy of the legal links. The map legend carries a
+          deliberately tiny duplicate (item: owner asked for the map real
+          estate back), so these anchors have to be the ones that meet the
+          WCAG 2.5.8 24px target. py-1 on a 16px line box gets there. */}
       <div className="px-4 py-4 text-center border-t border-gray-100 flex items-center justify-center gap-2">
-        <a href="/terms" className="text-xs text-(--muted) hover:text-(--dark) transition-colors">
+        <a href="/terms" className="inline-block py-1 text-xs text-(--muted) hover:text-(--dark) transition-colors">
           Terms
         </a>
         <span className="text-xs text-(--muted)/50" aria-hidden="true">
           &middot;
         </span>
-        <a href="/disclaimer" className="text-xs text-(--muted) hover:text-(--dark) transition-colors">
+        <a href="/disclaimer" className="inline-block py-1 text-xs text-(--muted) hover:text-(--dark) transition-colors">
           Disclaimer
         </a>
         <span className="text-xs text-(--muted)/50" aria-hidden="true">
           &middot;
         </span>
-        <a href="/privacy" className="text-xs text-(--muted) hover:text-(--dark) transition-colors">
+        <a href="/privacy" className="inline-block py-1 text-xs text-(--muted) hover:text-(--dark) transition-colors">
           Privacy
         </a>
       </div>

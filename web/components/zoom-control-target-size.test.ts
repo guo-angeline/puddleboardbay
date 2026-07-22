@@ -41,3 +41,32 @@ describe("zoom control target size (defect B, acceptance 3)", () => {
     expect(rendererPropCount).toBeGreaterThan(0);
   });
 });
+
+/**
+ * The legal links (Terms / Disclaimer / Privacy) render TWICE: a deliberately
+ * tiny copy in the map legend, and a full-size copy in the list-panel footer.
+ * The owner asked for the map real estate back (2026-07-22), so the legend copy
+ * is 10px with no padding. That is only acceptable while the other copy remains
+ * a real target: WCAG 2.5.8 allows an undersized control when the same function
+ * is available through one that meets the size. Shrink BOTH and the site has no
+ * compliant route to its own legal pages.
+ */
+describe("legal links keep one full-size route", () => {
+  const list = fs.readFileSync(path.resolve(__dirname, "./SpotList.tsx"), "utf-8");
+  const home = fs.readFileSync(path.resolve(__dirname, "./HomeClient.tsx"), "utf-8");
+
+  it("gives the list-panel copy a >=24px target", () => {
+    for (const href of ["/terms", "/disclaimer", "/privacy"]) {
+      const i = list.indexOf(`href="${href}"`);
+      expect(i, `${href} missing from the list footer`).toBeGreaterThan(-1);
+      // py-1 on a 16px line box is 24px. inline-block is what makes it apply.
+      const tag = list.slice(i, i + 220);
+      expect(tag, `${href} must be a real target`).toMatch(/inline-block/);
+      expect(tag, `${href} must be a real target`).toMatch(/py-1/);
+    }
+  });
+
+  it("keeps the dense legend copy dense, and only in the legend", () => {
+    expect(home).toMatch(/text-\[10px\] leading-none/);
+  });
+});
