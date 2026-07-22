@@ -198,7 +198,7 @@ Not user-visible today (native is gated on Apple Developer Program enrollment, i
 
 ## Owner items, added 2026-07-21 (rating + reviews copy removal; both [ready], queued top-most on purpose)
 
-## 84. [in-progress] 2026-07-21T21:55:45-07:00 Drop the "Paddle score" label next to the rating number
+## 84. [done] Drop the "Paddle score" label next to the rating number (deployed 2026-07-22, 5848c0a)
 
 **Owner-directed 2026-07-21.** Remove the "Paddle score" wording that sits beside the rating numbers.
 
@@ -213,6 +213,8 @@ Not user-visible today (native is gated on Apple Developer Program enrollment, i
 **Guards that will fail and must be updated deliberately (not deleted wholesale):** `components/reviews-guards.test.ts` asserts the label at **lines 179, 189, 203, 208** (`expect(blended).toContain("Paddle score")` and two `aria-hidden ... Paddle score` matchers). Rewrite them to assert the NEW intended state so the guard still bites. Also update the now-stale comments referencing the label in `SpotDrawer.tsx:465-468` and `SpotRating.tsx:10`.
 
 **Acceptance:** no visible "Paddle score" text anywhere; the screen-reader description still explains what the number is; guards updated to the new state and passing; verified at 390px and desktop on a spot with reviews and one without. No em dashes.
+
+**Shipped 2026-07-22, with one correction from the re-gate.** "Paddle score" is gone everywhere and the accessible description keeps its meaning ("combining our own rating with N paddler reviews"). The item's own point 2 turned out to be the whole story: the label WAS doing provenance work, and the re-gate returned `needs-changes` on removing it outright. With the sheet's breakdown line already gone (8d9bfbe), a blended number would have had no visible provenance at all. The floor is one short visible attribution, so it ships as **"our take"**: the owner rejected the wording "Paddle score", not the concept. The sharpest finding was not FTC but defamation posture, an attributed rating is opinion (the strongest defence if a named business objects) while a bare aggregate under a "Paddler reviews N" heading reads as a factual report of paddler sentiment. Verified at 375px on blended and owner-only spots; no subtitle row truncates. Guards now assert the attribution is PRESENT (the version that asserted the old label's absence would have certified the rejected state).
 
 ## 85. [ready] Remove the contributor-marks line from the paddler reviews section (NEEDS A LAWYER RE-GATE FIRST)
 

@@ -1,3 +1,17 @@
+## 2026-07-22 · Studio iteration: item 84 (one item, shipped)
+
+**Your move.** Nothing blocking. Two decisions sit open when you want them: **D31** (form the LLC) and **item 85** (removing the contributor-marks line, now with a recorded verdict and one condition).
+
+**Shipped.** Item 84, the "Paddle score" label, is gone and deployed (`5848c0a`). It came back from the legal re-gate as `needs-changes`, so it ships with a shorter replacement, **"our take"**, rather than nothing.
+
+**What this iteration actually found.** Your directive was the wording, and the wording was never the problem. The label was doing two jobs: disclosure, and your opinion defence. An attributed rating is opinion, which is the strongest answer if a named marina or private launch objects to its score; an unattributed number sitting under a "Paddler reviews 3" heading reads as a factual report of what paddlers think. You accepted the D30 Q1 defamation risk on a labelled version, so removing the label had quietly downgraded a position you had already weighed. Combined with the earlier removal of the breakdown line, the number was about to render with no visible provenance anywhere. "our take" restores the state your acceptance was given on, which is why D30 Q1 does not need re-deciding.
+
+**Process note worth keeping.** Two separate owner-directed items each removed one half of what a single legal gate required, and neither looked like a legal change on its own. The trigger recorded in `.claude/studio.md` is now "does this UNDO something a prior gate required", not "does this touch a legal surface". A guard I wrote earlier in the iteration was also pointing the wrong way, asserting the old label was absent, which would have certified exactly the state the gate rejected; it now asserts the attribution is present.
+
+**Board input ingested.** D30 moved to `[RESOLVED]` on your Q1/Q2 answers, and its unanswered LLC escalation was promoted to **D31** so it would not be buried inside a resolved entry.
+
+**Not touched.** Items 85, 77, 78, 81, 76 remain `[ready]`. I stopped at one item because the queue top (85) is gated on the same lawyer question this iteration was already waiting on; its spec now carries the verdict and its one condition, so it is ready to run cleanly next time.
+
 ## 2026-07-21 — Item 78: account management, and a live privacy leak caught in testing
 
 **Your move.** One thing, when convenient: run the account-deletion pre-enable test once with a real hand-clicked Google sign-in (the runbook's "Pre-enable test"). I exercised the actual delete endpoint end to end against a seeded account and it passed cleanly, but the lawyer's gate asks for one human-driven run before the promise is relied on for a real request.
