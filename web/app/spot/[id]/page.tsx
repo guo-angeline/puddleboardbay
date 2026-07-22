@@ -57,6 +57,18 @@ export default async function SpotPage(
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(spotJsonLd(spot)) }}
       />
+      {/* Item 81: this page's <h1>, and it has to be SERVER-rendered.
+          The obvious fix (promote the drawer's title from h2 to h1) does
+          nothing here: the drawer mounts client-side after an effect selects
+          the spot, so `spot-sheet-title` is absent from the served HTML that
+          crawlers actually read. Verified by fetch, which is why the item asked
+          for that rather than for inspecting React.
+          sr-only because the visible title arrives with the drawer a moment
+          later; a visible one would render the name twice. */}
+      <h1 className="sr-only">
+        {spot.water}
+        {spot.city ? `, ${spot.city}` : ""}: paddleboard and kayak launch
+      </h1>
       <nav aria-label="More paddleboard spots" className="sr-only">
         <Link href="/">All Bay Area paddleboard and kayak spots</Link>
         <h2>More paddleboard spots in {spot.region}</h2>

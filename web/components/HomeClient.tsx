@@ -727,6 +727,18 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Item 81: the page's one <h1>.
+          Rendered ONLY on the home page. On /spot/[id] the page component owns
+          the h1 (the spot name), and two would be worse than none.
+          sr-only rather than a visible heading on purpose: the wordmark beside
+          it is a button, and the header tagline is `hidden lg:inline`, so
+          promoting either would give an h1 that is display:none for most
+          users. sr-only is real text in the DOM for crawlers and screen
+          readers at every viewport, and leaves the visual design untouched. */}
+      {initialSpotId === undefined && (
+        <h1 className="sr-only">Paddleboard and kayak launch spots across the Bay Area</h1>
+      )}
+
       {/* Header */}
       <header className="shrink-0 px-4 py-3 border-b border-gray-200 bg-(--bg) flex items-center justify-between">
         <button

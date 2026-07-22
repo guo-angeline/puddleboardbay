@@ -96,11 +96,13 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Studio finding, added 2026-07-21 (auth defect found while diagnosing a real failed sign-in)
 
-## 74. [proposed] Email sign-in is broken for anyone on Microsoft 365 or Google Workspace: link scanners burn the one-time code
+## 74. [proposed] Auth-email hardening: nothing stops a clickable link returning to the sign-in templates
+
+**STATUS 2026-07-22: the live break is FIXED and needs no owner action.** Both templates were verified code-only from the dashboard on 2026-07-22 ("Confirm sign up" and "Magic link or OTP", `{{ .Token }}` only, no `{{ .ConfirmationURL }}`, subject "Your Paddle to Water sign-in code"). What remains in this item is the **code-side hardening in "STILL OPEN" below**, which is loop work. Do not re-report the dashboard edit as owed: it is done. The diagnosis below is kept in past tense as the record.
 
 **Filed as a defect with direct evidence, not as an idea.** The studio does not add proposals to a stocked shelf, but this was found while diagnosing an actual sign-in the owner could not complete (`qg47@cornell.edu`, 2026-07-21), and losing it would leave a live P0 unrecorded.
 
-**What happens.** The Supabase auth email contains BOTH a clickable confirmation link and the `{{ .Token }}` code. Corporate and university mail systems pre-click every URL in inbound mail to scan it (Microsoft Defender **Safe Links**, Google Workspace equivalents). That click consumes the single-use token, so the code printed in the same message is dead before the human ever opens it. The user sees "the code doesn't work", or never registers that a code was there at all.
+**What happened.** The Supabase auth email contained BOTH a clickable confirmation link and the `{{ .Token }}` code. Corporate and university mail systems pre-click every URL in inbound mail to scan it (Microsoft Defender **Safe Links**, Google Workspace equivalents). That click consumes the single-use token, so the code printed in the same message is dead before the human ever opens it. The user sees "the code doesn't work", or never registers that a code was there at all.
 
 **Evidence (2026-07-21, `qg47@cornell.edu`, Cornell is on `cornell-edu.mail.protection.outlook.com`, i.e. Microsoft 365):**
 - Supabase `confirmation_sent_at` 19:54:06.583Z; `email_confirmed_at` **19:55:28.058Z**, 82 seconds later.
@@ -111,7 +113,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 **Why it matters more than one user.** Microsoft 365 and Google Workspace are most corporate and university mail. Sign-in is now required to post a review (item 43), so this silently excludes a large class of users from the whole UGC feature, and there is no error message anywhere: the app reports the code as invalid, which reads as our bug to the user and as user error to us.
 
 **Fix, in order of leverage:**
-1. **Make the auth emails code-only.** Supabase Dashboard -> Authentication -> Emails -> **"Confirm signup"** and **"Magic Link"**: drop `{{ .ConfirmationURL }}`, keep `{{ .Token }}`. With no URL in the message there is nothing to detonate. This is an owner dashboard action, not code, and it fixes the failure outright.
+1. ~~**Make the auth emails code-only.** Supabase Dashboard -> Authentication -> Emails -> **"Confirm signup"** and **"Magic Link"**: drop `{{ .ConfirmationURL }}`, keep `{{ .Token }}`.~~ **DONE, verified in the dashboard 2026-07-22.** With no URL in the message there is nothing to detonate. This was the owner dashboard action and it fixed the failure outright. Steps 2 and 3 remain and are code.
 2. **Stop depending on the template.** The app should also survive a link click: today `createBrowserClient` uses PKCE, so a link followed from a mail client can never complete a session in the user's browser, and `/` has no handler for the landing. Either handle the `token_hash` + `type` landing in a route, or assert the code-only template in a test that fails loudly if a link ever reappears.
 3. **Surface the real failure.** "That code did not work" should distinguish an expired/consumed token from a wrong code, so the next occurrence is diagnosable from the UI instead of from Vercel logs.
 
