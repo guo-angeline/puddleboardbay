@@ -1,3 +1,15 @@
+# 2026-07-22: your own devices were in ten analytics numbers
+
+**Shipped item 105.** A data-quality fix, not a user-facing one, so nothing deployed.
+
+The rule was already written down: every analytics query must filter out your own phones and laptops, because at ~30 daily users your devices are a big share of the traffic (about 72% of all the "save" actions, for instance). Five queries followed the rule. Ten did not, and just quietly counted you as a user.
+
+That matters because one of the ten is the query behind the number everyone keeps citing: "~86% of people who open a spot actually look at conditions", the main evidence that conditions is the reason people come. Your own heavy use was inflating it. Same for the week-one retention baseline and the spot-open rate. All of them read higher than they should, and all now need re-reading with you filtered out. I could not compute the corrected numbers here because that needs a read key this environment does not have, so I have flagged it for the next report.
+
+Two things worth knowing about how this was done. I found a tenth bad query the original list had missed, by searching the code instead of trusting the list, and the fix ships with an automated check so a future query that forgets the filter fails immediately rather than silently. And one query was left seeing all traffic on purpose: it exists to catch leaked links, and filtering anyone out would make it always report zero.
+
+**Your move:** nothing blocking. When you next want an analytics read, know that the older numbers were owner-inflated and the corrected queries are ready to re-run. D32 is still open from this morning.
+
 # 2026-07-22: the conditions panel now tells you which way to come home
 
 **Shipped item 99, the last of the three conditions upgrades.** Live and verified.

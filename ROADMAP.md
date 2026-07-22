@@ -297,7 +297,7 @@ Two tiers, different severities: a **hard exclusion** for thunderstorm hours (ch
 
 Confirmed absent from the whole stack; NWS does not provide it. NOAA CO-OPS publishes `water_temperature` at sensor stations, but most of `TIDE_STATIONS` are harmonic and subordinate *prediction* stations, so statewide coverage is probably thin. **That is an assumption, not a measurement.** Measure coverage across all 177 spots before scoping anything. Cold shock, not air comfort, is the real safety variable, so this is the one genuinely valuable new dependency.
 
-## 105. [ready] Nine analytics queries silently include the owner's own traffic
+## 105. [done] Owner traffic excluded from ten analytics queries, guarded (2026-07-22, 487f762; analytics-only, no deploy)
 
 `analytics/EXCLUDED_PERSONS.md` states every query MUST exclude the owner's five `person_id`s, which were ~72% of all saves. **Five query files hard-code them; nine do not**, so per-query exclusion is the convention and these simply lack it:
 
@@ -308,6 +308,8 @@ Confirmed absent from the whole stack; NWS does not provide it. NOAA CO-OPS publ
 Same shape as the "tests must grep the tree, not your memory" rule: the exclusion was applied to the queries someone remembered. The newer files (backswipe, enrollment) got it right; the older core ones did not.
 
 **Acceptance:** all nine carry the exclusion; a guard or a documented check makes a new query without it visible; any figure previously reported from these queries is re-read and the delta noted in the next report.
+
+**Done: a TENTH query (`experiment_next_good_window`) was found by grepping the tree rather than trusting this list, which is why the fix ships with `web/lib/analytics-owner-exclusion.test.ts` (fails when any events+person_id query omits the exclusion; `token_leak_check` allowlisted with reason) instead of a one-time edit. `alert_ctr` was Supabase-keyed, so it drops the owner push subscription, not a person_id. Delta re-read flagged for the next report (needs the PostHog personal key). Full note in the changelog.**
 
 ## 106. [ready] The predeploy gate cannot see the code that decides which push alerts fire
 
