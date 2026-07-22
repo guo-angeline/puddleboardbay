@@ -206,7 +206,18 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
           link reads as a footnote rather than as a label on the first review. */}
       {hasReviews && (
         <p className="mt-2 text-xs text-(--muted)">
-          <a href="/contributor-terms" target="_blank" rel="noopener noreferrer" className="underline">
+          {/* Item 87: `inline-block py-1` is a target-size fix, not spacing.
+              WCAG 2.2 SC 2.5.8 wants a 24x24 CSS px target. This anchor used to
+              sit inside a sentence, where the "inline" exception covered it,
+              and item 85 deleted that sentence, leaving a ~16px tall hit area
+              as the only content of its own paragraph. The exception no longer
+              applies, so the box has to earn the height itself. */}
+          <a
+            href="/contributor-terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block py-1 underline"
+          >
             Contributor Terms
           </a>
         </p>

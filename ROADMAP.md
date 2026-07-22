@@ -235,7 +235,11 @@ Deleting it while the app still awards marks for contributing removes a disclosu
 
 **Also note:** the reviews guards reference contributor terms (`reviews-guards.test.ts:45`, and `:98`/`:306` cover the `/contributor-terms` page). Removing the paragraph must not silently weaken those guards; update them to match whatever the lawyer approves, and leave the `/contributor-terms` page itself in place.
 
-**LAWYER VERDICT RECORDED (2026-07-22, re-gate run during item 84).** Removing the sentence is **defensible, with one condition**: marks are private, valueless and never conditioned on what a review says, so the material connection fails the Endorsement Guides materiality test in the direction of "disclosure not required". **The condition: keep a `/contributor-terms` link on the reviews surface.** A bare link with no sentence is fine. `ReviewsSection.tsx:186` is the ONLY reader-facing route to that document (`ReviewForm.tsx` is writer-only, behind the form), so deleting the whole block leaves a reader with no path from the number to the document explaining it. Also corrected by the gate: the review form carries an assent checkbox plus a terms link, NOT a marks disclosure, so "the writer already sees it" is not true today.
+**LAWYER VERDICT RECORDED (2026-07-22, re-gate run during item 84).** Removing the sentence is **defensible, with one condition**: marks are private, valueless and never conditioned on what a review says, and the incentive is **disclosed at the point of writing and in the linked terms, so no in-line reader disclosure is required**. **The condition: keep a `/contributor-terms` link on the reviews surface.**
+
+A bare link with no sentence is fine. `ReviewsSection.tsx` is the ONLY reader-facing route to that document (`ReviewForm.tsx` is writer-only, behind the form), so deleting the whole block leaves a reader with no path from the number to the document explaining it. Also corrected by the gate: the review form carries an assent checkbox plus a terms link, NOT a marks disclosure, so "the writer already sees it" is not true today.
+
+**Narrowed 2026-07-22 (item 87b).** The verdict above originally read "fails the Endorsement Guides materiality test in the direction of disclosure not required". Taken literally that would have authorised deleting the WRITER-side disclosure too, which it does not. The position that actually holds is the narrower one now recorded, and it depends on three artifacts continuing to exist, none removable without a fresh gate: the `{DISCLOSURE}` rendered above the assent box in `components/ReviewForm.tsx`, the string itself in `lib/markCopy.ts`, and the marks clause in Contributor Terms section 2. All three are now asserted in `components/reviews-killswitch.test.ts`, so the dependency is executable rather than a note someone has to remember.
 
 **Acceptance:** the lawyer verdict is recorded (in DECISIONS.md if it escalates); the reviews section matches the approved outcome; **a `/contributor-terms` link survives on the reviews surface**; guards updated to assert the new intended state and still passing; the review form's own disclosure and the Contributor Terms page are unaffected unless the lawyer says otherwise.
 
@@ -455,7 +459,7 @@ Verified:
 
 **Shipped 2026-07-22.** All three `SpotList` card sites now gate on `useKillSwitch("reviews")`, matching `SpotDrawer`. **Verified behaviourally, not just structurally**, by forcing the flag off locally (reverted immediately after): Rollins Lake renders **3.9 with no attribution** when off, and **4.2 "our take, combining our own rating with 2 paddler reviews"** when on. Guard asserts both consumers read the same flag and that no ungated survivor remains. The pre-existing "gives EVERY card the review totals" guard asserted the old literal, so its intent was preserved and its string updated rather than deleted, and the per-card count stays owned by that one test rather than duplicated.
 
-## 87. [ready] Two small follow-ups from the item-85 lawyer re-gate (a11y target size + a rationale that is too broad as written)
+## 87. [in-progress] 2026-07-22T09:04:13-07:00 Two small follow-ups from the item-85 lawyer re-gate
 
 **From the same re-gate (2026-07-22). Both minor, both cheap.**
 

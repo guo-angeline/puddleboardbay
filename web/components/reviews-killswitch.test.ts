@@ -45,3 +45,32 @@ describe("the reviews kill switch reaches every surface that reads contributor d
     expect(/crowd=\{aggregates\[spot\.id\]\}/.test(broken)).toBe(true);
   });
 });
+
+describe("the bare Contributor Terms link is a real touch target (item 87)", () => {
+  it("earns its own 24px box, since the sentence that used to cover it is gone", () => {
+    // WCAG 2.2 SC 2.5.8 wants 24x24 CSS px. This anchor was covered by the
+    // "inline" exception precisely BECAUSE it sat inside a sentence; item 85
+    // deleted that sentence and left it alone in its own paragraph at
+    // text-xs, roughly a 16px tall target. `inline-block` + `py-1` takes the
+    // measured box to exactly 24px.
+    const link = section.slice(section.indexOf('href="/contributor-terms"') - 200);
+    expect(link).toMatch(/inline-block/);
+    expect(link).toMatch(/py-1/);
+  });
+
+  it("keeps the three artifacts the item-85 verdict actually depends on", () => {
+    // The recorded rationale was narrowed (item 87b): the reader-side line was
+    // droppable because the incentive is disclosed AT THE POINT OF WRITING and
+    // in the linked terms, NOT because no disclosure is required at all. That
+    // narrower position rests on three things existing, so removing any of
+    // them needs a fresh gate rather than a copy review.
+    const form = read("./ReviewForm.tsx");
+    const copy = read("../lib/markCopy.ts");
+    const terms = read("../app/contributor-terms/page.tsx");
+    expect(form, "writer-side disclosure above the assent box").toContain("{DISCLOSURE}");
+    expect(copy, "the disclosure string itself").toContain("never depend on your opinion of a spot");
+    expect(terms, "the marks clause in the Contributor Terms").toContain(
+      "Marks are for taking part, never for your opinion"
+    );
+  });
+});
