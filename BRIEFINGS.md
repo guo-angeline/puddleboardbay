@@ -1,3 +1,15 @@
+# 2026-07-22: the tide now tells you which way it is going
+
+**Shipped item 98**, the second of the three conditions upgrades. Live and verified.
+
+The panel used to lead with a list of high and low times and leave you to work out what that meant. It now leads with the plain-language version: "Rising, turns to falling at 4:53 PM." The actual times are still there underneath, in lighter text, because the height of a low still matters for how far you carry the board, but the first thing you read is the thing you actually wanted to know.
+
+One deliberate restraint worth flagging, because it is a safety line and not a style choice. The app predicts tide HEIGHT, so it says "rising" and "falling". It does not say "flood", "ebb", or "current", which are about how the water moves, because the water keeps moving for a while after the height turns, and claiming otherwise would invite someone to plan a return around a current we cannot actually predict. Two tests enforce that the words never creep in.
+
+Same off switch as yesterday's temperature work, so the whole set reverts together if needed.
+
+**Your move:** nothing blocking. D32 is still open. Item 99 is the last of this set: it puts the wind-direction sentence you already own in front of every visitor, and it has a legal rewrite already specced from its gate, so it is a clean next pick.
+
 # 2026-07-22: the conditions panel now shows temperature, rain, and storms
 
 **Shipped item 97**, the first of the three-part conditions upgrade. Live and verified.

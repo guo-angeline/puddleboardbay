@@ -226,7 +226,7 @@ Also split the wind failure state, which today collapses two different things in
 
 **Acceptance:** ships in the 97+98+99 bundle behind one `conditions-readout` kill switch; one changelog entry naming it a bundle; `conditions_loaded.latency_ms` does not regress; no em dashes.
 
-## 98. [ready] The tide line says which way it is going
+## 98. [done] The tide reads as a direction, not a table of times (deployed 2026-07-22, 3d122b6)
 
 `next[0].type === "H"` means rising now, turning at `next[0].time`. Pure arithmetic on `TideInfo.next`, already parsed. Zero new data.
 
