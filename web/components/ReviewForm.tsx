@@ -114,13 +114,17 @@ export default function ReviewForm({
       <label htmlFor="review-body" className="mt-3 block text-sm font-medium text-(--dark)">
         Your review <span className="font-normal text-(--muted)">(optional)</span>
       </label>
+      {/* 16px at base is load-bearing, not a type choice: iOS Safari zooms the
+          page in on any focused field under 16px and never zooms back out, so
+          the whole app stays magnified after the review is submitted (owner
+          screen recording, 2026-07-21). Desktop keeps 14px. */}
       <textarea
         id="review-body"
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
         rows={4}
         placeholder="What was the put-in like? Parking, access, what you saw."
-        className="mt-1 w-full rounded-lg border border-(--border) px-3 py-2 text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
+        className="mt-1 w-full rounded-lg border border-(--border) px-3 py-2 text-base md:text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
       />
 
       {/* Item 77: asked once. Sits above the assent row so the checkbox stays
@@ -139,7 +143,7 @@ export default function ReviewForm({
             autoComplete="nickname"
             placeholder="Shown on your review"
             aria-describedby="review-name-hint"
-            className="mt-1 w-full rounded-lg border border-(--border) px-3 py-2 text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
+            className="mt-1 w-full rounded-lg border border-(--border) px-3 py-2 text-base md:text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
           />
           <p id="review-name-hint" className="mt-1 text-xs text-(--muted)">
             Public, and reused on your later reviews. Leave it blank to post as

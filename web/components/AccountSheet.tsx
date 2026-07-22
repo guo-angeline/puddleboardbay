@@ -141,7 +141,7 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
               maxLength={MAX_DISPLAY_NAME}
               autoComplete="nickname"
               placeholder="Not set"
-              className="min-w-0 flex-1 rounded-lg border border-(--border) px-3 py-2 text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
+              className="min-w-0 flex-1 rounded-lg border border-(--border) px-3 py-2 text-base md:text-sm text-(--dark) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)"
             />
             <button
               type="submit"

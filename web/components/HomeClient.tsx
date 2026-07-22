@@ -750,7 +750,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search spots, towns, wildlife…"
               aria-label="Search spots"
-              className="w-52 rounded-lg border border-(--border) bg-white pl-8 pr-7 py-1.5 text-xs text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
+              className="w-52 rounded-lg border border-(--border) bg-white pl-8 pr-7 py-1.5 text-base md:text-xs text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
             />
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
             {filters.search && (

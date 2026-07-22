@@ -596,7 +596,7 @@ export default function InstallPrompt() {
             aria-label="Email address"
             style={{
               flex: 1, minWidth: 0, borderRadius: 10, border: "1px solid var(--border)",
-              padding: "10px 12px", fontSize: 14, background: "var(--fill)", color: "var(--dark)",
+              padding: "10px 12px", fontSize: 16, background: "var(--fill)", color: "var(--dark)",
               colorScheme: "light",
             }}
           />

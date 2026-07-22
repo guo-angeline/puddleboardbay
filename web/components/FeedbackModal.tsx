@@ -123,7 +123,7 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
                     ? "What's wrong? Which spot?"
                     : "What's on your mind?"
                 }
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent) resize-none"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base md:text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent) resize-none"
               />
             </div>
 
@@ -137,7 +137,7 @@ export default function FeedbackModal({ onClose, defaultType, defaultMessage }: 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-base md:text-sm text-(--dark) placeholder-gray-400 focus:outline-none focus:border-(--accent)"
               />
             </div>
 
