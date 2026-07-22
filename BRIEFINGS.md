@@ -1,3 +1,17 @@
+# 2026-07-22: the first-review invitation is live, and one half went to you
+
+**Shipped item 89.** Spots with no reviews now carry a single line inviting the reader to write about them. That is 176 of the 177 spots, so it is the biggest new surface in the app, which is why it is one sentence of prose and not a button. You already have a "Write a review" button on every sheet; a second ask would have competed with it.
+
+**The mark now also shows beside your name in the header**, visible only to you. That was the safe half of what you asked for.
+
+**The other half went to you as D32, and it is a real decision, not a formality.** You asked for the mark to sit next to the byline where readers see it. Three things follow. It makes your own Contributor Terms false, since they currently promise marks are shown to nobody but the earner. It would decorate reviews people wrote under that promise. And it is the site putting a token of credibility next to someone else's opinion about a named business, which is the move your own terms flag as the one most likely to turn you from a host into a co-author. You accepted that exposure before, while marks were private. This changes that condition, so I did not ship it on the old answer. There is also a straight contradiction between two of your own items about whether the mark should be a count, and D32 makes you pick.
+
+**Worth knowing what running the legal check first bought.** The reader's only route to the Contributor Terms was coded to appear only on spots that already had reviews, which is precisely the opposite of where this new invitation shows. Shipping it as written would have silently cancelled an earlier approval, and no test would have gone red.
+
+**Two places the item's own spec was wrong, and I checked instead of trusting it.** It predicted an analytics metric would break; it does not, because that counter is separately gated. And it asked for a click event on something that has nothing to click. Both are written down so the next person does not re-derive them.
+
+**Your move:** answer D32 (recommended: (a), header only, defer the byline until there are enough contributors for it to mean anything). Nothing else is blocked.
+
 # 2026-07-22: California is covered, and the sweep is closed
 
 **177 spots.** The last batch adds Stone Lagoon and Hookton Slough on the Humboldt coast, Hooper Beach at Capitola, Morro Bay State Park Marina (the one you asked for by name), and Marina Park in Ventura. Two new regions, North Coast and Ventura.

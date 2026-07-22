@@ -79,7 +79,26 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner items, added 2026-07-22 (first-review prompt + conditions rethink + trip-planner demand test; all three [ready], queued top-most on purpose)
 
-## 89. [ready] Prompt the first review on a spot that has none, with a mark for writing it
+## 89. [done] Prompt the first review on a spot that has none (deployed 2026-07-22, ba262a2; byline half escalated as D32)
+
+**Shipped:** one line of prose on the ~176 of 177 spots with no published review, plus item 89's **header** half (a mark count beside the account button, self-visible only). **The byline half is NOT built:** it escalated, and is D32.
+
+**Deliberately quiet, and that was a design constraint not a taste call.** A full-width filled "Write a review" already sits in the action row, so the invitation is prose with no control of its own. A guard asserts it never grows a `<button>`.
+
+**What the legal gate actually caught, which is the value of running it first:**
+- **The Contributor Terms link was gated on `hasReviews`**, i.e. absent from exactly the 176 spots where the invitation renders. **Item 85's removal of the in-line marks disclosure was cleared ON THE CONDITION that link survives.** Shipping as built would have quietly voided a prior verdict, and nothing would have failed.
+- **`first-report` is a LIFETIME mark**, so naming it to someone who already holds it is a false statement repeated across 176 spots. The reward clause is conditional; unknown state omits it, because silence is never false.
+- The incentive now acts a screen earlier than the form, so the **non-conditioning clause travels with it**. This ADDS to `ReviewForm`'s disclosure, never replaces it (item 87b still binds).
+- **"Know this spot?"** is an eligibility qualifier (16 CFR 465), deliberately knowledge-shaped rather than water-shaped, since nothing may reward going.
+- **No "be the first".** The owner asked for those words; on a pre-moderated surface they cannot be said truthfully. Verified absent from the production bundle.
+
+**Two things checked rather than assumed, both of which the spec got wrong:**
+1. **The spec predicted a `reviews_viewed` discontinuity. There is none.** That observer is separately gated on `reviews.length > 0`, so it never arms on a zero-review spot. The series is continuous. That gate is now load-bearing and the changelog says so.
+2. **The spec asked for an impression event AND a click event. There is no click event**, deliberately: the invitation has no control, so the funnel completes through the existing `review_form_opened`. Inventing a click for a paragraph would put a step in the funnel no user can perform.
+
+**Guards were repointed, not deleted.** Two tests asserted the exact opposite of this item. Rewriting them to the new invariant (rather than dropping them) keeps the protection, and **both were proven to fail when the invariant is broken**.
+
+
 
 **Owner-directed 2026-07-22.** In the spot sheet, on a spot with no published reviews, invite the reader to write the first one and name what they get for it. Owner's phrasing: *"be the first to review this spot to earn a [gold badge etc.] by your name"*.
 
