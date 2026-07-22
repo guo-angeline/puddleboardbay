@@ -159,3 +159,62 @@ describe("evaluateGoodWindow (hourly)", () => {
     expect(w!.windowKey).toBe("2026-07-01");
   });
 });
+
+describe("evaluateGoodWindow fails CLOSED on bad wind data (item 107)", () => {
+  it("does NOT treat missing/garbage windSpeed as calm", () => {
+    // The defect: parseMaxWind returned 0 for these, and 0 is "calm", so a data
+    // gap produced a good window. Now null -> ineligible -> no window.
+    const periods = [
+      h("2026-07-01", 9, ""),
+      h("2026-07-01", 10, "garbage"),
+    ];
+    expect(evaluateGoodWindow(periods, NOW, 3)).toBeNull();
+  });
+
+  it("still alerts on a real numeric 0 mph", () => {
+    const periods = [
+      h("2026-07-01", 9, "0 mph"),
+      h("2026-07-01", 10, "0 mph"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    expect(w!.maxWindMph).toBe(0);
+  });
+
+  it("still alerts when NWS writes the word Calm for windSpeed", () => {
+    const periods = [
+      h("2026-07-01", 9, "Calm"),
+      h("2026-07-01", 10, "calm"), // case-insensitive
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    expect(w!.maxWindMph).toBe(0);
+  });
+
+  it("a bad-data hour BREAKS a run rather than silently extending it", () => {
+    // 6,7 are calm (would be a window), 8 is garbage. The garbage hour must not
+    // become part of the locked run, and must not read as another calm hour.
+    const periods = [
+      h("2026-07-02", 6, "5 mph"),
+      h("2026-07-02", 7, "6 mph"),
+      h("2026-07-02", 8, "garbage"),
+      h("2026-07-02", 9, "40 mph"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    // The run is 6-7 only; 8 (garbage) does not extend it, so endHour is 8.
+    expect(w!.startHour).toBe(6);
+    expect(w!.endHour).toBe(8);
+    expect(w!.maxWindMph).toBe(6);
+  });
+
+  it("mixed valid+invalid: peak wind ignores the unusable hour", () => {
+    const periods = [
+      h("2026-07-02", 10, "3 mph", "W"),
+      h("2026-07-02", 11, "7 mph", "NW"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w!.maxWindMph).toBe(7);
+    expect(w!.windDirection).toBe("NW");
+  });
+});

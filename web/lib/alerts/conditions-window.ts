@@ -18,9 +18,27 @@ export interface GoodWindow {
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-function parseMaxWind(raw: string): number {
-  const nums = (raw.match(/\d+/g) ?? []).map(Number);
-  return nums.length ? Math.max(...nums) : 0;
+/**
+ * Peak wind in a windSpeed string, or null when there is no usable reading.
+ *
+ * Item 107 (2026-07-22). This used to return 0 for ANY string with no digits
+ * ("", null-ish, "garbage"), and paddleabilityFromWind(0) is "calm", so a period
+ * with missing or unparseable wind scored as DEAD CALM and eligible. On this
+ * unattended alert path that means the absence of data could fire a "good to
+ * paddle" push. A paddling app must fail CLOSED here, not open.
+ *
+ * The two legitimate low-wind cases are preserved: a numeric "0 mph" is real
+ * calm, and NWS sometimes writes the literal word "Calm" for windSpeed. Anything
+ * else with no number returns null, and the caller treats null as ineligible.
+ * `raw` is typed string but the NWS response is cast unchecked (findGoodWindow),
+ * so guard the runtime null/undefined too.
+ */
+function parseMaxWind(raw: string): number | null {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  if (s.toLowerCase() === "calm") return 0;
+  const nums = (s.match(/\d+/g) ?? []).map(Number);
+  return nums.length ? Math.max(...nums) : null;
 }
 
 /** Spot-local calendar fields, read straight off the offset-bearing ISO string. */
@@ -61,19 +79,25 @@ export function evaluateGoodWindow(
     const startMs = Date.parse(period.startTime);
     const { hour } = localParts(period.startTime);
     const wind = parseMaxWind(period.windSpeed);
+    // w is only ever read inside the eligible branches below, where wind is
+    // guaranteed non-null; coalescing keeps the types clean without an assertion.
+    const w = wind ?? 0;
     const eligible =
       !Number.isNaN(startMs) &&
       startMs >= nowMs &&
       startMs <= horizonMs &&
       hour >= 6 &&
       hour < 18 &&
+      // Item 107: null wind (missing/garbage) is NOT calm. It breaks the run,
+      // so a data gap can never sit inside a "good window".
+      wind !== null &&
       paddleabilityFromWind(wind) === "calm";
 
     if (locked) {
       if (eligible && startMs - prevMs === 3600000) {
         locked.lastPeriod = period;
-        if (wind > locked.maxWind) {
-          locked.maxWind = wind;
+        if (w > locked.maxWind) {
+          locked.maxWind = w;
           locked.maxDir = period.windDirection ?? "";
         }
         prevMs = startMs;
@@ -84,14 +108,14 @@ export function evaluateGoodWindow(
 
     if (eligible && runLength > 0 && startMs - prevMs === 3600000) {
       runLength += 1;
-      if (wind > runMaxWind) {
-        runMaxWind = wind;
+      if (w > runMaxWind) {
+        runMaxWind = w;
         runMaxDir = period.windDirection ?? "";
       }
     } else if (eligible) {
       runStart = period;
       runLength = 1;
-      runMaxWind = wind;
+      runMaxWind = w;
       runMaxDir = period.windDirection ?? "";
     } else {
       runStart = null;
