@@ -77,6 +77,120 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## Studio review batch, added 2026-07-22 (hourly product + design review vs the north star: "California's best utility AND lifestyle app for SUP paddlers and kayakers"). CEO-graded: [ready] = high confidence, clear problem + direction, aligned, build now; [proposed] = worth doing but needs a decision or sits behind the retention read. Items 108 to 121.
+
+## 108. [ready] California-wide default map view (the brand shipped statewide, the map still opens on the Bay)
+
+**Problem:** Items 90/94/95/96 added 29 SoCal spots (LA, San Diego, Orange County, Ventura), 16% of 177, and the site now says "across California". But `MapView.tsx` hardcodes `BAY_CENTER = [37.55, -122.25]` at zoom 9 for any cold visitor with no location grant, and `REGIONS` in `lib/types.ts` appends the four new SoCal regions last, so a SoCal visitor scrolls past the whole pill row to find their own coast. First impression contradicts the rebrand for exactly the audience the expansion was for.
+
+**Direction:** widen the unfiltered default to a full-state framing (zoom out to show all clusters, tighten to a region only on first interaction) or key the initial center off a coarse signal (IP geo, timezone) when available; reorder or reflow the region pills so new regions are not structurally last.
+
+**Grade:** [ready], high confidence. Grounded, clear fix, undercuts a rebrand that shipped the same day.
+
+## 109. [ready] Zero-match filter can render with no "0 results" message
+
+**Problem:** `SpotList.tsx`'s empty-state guard only fires when main, saved, and recent lists are all empty. Saved and recent spots are computed unfiltered (`HomeClient.tsx`), so a filter/search matching zero spots leaves the Watching and Recently-checked sections showing (spots that ignore the filter), the main list silently renders nothing, and no "no spots match" text appears anywhere. Reads as the app being broken. Gets more likely as saves/recents grow with retention work.
+
+**Direction:** show the scoped empty-state message (`emptyState.title`/`clearLabel`, already computed) inline after the pinned sections whenever `mainSpots.length === 0` but those sections are not empty.
+
+**Grade:** [ready], high confidence. Functional-confusion bug, not polish; the scoped copy already exists.
+
+## 110. [ready] AlertInterstitial reskin to the light card language (settled by item 66, one component got missed)
+
+**Problem:** Item 66 converged the enrollment prompt from a dark navy bubble to a light Meltwater card, and every other overlay (InstallPrompt, FeedbackModal, SignInSheet, AccountSheet) is a light card with dark text. `AlertInterstitial.tsx` is the one survivor still rendering solid `var(--accent)` with white text, and it appears in the same push-alert flow as the now-light InstallPrompt, so the two patterns visibly fight.
+
+**Direction:** reskin to white background, `1px solid var(--border)`, dark text, accent only on the button/badge, matching InstallPrompt's post-item-66 treatment.
+
+**Grade:** [ready], high confidence. Applies an already-validated owner decision to a component that was missed; the fix pattern exists in the codebase.
+
+## 111. [ready] Weekend / multi-day outlook in the conditions panel
+
+**Problem:** `nextWindow.ts` already computes a 1-to-3-day good-window for alerts, but in-app a paddler only sees "today". The most natural return trigger, checking Thursday to plan Saturday, has no surface. Retention is the #1 goal and this reuses logic already in flight.
+
+**Direction:** surface the existing 1-3 day window as a free "this weekend looks good at X" line in the panel, reusing `evaluateGoodWindow` so nothing contradicts. Note the overlap: PaddlePass names "multi-day forecast windows" as a premium bullet, so ship a bounded free version as a retention driver and leave deeper multi-day for the paywall.
+
+**Grade:** [ready], high confidence. Cheap (logic exists), targets the actual #1 goal. Flag the premium-tier boundary in the spec.
+
+## 112. [ready] Spot photos in the per-spot OG share card
+
+**Problem:** `spot-photos.json` has real photos for 109 of 177 spots (62%), but `app/spot/[id]/opengraph-image.tsx` never imports `getSpotPhoto`, so every shared link renders the same generic navy text card. Share is a primary tracked action and growth is ~82% word-of-mouth; the app's real social-distribution surface is not using the imagery it already has.
+
+**Direction:** when `getSpotPhoto(spot.id)` resolves, composite it as the OG background with the existing navy gradient/wordmark overlay for legibility; fall back to today's text card when no photo exists.
+
+**Grade:** [ready], medium-high confidence. Real organic-growth lift, data already exists, scoped mainly by `next/og` image-loading effort.
+
+## 113. [proposed] Paddler profile: tune the conditions verdict to skill and craft
+
+**Problem:** `paddleabilityFromWind(speedMax)` gives everyone the same calm/breezy/windy. "Breezy" is a fine day for an experienced kayaker and a dangerous one for a beginner on a SUP. The moat is per-spot judgment, but judgment without knowing the paddler is only half the answer. It is also the cheapest real identity primitive the app can add, which serves the thin lifestyle half of the north star.
+
+**Direction:** an optional lightweight profile (beginner/intermediate/expert, SUP/kayak) that shifts verdict thresholds and copy, stored via the existing `setPersona`. Ship behind a kill switch, no A/B.
+
+**Grade:** [proposed], not [ready]. High value, but it changes a safety-critical verdict: an "expert" threshold must not become an inducement to paddle worse conditions (same concern the item-82 and item-34 notes raise). Needs an owner decision on the safety gate before build.
+
+## 114. [proposed] Home water: set a home region once
+
+**Problem:** the app re-prompts geolocation each session and has no persistent sense of where a paddler is based, which every "near me" surface (cold-open item 61, any digest) needs.
+
+**Direction:** let a paddler set a home region once; personalize cold-open ranking and future digests without a repeated location prompt.
+
+**Grade:** [proposed]. Small and it unblocks personalization behind items 61/111/117, but only worth it as an enabler. Strong candidate to merge into item 113's profile rather than build standalone.
+
+## 115. [proposed] Shareable "it's good today" conditions card
+
+**Problem:** growth is ~82% word-of-mouth and Share is barely used, yet there is no artifact worth sharing. Item 9 fixed how a shared link opens; nothing makes the conditions themselves shareable ("Richardson Bay, glassy til 11am, let's go").
+
+**Direction:** one-tap share of the current conditions as a rich card/OG image tied to the spot, native to how paddlers recruit each other.
+
+**Grade:** [proposed]. Cheap and on-brand, but acquisition sits behind the retention read in the owner's sequence, so it competes with items 111/112 for a slot. Relation to items 9 and 112 to be stated in the spec.
+
+## 116. [proposed] Nearby rentals and lessons at a put-in
+
+**Problem:** the exploring journey explicitly includes "check rentals if needed" and the vision names local commerce (rentals, lessons, clubs) as a revenue engine that may out-earn the subscription. The app surfaces neither, so the exploring journey dead-ends before the paddler can act.
+
+**Direction:** a per-spot "rentals & lessons nearby" section, curated or lightweight lookup. Ship unmonetized first as pure utility; the lead-gen model is a later layer.
+
+**Grade:** [proposed]. Real utility and real strategic value, but monetization is deferred until retention is proven, and data-sourcing cost needs an honest estimate before this gets promoted.
+
+## 117. [proposed] "This weekend near you" re-engagement digest
+
+**Problem:** the only reach channel is the calm-window push, whose bottleneck is enrollment conversion, not input (~1 enrollment / 8 days, 83% dismiss). A lower-commitment, higher-frequency touch could re-reach the 78% who never enroll.
+
+**Direction:** an opt-in weekly "where's good this weekend near your saved/recent spots" email, softer than the per-spot push.
+
+**Grade:** [proposed]. On-strategy, but it adds a reach channel that inherits the same low enrollment and risks reading as a dupe of the alert loop. Sequence after the early-August retention read confirms whether the reach channel, not the trigger, is the problem.
+
+## 118. [proposed] Beginner on-ramp: a curated "new to paddling" starter set
+
+**Problem:** the app opens as 177 pins, intimidating to the largest lifestyle audience, first-timers. There is no welcoming entry ("start here: calm, free, easy parking, rentals nearby").
+
+**Direction:** a small curated starter collection plus beginner-framed copy. Editorial, low build.
+
+**Grade:** [proposed], low confidence now. On the thin lifestyle half and cheap, but it leans acquisition/SEO, which the roadmap defers behind retention. Park until the August read, or ship only the curation if it rides along with item 113.
+
+## 119. [proposed] Visual fallback for spots without a photo
+
+**Problem:** 68 of 177 spots (~38%) have no photo, and `SpotDrawer.tsx` renders nothing in that case, jumping from badges straight to plain notes. Photo coverage is effectively random to a visitor, so browsing alternates between an editorial-feeling card and a bare text list, which reads as unfinished. The lifestyle half of the north star is only present for 62% of spots.
+
+**Direction:** a non-fabricated placeholder: a difficulty-tinted gradient/illustrated panel (existing `DIFF_STYLES` palette) with a paddle/water glyph. Never a fake photo.
+
+**Grade:** [proposed], medium. Real but purely aesthetic; reasonable to sequence behind photo-coverage growth (item 56).
+
+## 120. [proposed] Mobile first-run value prop before the map loads
+
+**Problem:** the only descriptive copy ("Paddleboard & kayak spots across California") lives in a `hidden lg:inline` span, so mobile visitors (the majority, ~82% direct) land on a map of unlabeled colored dots with nothing saying what the product does or its scope.
+
+**Direction:** surface a compact one-line value prop on mobile too: a dismissible one-time strip above the filter bar, or fold the count/scope into the mobile "Map (N)" tab label.
+
+**Grade:** [proposed], medium. Plausible bounce-rate cost on cold mobile landings, but unproven without data. Cheap to test.
+
+## 121. [proposed] Map loading skeleton on cold load
+
+**Problem:** `dynamic(() => import("MapView"), { ssr: false })` has no `loading` fallback, and map is the default mobile tab, so a cold visitor's first paint is header + filter bar + an unstyled blank pane where the map will mount.
+
+**Direction:** add a `--bg`/`--border` skeleton matching the map panel dimensions so the transition into tiles does not read as broken.
+
+**Grade:** [proposed], low-medium. Likely a short window (Leaflet warms from cache), but a real gap on every cold load, the highest-stakes moment for a new visitor.
+
 ## Owner items, added 2026-07-22 (first-review prompt + conditions rethink + trip-planner demand test; all three [ready], queued top-most on purpose)
 
 ## 89. [done] Prompt the first review on a spot that has none (deployed 2026-07-22, ba262a2; byline half escalated as D32)
@@ -311,7 +425,7 @@ Same shape as the "tests must grep the tree, not your memory" rule: the exclusio
 
 **Done: a TENTH query (`experiment_next_good_window`) was found by grepping the tree rather than trusting this list, which is why the fix ships with `web/lib/analytics-owner-exclusion.test.ts` (fails when any events+person_id query omits the exclusion; `token_leak_check` allowlisted with reason) instead of a one-time edit. `alert_ctr` was Supabase-keyed, so it drops the owner push subscription, not a person_id. Delta re-read flagged for the next report (needs the PostHog personal key). Full note in the changelog.**
 
-## 106. [ready] The predeploy gate cannot see the code that decides which push alerts fire
+## 106. [in-progress] 2026-07-22T16:07:55 The predeploy gate cannot see the code that decides which push alerts fire
 
 `scripts/predeploy-gate.py` has `PROTECTED_PATTERNS = ("web/app/api/cron/*", "web/app/api/alerts/*")`, matched on **path**. Exercising the gate's own matcher:
 
