@@ -83,3 +83,44 @@ CCC's coordinate is a site locator, not a put-in, and OSM has nothing to match a
 4. **Fees, for every San Diego record.** CCC has already been caught wrong once here. Do not let me carry `FEE` through unverified; tell me which of the shortlist actually charge, or I will store `null` rather than a value I cannot stand behind.
 5. **`tide_sensitive`.** Mission Bay and San Diego Bay are tidal, so `true`. Agua Hedionda is a lagoon with tidal exchange through jetties, so probably `true`. Confirm if you know otherwise.
 6. **The other 48** beach carry-in candidates are not listed here. Same reasoning as LA: mostly open-coast beach access, not put-ins. Name any you want and I will check them.
+
+
+---
+
+# METHOD UPGRADE, 2026-07-22: aerial imagery, after the owner asked "have you tried something more sophisticated"
+
+**The honest answer was no, and the challenge was right.** What had been tried: the CCC API, DBW, Overpass restricted to `leisure=slipway` / `waterway=access_point` / `canoe=put_in`, Nominatim REVERSE geocoding, and web search. What had not: forward geocoding, wider OSM tags, and imagery.
+
+## What was tried in response, and what each returned
+
+| Method | Result |
+|---|---|
+| **Google Places API** | **Ruled out on licensing, not capability.** Google Maps Platform terms prohibit using Places content "with or near a non-Google map", and permit caching lat/lng for only **30 consecutive days**. This app renders Leaflet + CARTO tiles and stores coordinates permanently in `spots.json`, so both clauses are broken. Unusable unless the whole basemap moves to Google. |
+| **Nominatim FORWARD search** (never previously run) | 3 of 5. All locators, not put-ins: Crown Cove returned a *boathouse building*, Agua Hedionda returned *a residential street*, La Jolla Shores returned a *beach polygon centroid*. El Carmel Point and Playa Pacifica returned **nothing**. |
+| **Wider OSM tags** (`amenity=boat_rental`, named `natural=beach`) | **Zero features in Mission Bay.** The densest paddle water in California is essentially unmapped in OSM. A regex-over-all-names query blew the Overpass timeout. |
+| **USGS aerial imagery** (`basemap.nationalmap.gov`, public domain) | **This works, and it is the method that should have been used first.** |
+
+## Why imagery is the right tool here
+
+Every dataset in this project publishes a *site locator*: the park, the address, the polygon centroid. A put-in is a physical feature you can see. In imagery the launch is directly visible: the ramp, the sand, the staged craft, the dock. It is also **licence-clean**: USGS National Map imagery is public domain, with no contract restriction of the kind that disqualifies Google.
+
+It resolved things no dataset could:
+- **El Carmel Point:** a cluster of small craft staged on the sand at the southeast shore of the point. That is the launch, and nothing in CCC, OSM or DBW says so.
+- **Crown Cove:** unambiguous confirmation that it is protected. Ocean surf breaks on the Silver Strand side; the C-shaped cove sits on the bay side with the Aquatic Center at its south end.
+- **Agua Hedionda:** shows **both** launches the permit research implied, and distinguishes them. The free public sand strip on the lagoon shore, and the concessionaire's craft area to the northwest.
+
+## Proposed pins, for confirmation rather than lookup
+
+Read off 900 px images spanning roughly 600 to 750 m, so about 0.7 m per pixel. The limiting error is my visual centroid estimate, roughly **±25 m**. Good enough to be a real put-in and worth a sanity check, not worth a survey.
+
+| Site | Proposed | vs CCC's locator | Confidence |
+|---|---|---|---|
+| **El Carmel Point** | `32.7783, -117.2476` | ~60 m S | **High.** Staged craft visible on the sand. |
+| **Crown Cove** | `32.6365, -117.1410` | ~75 m N | **High.** Cove geometry and the Aquatic Center are unmistakable. |
+| **Agua Hedionda**, free public beach | `33.1421, -117.3210` | n/a, CCC pins the lagoon generally | **Medium-high.** Beach is clear; which access is "the" public one still benefits from local knowledge. |
+| **Playa Pacifica** | `32.7819, -117.2107` | ~60 m N | **Medium.** The protected cove is obvious; the exact launch edge is not. |
+| **La Jolla Shores** | not proposed | | Pending the owner's include/exclude call. |
+
+## The lesson worth keeping
+
+**Reach for imagery before asking a human to look something up.** The lookup list handed to the owner asked for five coordinates. Four of them were readable from public-domain aerial imagery in about a minute each, and the fifth is blocked on a product decision rather than a fact. The owner's remaining job shrinks from "find these" to "confirm or nudge these", which is a different and much smaller ask.
