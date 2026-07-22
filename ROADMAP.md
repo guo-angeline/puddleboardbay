@@ -499,7 +499,7 @@ The h1 is therefore **server-rendered by the page component**: `app/spot/[id]/pa
 
 **Verified live by fetch:** `/`, `/spot/1`, `/spot/33`, `/spot/120` each serve exactly one h1, carrying the spot name on spot pages. `/privacy` and the 404 already had one and were untouched.
 
-## 76. [ready] Tablet (md, 768-1023px) with a spot open: three panes do not fit, the map collapses to a 128px dead sliver
+## 76. [parked] Tablet (md, 768-1023px) map sliver: real, cosmetic, and ~2% of traffic does not justify a slot
 
 **Found by the 2026-07-19 verify loop while verifying the item-"desktop card 1.5x wider" change (`0fe5758`).** That change is correct and verified (drawer 320px at md, 479px from lg, map 224px@1024 / 480px@1280 / 640px@1440, no horizontal overflow at any width). This item is about the **map pane at md**, which the commit deliberately left alone.
 
@@ -516,6 +516,12 @@ Whatever is chosen, the map should either be usable or absent, never a 128px sli
 **Weigh before building:** this is tablet-only (768-1023px) and does not affect phone or desktop, so check whether tablet traffic justifies it before spending a slot. It is filed so the measurement is not lost, not because it is urgent.
 
 **Acceptance:** at 768px and 1023px with a spot open, the map is either usable or intentionally hidden, no clipped footer links in the map pane, no horizontal overflow, and phone (390px) + desktop (>=1024px) layouts are unchanged.
+
+**PARKED 2026-07-22, after doing the traffic check this item asked for.** The measurement was re-confirmed first, so nothing is lost: at 768px with a spot open the map pane is still exactly **128px** (ends at x=448) and its footer links still run to 461 and 522, clipped behind the drawer. The list-panel copies sit at right <=249, so legal access is genuinely not blocked, exactly as filed.
+
+**Why parked rather than built.** This item told the next reader to weigh tablet traffic before spending a slot. Weighed, from `reports/analytics-2026-06-09.md` ("Mobile 28 users, Desktop 8, Tablet 1") and `reports/analytics-2026-06-27.md` ("77% mobile, 21% desktop, 2% tablet"): **tablet is ~2% of traffic**, and the affected band is narrower still, since it is 768-1023px with a spot open, i.e. portrait tablets only (landscape iPad is >=1024px, where the map is 224px and nothing clips). A cosmetic defect on a fraction of 2%, against an explicit instruction to check first, is not a slot.
+
+**If it is ever picked up, the cheapest correct fix** is the second of the three options already listed: at `md` with a spot open, hide the map pane and give its width to the list and drawer. That removes the dead sliver and the clipping in one change, and leaves phone and desktop untouched. Unpark it by editing this line back to `[ready]`.
 
 ## 73. [done] Custom 404 page: a stale/hidden spot link dead-ends on the bare Next.js 404 with no way back (deployed 2026-07-20)
 

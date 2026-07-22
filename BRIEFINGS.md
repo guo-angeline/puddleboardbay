@@ -1,3 +1,20 @@
+## 2026-07-22 · Studio loop STOPPED: backlog dry (wrap-up across 7 items)
+
+**Your move.**
+1. Promote something from the `[proposed]` shelf to `[ready]` to restart the loop. Eight are waiting; my picks are below.
+2. Answer **D31** (form the LLC) when you have a view. It is the only open decision.
+3. Nothing else. The 30-minute cron is cancelled, so nothing will fire into an empty queue.
+
+**This iteration: item 76 parked, not built.** The item told the next reader to weigh tablet traffic before spending a slot. I weighed it: tablet is ~2% of traffic across both analytics reports, and the affected band is narrower still (768-1023px with a spot open, so portrait tablets only). I re-confirmed the measurement first so nothing is lost, the map pane is still exactly 128px and its footer links still clip, and recorded the cheapest fix inside the item for whoever unparks it. A cosmetic defect on a fraction of 2%, against an explicit instruction to check first, is not a slot.
+
+**The run, seven items.** Water types became Lake / Coast / River after you rejected both my framing and my first wording. The account button joined the header set. The `reviews` kill switch was only pulling contributor content from the sheet, not the list, so flipping it would have left every card still showing blended contributor ratings. Every page now serves exactly one `<h1>`, where before `/` and all 139 spot pages served zero. Plus the "Paddle score" label, the contributor-marks line, and the a11y and rationale follow-ups.
+
+**What the run keeps showing.** Four of the seven items had a spec that was wrong or incomplete in a way only checking could reveal: the h1 fix as prescribed would have been invisible to crawlers, "Ocean" would have mislabelled 52 of 67 spots, the terms link lost its WCAG exception when a sentence was deleted, and the kill switch was found by a lawyer looking at something else. In every case the acceptance criterion or a measurement caught it, not the plan.
+
+**The recurring gap, now closed three times over.** Guards were missing on exactly the things that mattered: the labels, the reader disclosure, the kill switch pairing. Each was deleted or broken without a single test failing. `.claude/studio.md` now carries the rule, and this run added guards for all three.
+
+**Shelf, if you want a steer.** Item 75 (moderation email can bounce silently) is the one with a live failure mode, since your review queue depends on it. Item 80 (native shows a different number than web under the same star) has to close before any TestFlight build. Item 82 (social layer) is a placeholder and would need real scoping first.
+
 ## 2026-07-22 · Studio iteration: item 81 (one item, shipped)
 
 **Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.
