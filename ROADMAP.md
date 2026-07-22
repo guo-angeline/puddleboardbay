@@ -79,7 +79,9 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Studio review batch, added 2026-07-22 (hourly product + design review vs the north star: "California's best utility AND lifestyle app for SUP paddlers and kayakers"). CEO-graded: [ready] = high confidence, clear problem + direction, aligned, build now; [proposed] = worth doing but needs a decision or sits behind the retention read. Items 108 to 121.
 
-## 107. [ready] Alert engine fails OPEN: missing/malformed NWS wind is read as dead calm, so a "good to paddle" alert can fire on absent data
+## 107. [blocked(owner-deploy)] Alert engine fails OPEN: missing/malformed NWS wind is read as dead calm, so a "good to paddle" alert can fire on absent data
+
+**CODE + TESTS DONE, DEPLOY GATED (committed, not deployed).** The fix is committed and 630 tests pass, but it changes what the push and email crons send, so it is a PROTECTED deploy and the (item-106) predeploy gate correctly blocks it. Awaiting explicit owner deploy-approval. Until deployed, the bug is still live in production. To ship: owner approves in chat, write HEAD sha to DEPLOY_APPROVAL, run the prod deploy, verify, delete DEPLOY_APPROVAL, mark done.
 
 **Found by the 2026-07-22 verify loop, adversarially testing `evaluateGoodWindow` directly.** The good-window evaluator is otherwise solid, I threw 12 hard cases at it (data gaps, pre-6am, the 17/18 boundary, "5 to 12 mph" ranges, duplicate timestamps, beyond-horizon, DST spring-forward, peak-wind direction) and 11 behaved correctly. The 12th is a real defect:
 
@@ -445,6 +447,8 @@ Same shape as the "tests must grep the tree, not your memory" rule: the exclusio
 **Done: a TENTH query (`experiment_next_good_window`) was found by grepping the tree rather than trusting this list, which is why the fix ships with `web/lib/analytics-owner-exclusion.test.ts` (fails when any events+person_id query omits the exclusion; `token_leak_check` allowlisted with reason) instead of a one-time edit. `alert_ctr` was Supabase-keyed, so it drops the owner push subscription, not a person_id. Delta re-read flagged for the next report (needs the PostHog personal key). Full note in the changelog.**
 
 ## 106. [done] The predeploy gate now sees the send-path libraries (2026-07-22, 39482d0; script + doc only, no deploy)
+
+**Follow-up (b85533e):** the broadened trigger first fired on any command that merely MENTIONED the deploy string (a commit message, a heredoc writing these docs), blocking legitimate work minutes after ship. `is_prod_deploy` now strips quoted spans first, so only a bare invocation gates. Two false-positive fixtures added to `--selftest`.
 
 `scripts/predeploy-gate.py` has `PROTECTED_PATTERNS = ("web/app/api/cron/*", "web/app/api/alerts/*")`, matched on **path**. Exercising the gate's own matcher:
 
