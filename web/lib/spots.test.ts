@@ -8,10 +8,10 @@ const ROOT = path.resolve(__dirname, "..");
 describe("hidden spots are withheld everywhere (2026-07-16 coordinate audit)", () => {
   it("filters hidden spots out of ALL_SPOTS but keeps the records", () => {
     // A record count, not a rule. Bumped to 147 by item 90 (the first four Los
-    // Angeles spots, 165 by San Diego, then 172 by Orange County). The one that MATTERS is
+    // Angeles spots, 165 by San Diego, 172 by Orange County, 177 statewide). The one that MATTERS is
     // the next line: hidden
     // records are kept and filtered, never deleted.
-    expect(ALL_SPOTS_INCLUDING_HIDDEN.length).toBe(172);
+    expect(ALL_SPOTS_INCLUDING_HIDDEN.length).toBe(177);
     expect(ALL_SPOTS.length).toBe(ALL_SPOTS_INCLUDING_HIDDEN.length - HIDDEN_SPOTS.length);
     expect(ALL_SPOTS.every((s) => !s.hidden)).toBe(true);
   });

@@ -164,6 +164,14 @@ export const TIDE_STATIONS: TideStation[] = [
   // harbour's tide. Range is not the same thing as relevance.
   { id: "9410580", name: "Newport Bay Entrance, Corona del Mar", lat: 33.6033, lng: -117.883 },
   { id: "9410583", name: "Balboa Pier, Newport Beach", lat: 33.6, lng: -117.9 },
+  // Ventura, Santa Cruz and Humboldt, added with the final CCC batch. Hookton
+  // Slough has its own station 0.7 mi away, which is the closest match any spot
+  // in the app gets. NOAA publishes NO tide-prediction station for Morro Bay, so
+  // Morro Bay spots fall back to Port San Luis about 13 mi south; that is the
+  // honest best available, not an oversight.
+  { id: "9411189", name: "Ventura", lat: 34.2667, lng: -119.283 },
+  { id: "9413745", name: "Santa Cruz, Monterey Bay", lat: 36.9583, lng: -122.017 },
+  { id: "9418686", name: "Hookton Slough", lat: 40.6867, lng: -124.222 },
 ];
 
 /** Ids the tides proxy will forward upstream. */

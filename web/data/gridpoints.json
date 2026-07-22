@@ -28,11 +28,14 @@
 "33.7608,-118.1236": "https://api.weather.gov/gridpoints/LOX/157,31/forecast",
 "33.8438,-118.3953": "https://api.weather.gov/gridpoints/LOX/148,37/forecast",
 "33.9816,-118.4587": "https://api.weather.gov/gridpoints/LOX/147,43/forecast",
+"34.2531,-119.2682": "https://api.weather.gov/gridpoints/LOX/120,60/forecast",
 "35.1779,-120.7485": "https://api.weather.gov/gridpoints/LOX/74,111/forecast",
+"35.3459,-120.8427": "https://api.weather.gov/gridpoints/LOX/72,119/forecast",
 "35.3720,-120.8616": "https://api.weather.gov/gridpoints/LOX/72,120/forecast",
 "36.5386,-121.9256": "https://api.weather.gov/gridpoints/MTR/91,47/forecast",
 "36.8125,-121.7758": "https://api.weather.gov/gridpoints/MTR/99,58/forecast",
 "36.9682,-122.0029": "https://api.weather.gov/gridpoints/MTR/92,67/forecast",
+"36.9709,-121.9540": "https://api.weather.gov/gridpoints/MTR/94,67/forecast",
 "37.0902,-121.5395": "https://api.weather.gov/gridpoints/MTR/109,69/forecast",
 "37.1265,-119.3056": "https://api.weather.gov/gridpoints/HNX/72,114/forecast",
 "37.1883,-121.7687": "https://api.weather.gov/gridpoints/MTR/102,75/forecast",
@@ -167,5 +170,7 @@
 "39.1527,-120.9431": "https://api.weather.gov/gridpoints/STO/65,90/forecast",
 "39.1956,-119.9289": "https://api.weather.gov/gridpoints/REV/38,92/forecast",
 "39.2362,-120.0245": "https://api.weather.gov/gridpoints/REV/35,95/forecast",
-"39.3208,-120.2400": "https://api.weather.gov/gridpoints/REV/29,100/forecast"
+"39.3208,-120.2400": "https://api.weather.gov/gridpoints/REV/29,100/forecast",
+"40.6774,-124.2219": "https://api.weather.gov/gridpoints/EKA/59,103/forecast",
+"41.2326,-124.0835": "https://api.weather.gov/gridpoints/EKA/69,126/forecast"
 }
