@@ -108,6 +108,50 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Acceptance:** a spot with no published reviews shows one quiet invitation with an honest, non-promissory claim; the reward named is real and matches what the code actually awards; the lawyer verdict is recorded (DECISIONS.md if it escalates); the writer-side disclosure and its guards are intact or deliberately updated; no denominator, no progress meter, no per-spot collectable marker (item 83's guard forbids the last one); if a mark ships beside the display name it is a factual qualifier with no rank or tier, and a guard asserts that; verified at 390px and desktop, signed-in and signed-out. No em dashes.
 
+## 91. [ready] Strategic rethink of the conditions function: from a readout to a launch plan
+
+**Owner-directed 2026-07-22. This is a strategy and design item, not an implementation item.** The deliverable is a `product-visionary` brief plus a `design-lead` spec, both filed back into this item, with the build broken out as separate numbered items. Do not let an implementer start from this text.
+
+Conditions is the stated differentiator and the moat ("per-spot judgment, not a wind number"). This item asks whether the current panel actually earns that, measured against how a paddler really decides.
+
+**The owner's decision process, verbatim, as the design input.** Two routes, converging:
+
+**Route A, familiar spots.** Want to paddle -> a few known spots in mind -> is the weather stormy? -> is the temperature warm but not too hot? -> is the wind not too strong? -> **which direction is the wind?** -> what is the tide doing? -> **draw a mental plan: when to launch, which direction to paddle out, so the return leg rides the wind and tide, for safety.**
+
+**Route B, exploring.** Feeling adventurous -> look for a new spot -> check its view, parking, facilities, launch condition -> check rentals if needed -> then the identical conditions sequence and the same mental plan.
+
+**Read the routes as one shape, because that is the finding.** Both end at the same place, and it is not a number. The paddler's real question is **"when do I launch and which way do I go so I get back safely"**. The app today answers "is it windy". Everything below is downstream of that gap. Route B's first half is a discovery problem (item 61 and the spot-detail fields); Route A is pure conditions; the shared tail is where the product is thin.
+
+**Grounded audit of what exists today, so the brief starts from facts and not from the panel's reputation.** Read `web/lib/conditions.ts` and `web/components/ConditionsPanel.tsx` first:
+
+| Step in the routes | What ships today | Verdict |
+|---|---|---|
+| Not stormy | `shortForecast` string only; never gates the verdict | Present but inert |
+| Temperature warm, not too hot | **Nothing. No air temp, no water temp anywhere in the app** | Missing |
+| Wind not too strong | `paddleabilityFromWind(speedMax)` -> calm / breezy / windy | The one step done well |
+| Wind direction | `WindInfo.direction`, a raw compass string like "WNW" | Displayed, not interpreted |
+| Tide | `TideInfo.next`, raw NOAA high/low events with heights | Displayed, not interpreted |
+| The launch plan | **Nothing** | Missing, and it is the whole point |
+
+**The cheapest finding, verify it before designing anything.** `fetchWind` parses exactly four fields off `periods[0]` (`conditions.ts:305-326`): name, windSpeed, windDirection, shortForecast. The same NWS response already carries **`temperature`, `temperatureUnit`, `probabilityOfPrecipitation`, `isDaytime`**, and roughly a dozen further periods, and `/forecast/hourly` is a sibling endpoint. Two of the six steps above ("not stormy", "warm not too hot") are being fetched and thrown away right now, at zero added latency and zero new dependency. The intra-day shape needed for "when to launch" is one endpoint over. Confirm this against a live response, then treat it as the floor, not the ambition.
+
+**The strategic question to actually answer, not the feature list.** A verdict badge is a *readout*: it tells you a fact and leaves the synthesis to you. The routes describe a *plan*: launch time, first heading, return leg. Moving from one to the other is the difference between "AllTrails for water with a weather widget" and the Paddle-Morning Oracle this roadmap claims to be building. Frame the options honestly and recommend one:
+1. **Complete the readout.** Add the missing inputs (temp, precip) and interpret the two raw ones (wind direction relative to the shoreline, tide as flood/ebb with direction of travel rather than a table of times). Cheapest, lowest risk, still leaves the synthesis to the paddler.
+2. **Add the plan.** A suggested launch window and an out-and-back heading derived from wind + tide, so the return is downwind/with the current. Highest value, highest risk, and see the safety gate below.
+3. **Something between them:** surface the ingredients of the plan (wind direction relative to the water, when the tide turns) without issuing an instruction.
+
+Say which and why. A recommendation with the risk named beats a survey.
+
+**The blocker that decides how far this can go: a launch plan is safety advice.** "Wind is 8mph WNW" is a fact. "Launch at 9, head west first, ride the flood home" is an instruction that can put someone offshore in a rising wind with no way back. That is a categorically different liability posture, and this app already runs a no-inducement discipline (`web/lib/alerts/no-inducement.test.ts`) precisely because copy that nudges someone onto the water is the thing it must not do. **Run the `lawyer` agent on option 2 (and on option 3 if it names a direction) before any design work is specified, not after.** Ask specifically: does a directional or timing recommendation change the disclaimer's adequacy; is there a line between describing conditions and instructing a route; does per-spot geography being approximate (see below) make a heading recommendation reckless.
+
+**The data problem that gates option 2, and this is where it will actually fail.** A return-leg recommendation needs to know the water's shape: which way the shoreline runs, where the fetch is, where you would be blown to. The app has one lat/lng per spot and nothing else. It has no shoreline orientation, no prevailing-fetch axis, no "if the wind is from the west you end up here" field. And per the house rule on provenance, the fields it does have are not all trustworthy: `tide_sensitive` was systematically wrong (36 of 68 bay spots), several coordinates are the Water Trail's parking rather than the put-in, and the wrong pin for a plan-generating feature is worse than the wrong pin for a map. **Any option that computes a heading needs a new per-spot field, hand-curated, with a stated source.** Cost that honestly across 140 spots (and note item 45 wants statewide) rather than assuming it can be derived.
+
+**Do not re-litigate settled ground.** `lib/nextWindow.ts` already computes a next-good-window for alerts; check whether the in-app surface should reuse it rather than invent a second definition of "good" (the `next_good_window` experiment is parked per the no-A/B-until-DAU-100 rule, but the logic exists). Item 61 (cold-open "good to paddle today" ranked surface) is the discovery half of Route B and is still `[proposed]`; this item should say whether 61 is subsumed, sequenced after, or independent. Latency is already tuned (item 53) and the tide proxy already exists (item 52), so any proposal must state its latency cost against that baseline.
+
+**Measurement, decided in the brief and not bolted on.** The current instrumentation can tell you conditions *loaded* (~91% of opens, an availability number) and, since the dwell gate, that someone *looked*. Neither can tell you the panel was **useful**, and that is exactly the claim this item is testing. Name the metric that would move if this worked, before choosing an option. Repeat conditions checks per user is the honest candidate (re-checking is the one validated repeated behavior, per item 26); `spot_action{action:"directions"}` is the accidental-inducement guardrail and must not step up. No A/B at this DAU.
+
+**Acceptance:** a written recommendation naming one option and its risk; the lawyer verdict recorded (DECISIONS.md if it escalates); the free-today findings (temperature, precipitation) confirmed against a live NWS response and either scoped or explicitly deferred with a reason; any new per-spot data requirement costed across 140 spots with a named source; the relationship to items 61 and 53 and `nextWindow.ts` stated; a metric that would move; and the build filed as new numbered roadmap items. No em dashes.
+
 ---
 
 ## 75. [proposed] Review moderation cannot depend on an email that can bounce silently
