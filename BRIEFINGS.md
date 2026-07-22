@@ -1,3 +1,17 @@
+## 2026-07-22 · Studio iteration: item 77 (one item, shipped)
+
+**Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.
+
+**Shipped.** Item 77, the header button mismatch you reported, is fixed and deployed (`0a67cd3`). The account button now shares the Feedback button's geometry: same 30px height, same 8px radius, same 12px text.
+
+**One thing I did not copy on purpose.** Feedback's azure outline stays unique to it. Cloning it onto the account button would have put two competing call-to-action colours side by side, so the account button matches the shape and keeps the neutral hairline the search control already uses. The item's own design note called this out and I followed it rather than re-running design-lead for three CSS properties.
+
+**Measuring found a third mismatch nobody had listed.** You reported the radius; the code review found the text size and border too. Measuring the rendered header turned up a fourth: at mobile widths the search glyph was 38px tall standing next to two 30px buttons, because at `text-base` its line box is 24px. One property fixed it. That is inside this item's acceptance, which asks for the three controls to sit as a deliberate set.
+
+**Guard against regression.** The signed-in and signed-out variants now share one `HEADER_BUTTON` constant, so they cannot drift apart again the way they did after item 44.
+
+**Queue.** Items 78, 81, 76 remain `[ready]`. The 30-minute `/studio` cron is running (job `3dca0e72`), so the next item picks up automatically.
+
 ## 2026-07-22 · Studio iteration: item 85 (one item, shipped)
 
 **Your move.** Nothing blocking. **D31** (form the LLC) is the only open decision.

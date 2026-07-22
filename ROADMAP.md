@@ -243,7 +243,7 @@ Deleting it while the app still awards marks for contributing removes a disclosu
 
 ## Owner items, added 2026-07-21 (header polish + label clarity; both [ready], queued top-most on purpose)
 
-## 77. [in-progress] 2026-07-21T22:22:48-07:00 Header: make the account/Sign-in button visually consistent with the Feedback button beside it
+## 77. [done] Header: make the account/Sign-in button visually consistent with the Feedback button beside it (deployed 2026-07-22, 0a67cd3)
 
 **Owner-reported 2026-07-21.** The top-right account button does not match the button next to it. Measured from the code, the two are built on different shapes:
 
@@ -255,6 +255,8 @@ Three mismatches sit side by side in the header: **radius** (pill vs 8px, the ow
 **Design note, do not blindly copy Feedback's colours:** Feedback's azure outline reads as a call to action. Cloning it exactly would put two competing azure CTAs in the header. The likely right answer is **match the geometry** (radius, height, padding, text size) while keeping the colour hierarchy deliberate (Feedback stays the accented one, account stays neutral). design-lead decides.
 
 **Acceptance:** the account/Sign-in button and the Feedback button share radius, height and text size, and sit in the header as a deliberate set with the search input (the item-37 pair). Check both signed-out ("Sign in") and signed-in (account name, which truncates at `max-w-[7rem]`) states, and the `sm` breakpoint where the label hides. No layout shift, no horizontal overflow at 390px.
+
+**Shipped 2026-07-22.** Geometry matched (`rounded-lg`, `text-xs`, `px-3 py-1.5`, same 30px box); colour deliberately not, per this item's own design note, so Feedback keeps the single azure outline and the account button stays neutral. Both AccountButton variants now share one `HEADER_BUTTON` constant so they cannot drift apart again. **Measuring rather than eyeballing found a third mismatch this spec did not list:** the mobile search glyph rendered 38px tall beside two 30px buttons, because `text-base` gives it a 24px line box; `leading-none` holds it to 30. Verified at 1280px and 390px, signed in (long name truncating) and signed out, and at the `sm` breakpoint: all three controls 30px / 8px / 12px, one azure border among them, no overflow.
 
 ## 78. [ready] Rename the "Flatwater" / "Open water" water-type labels: users report they are hard to understand
 
