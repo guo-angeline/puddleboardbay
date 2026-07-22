@@ -151,6 +151,39 @@ Second attempt used the **Magic Link** template (`recovery_sent_at`), the first 
 
 ---
 
+## Owner items, added 2026-07-21 (header polish + label clarity; both [ready], queued top-most on purpose)
+
+## 77. [ready] Header: make the account/Sign-in button visually consistent with the Feedback button beside it
+
+**Owner-reported 2026-07-21.** The top-right account button does not match the button next to it. Measured from the code, the two are built on different shapes:
+
+- **Feedback** (`components/HomeClient.tsx:779`): `text-xs font-medium px-3 py-1.5 rounded-lg border border-(--accent) text-(--accent)`, so an **8px radius**, extra-small text, azure outline that fills azure on hover.
+- **Account / Sign in** (`components/AccountButton.tsx:34` and `:60`): `rounded-full ... px-2.5 py-1.5 sm:px-3 text-sm border border-(--border) text-(--dark)`, so a **full pill**, small text, neutral hairline border.
+
+Three mismatches sit side by side in the header: **radius** (pill vs 8px, the owner's main complaint), **text size** (`text-sm` vs `text-xs`), and **border/colour** (neutral vs azure). Item 37 already established the header standard: the search input and Feedback button were deliberately matched at 30px height and 8px radius; the account button shipped later (item 44) and never joined that system.
+
+**Design note, do not blindly copy Feedback's colours:** Feedback's azure outline reads as a call to action. Cloning it exactly would put two competing azure CTAs in the header. The likely right answer is **match the geometry** (radius, height, padding, text size) while keeping the colour hierarchy deliberate (Feedback stays the accented one, account stays neutral). design-lead decides.
+
+**Acceptance:** the account/Sign-in button and the Feedback button share radius, height and text size, and sit in the header as a deliberate set with the search input (the item-37 pair). Check both signed-out ("Sign in") and signed-in (account name, which truncates at `max-w-[7rem]`) states, and the `sm` breakpoint where the label hides. No layout shift, no horizontal overflow at 390px.
+
+## 78. [ready] Rename the "Flatwater" / "Open water" water-type labels: users report they are hard to understand
+
+**Owner-reported 2026-07-21, from user feedback.** The water-type vocabulary is not landing: people do not know what "Flatwater" and "Open water" mean. Replace with something understandable but **not wordy** (these render as compact filter pills and badges, so length is a hard constraint).
+
+**Single source of truth:** `DIFFICULTY_LABEL` in `web/lib/types.ts:76-79` (`flatwater` -> "Flatwater", `bay` -> "Open water", `river` -> "River", `unknown` -> "Unknown"). `DIFFICULTY_LEGEND` derives from it, so the map legend follows automatically.
+
+**Do NOT rename the underlying enum values.** The keys `flatwater` / `bay` / `river` feed `DIFFICULTY_COLOR`, the map pin colours, the filter state, and analytics event props. Change the **display strings only**; renaming the values would break pin colours and destroy analytics comparability. If what gets *logged* changes as a result, that needs an `analytics/INSTRUMENTATION_CHANGELOG.md` entry per the house rule.
+
+**Sweep the tree, do not trust this list.** Hardcoded occurrences of the current strings live outside `types.ts` in at least: `components/ConditionsPanel.tsx` (copy such as "good for flatwater"), `lib/search.ts` (search synonyms), `scripts/verify-legend.mjs` (a legend guard that will fail if labels move), and `data/spots.json` (prose inside `notes`, which must NOT be mass-renamed). Grep for both strings and decide each hit deliberately.
+
+**Editor constraints:**
+- Keep search working for the OLD words too: someone who types "flatwater" must still find the same spots (`lib/search.ts` synonyms), and ideally the new words match as well.
+- **Avoid colliding with the conditions vocabulary.** "Calm" is already a live *conditions* verdict (`ConditionsBadge` / `PADDLE_COPY`). A water-type label like "Calm water" would blur a permanent property of the spot with today's forecast. Pick words that cannot be mistaken for a conditions state.
+- Two words maximum per label; they must not wrap in a filter pill at 390px.
+- `river` and `unknown` probably stay as they are; the problem words are the first two.
+
+**Acceptance:** new labels render everywhere the old ones did (filter pills, spot badges, map legend, spot sheet, OG/JSON-LD if present) with no leftover instances of the old strings outside deliberate prose; pins keep their colours; search still matches the old terms; `verify-legend.mjs` and the test suite pass; verified at 390px and desktop with no pill wrapping. No em dashes.
+
 ## Owner items, added 2026-07-18 (enrollment-prompt tuning; all three [ready], queued top-most on purpose)
 
 *From the 2026-07-18 enrollment-funnel readout: the alert prompt reaches 59 unique users in the clean 9-day window (34% of visitors) but 83% dismiss it and ~2% enroll. The bottleneck is prompt quality and timing, not reach. These three items address timing (65), design + copy (66), and over-nagging (67). Work item 65 first (one-line, low-risk), then 66, then 67.*
