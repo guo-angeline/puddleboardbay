@@ -79,6 +79,25 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Studio review batch, added 2026-07-22 (hourly product + design review vs the north star: "California's best utility AND lifestyle app for SUP paddlers and kayakers"). CEO-graded: [ready] = high confidence, clear problem + direction, aligned, build now; [proposed] = worth doing but needs a decision or sits behind the retention read. Items 108 to 121.
 
+## 107. [ready] Alert engine fails OPEN: missing/malformed NWS wind is read as dead calm, so a "good to paddle" alert can fire on absent data
+
+**Found by the 2026-07-22 verify loop, adversarially testing `evaluateGoodWindow` directly.** The good-window evaluator is otherwise solid, I threw 12 hard cases at it (data gaps, pre-6am, the 17/18 boundary, "5 to 12 mph" ranges, duplicate timestamps, beyond-horizon, DST spring-forward, peak-wind direction) and 11 behaved correctly. The 12th is a real defect:
+
+- `parseMaxWind` (`lib/alerts/conditions-window.ts:21-24`) returns **0** for any string with no digits (`""`, `null`-ish, `"garbage"`).
+- `paddleabilityFromWind(0)` returns **"calm"** (`lib/conditions.ts:338`, `maxMph <= 8`).
+- So a period with missing or unparseable `windSpeed` is treated as **dead calm and eligible**. Verified: a 6/7/8am run of `["", "garbage", "0 mph"]` produces a good window `6-9, maxWind 0`.
+
+**Why the data can actually be bad:** `findGoodWindow` (`conditions-window.ts:132-134`) casts the NWS response straight to `HourlyPeriod[]` (`as { periods?: HourlyPeriod[] }`) and passes it to the evaluator with **no validation of `windSpeed`**. A TypeScript cast is a compile-time fiction; if NWS omits `windSpeed`, returns null, or changes format on any hour, that hour silently scores as 0 mph. This runs unattended daily in the cron.
+
+**Why it matters (direction of failure):** this is the conditions-alert loop, the retention engine and a safety-adjacent surface. Failing open means **absence of wind data is announced to the user as a positive "this spot is calm, good to paddle" push/email**. That is the exact opposite of how the rest of the app treats missing data: item 53 deliberately shows "Tide data is unavailable" rather than invent a reading, and the whole product is wrapped in "guidance only, not a safety guarantee." A false calm signal is the worst way for a paddling app to be wrong.
+
+**The fix already has a home in the type system.** `Paddleability` (`lib/conditions.ts:78`) already has an `"unknown"` value, and the evaluator's eligibility check already requires `paddleabilityFromWind(wind) === "calm"`, so `"unknown"` is correctly excluded. The defect is only that missing data maps to `"calm"` instead of `"unknown"`.
+- Distinguish "no parseable wind" from "0 mph". A period whose `windSpeed` contains no number should map to unknown (ineligible), NOT calm.
+- **Preserve the two legitimate low-wind cases:** a literal `"0 mph"` is real calm, and NWS sometimes uses the word **"Calm"** for windSpeed, which is also real calm. So the rule is: has a number -> use it; is exactly "Calm" (case-insensitive) -> 0; otherwise -> unknown/skip. Do not naively reject everything without a digit.
+- Consider validating in `findGoodWindow` too (drop or mark periods with no usable wind before evaluating), so the guarantee does not rest on one helper.
+
+**Acceptance:** a period with empty/null/garbage `windSpeed` never contributes to a good window (unit test it: `["", "garbage"]` at calm hours yields null, while `["0 mph","0 mph"]` and `["Calm","Calm"]` still yield a window). No behavior change for well-formed NWS data. Add the cases to `conditions-window.test.ts`. Not a legal surface, but it touches the alert send path, so run the verifier on the diff.
+
 ## 108. [ready] California-wide default map view (the brand shipped statewide, the map still opens on the Bay)
 
 **Problem:** Items 90/94/95/96 added 29 SoCal spots (LA, San Diego, Orange County, Ventura), 16% of 177, and the site now says "across California". But `MapView.tsx` hardcodes `BAY_CENTER = [37.55, -122.25]` at zoom 9 for any cold visitor with no location grant, and `REGIONS` in `lib/types.ts` appends the four new SoCal regions last, so a SoCal visitor scrolls past the whole pill row to find their own coast. First impression contradicts the rebrand for exactly the audience the expansion was for.
@@ -849,25 +868,6 @@ Remaining owner steps (see `native/README.md` runbook): run `supabase/migrations
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
-
-## 107. [ready] Alert engine fails OPEN: missing/malformed NWS wind is read as dead calm, so a "good to paddle" alert can fire on absent data
-
-**Found by the 2026-07-22 verify loop, adversarially testing `evaluateGoodWindow` directly.** The good-window evaluator is otherwise solid, I threw 12 hard cases at it (data gaps, pre-6am, the 17/18 boundary, "5 to 12 mph" ranges, duplicate timestamps, beyond-horizon, DST spring-forward, peak-wind direction) and 11 behaved correctly. The 12th is a real defect:
-
-- `parseMaxWind` (`lib/alerts/conditions-window.ts:21-24`) returns **0** for any string with no digits (`""`, `null`-ish, `"garbage"`).
-- `paddleabilityFromWind(0)` returns **"calm"** (`lib/conditions.ts:338`, `maxMph <= 8`).
-- So a period with missing or unparseable `windSpeed` is treated as **dead calm and eligible**. Verified: a 6/7/8am run of `["", "garbage", "0 mph"]` produces a good window `6-9, maxWind 0`.
-
-**Why the data can actually be bad:** `findGoodWindow` (`conditions-window.ts:132-134`) casts the NWS response straight to `HourlyPeriod[]` (`as { periods?: HourlyPeriod[] }`) and passes it to the evaluator with **no validation of `windSpeed`**. A TypeScript cast is a compile-time fiction; if NWS omits `windSpeed`, returns null, or changes format on any hour, that hour silently scores as 0 mph. This runs unattended daily in the cron.
-
-**Why it matters (direction of failure):** this is the conditions-alert loop, the retention engine and a safety-adjacent surface. Failing open means **absence of wind data is announced to the user as a positive "this spot is calm, good to paddle" push/email**. That is the exact opposite of how the rest of the app treats missing data: item 53 deliberately shows "Tide data is unavailable" rather than invent a reading, and the whole product is wrapped in "guidance only, not a safety guarantee." A false calm signal is the worst way for a paddling app to be wrong.
-
-**The fix already has a home in the type system.** `Paddleability` (`lib/conditions.ts:78`) already has an `"unknown"` value, and the evaluator's eligibility check already requires `paddleabilityFromWind(wind) === "calm"`, so `"unknown"` is correctly excluded. The defect is only that missing data maps to `"calm"` instead of `"unknown"`.
-- Distinguish "no parseable wind" from "0 mph". A period whose `windSpeed` contains no number should map to unknown (ineligible), NOT calm.
-- **Preserve the two legitimate low-wind cases:** a literal `"0 mph"` is real calm, and NWS sometimes uses the word **"Calm"** for windSpeed, which is also real calm. So the rule is: has a number -> use it; is exactly "Calm" (case-insensitive) -> 0; otherwise -> unknown/skip. Do not naively reject everything without a digit.
-- Consider validating in `findGoodWindow` too (drop or mark periods with no usable wind before evaluating), so the guarantee does not rest on one helper.
-
-**Acceptance:** a period with empty/null/garbage `windSpeed` never contributes to a good window (unit test it: `["", "garbage"]` at calm hours yields null, while `["0 mph","0 mph"]` and `["Calm","Calm"]` still yield a window). No behavior change for well-formed NWS data. Add the cases to `conditions-window.test.ts`. Not a legal surface, but it touches the alert send path, so run the verifier on the diff.
 
 ## 86. [done] The `reviews` kill switch now reaches the spot list (deployed 2026-07-22, e610d05)
 
