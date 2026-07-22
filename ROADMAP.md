@@ -258,7 +258,7 @@ Three mismatches sit side by side in the header: **radius** (pill vs 8px, the ow
 
 **Shipped 2026-07-22.** Geometry matched (`rounded-lg`, `text-xs`, `px-3 py-1.5`, same 30px box); colour deliberately not, per this item's own design note, so Feedback keeps the single azure outline and the account button stays neutral. Both AccountButton variants now share one `HEADER_BUTTON` constant so they cannot drift apart again. **Measuring rather than eyeballing found a third mismatch this spec did not list:** the mobile search glyph rendered 38px tall beside two 30px buttons, because `text-base` gives it a 24px line box; `leading-none` holds it to 30. Verified at 1280px and 390px, signed in (long name truncating) and signed out, and at the `sm` breakpoint: all three controls 30px / 8px / 12px, one azure border among them, no overflow.
 
-## 78. [ready] Rename the "Flatwater" / "Open water" water-type labels: users report they are hard to understand
+## 78. [in-progress] 2026-07-22T08:31:11-07:00 Rename the "Flatwater" / "Open water" water-type labels
 
 **Owner-reported 2026-07-21, from user feedback.** The water-type vocabulary is not landing: people do not know what "Flatwater" and "Open water" mean. Replace with something understandable but **not wordy** (these render as compact filter pills and badges, so length is a hard constraint).
 
@@ -428,6 +428,30 @@ Remaining owner steps (see `native/README.md` runbook): run `supabase/migrations
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
+
+## 86. [ready] The `reviews` kill switch only half-works: the spot LIST keeps blending contributor ratings when it is off
+
+**Found by the lawyer re-gate on item 85 (2026-07-22), independently verified in code.** The `reviews` kill switch exists to pull user-generated content in a hurry, `ReviewsSection.tsx:47-50` says so directly ("this is the surface most likely to need pulling in a hurry (UGC)"). It does not cover the list.
+
+Verified:
+- `components/SpotDrawer.tsx:76` reads `const reviewsOn = useKillSwitch("reviews")` and **line 234 gates the crowd data**: `const crowd = spot && reviewsOn ? aggregates[spot.id] : undefined;`
+- `components/SpotList.tsx` **never calls `useKillSwitch` at all**, and passes `crowd={aggregates[spot.id]}` ungated at **lines 147, 173 and 195**.
+- `components/SpotCard.tsx:36` then does `displayRating(spot.owner_rating, crowd)`, so the crowd value genuinely changes the number rendered on the card.
+
+**Consequence.** Flip the `reviews` switch off and: the sheet stops blending, `ReviewsSection` returns null, the reviews and the Contributor Terms link disappear. But **every card in the list still shows a number that incorporates published contributor ratings**, still labelled as our take, with no reviews visible and no route to the document that explains the blend. In the exact incident the switch is for (a named marina objects, a defamatory or spam review lands), the owner would flip it, believe contributor input was pulled, and be wrong.
+
+**Fix (small, and make it drift-proof):**
+- Add `const reviewsOn = useKillSwitch("reviews");` to `SpotList.tsx` and pass `crowd={reviewsOn ? aggregates[spot.id] : undefined}` at all three call sites, matching `SpotDrawer.tsx:234`.
+- Add a guard test asserting **both** consumers gate identically, so the two cannot drift apart again. This is the second time a UGC guard has needed pairing (see `eefa4cf`, "gate-required copy must be guarded when it ships").
+- Verify by flipping the flag: with `reviews` off, no card in the list shows a blended number, and the number falls back to the owner rating alone.
+
+## 87. [ready] Two small follow-ups from the item-85 lawyer re-gate (a11y target size + a rationale that is too broad as written)
+
+**From the same re-gate (2026-07-22). Both minor, both cheap.**
+
+**(a) The now-bare Contributor Terms link fails WCAG 2.2 target size.** Item 85 removed the sentence around the link, so the anchor became the only content of its own paragraph at `text-xs` with no padding, roughly a 16px-tall hit area (`components/ReviewsSection.tsx:207-213`). WCAG 2.2 SC 2.5.8 wants 24x24 CSS px. The "inline" exception used to cover it precisely *because* it sat inside a sentence, and that sentence is what item 85 deleted. This repo already treats target size as live (`components/zoom-control-target-size.test.ts`). Fix: make the anchor `inline-block` with vertical padding so the box clears 24px, e.g. add `inline-block py-1`.
+
+**(b) Amend item 85's recorded rationale, it is broader than the position that actually holds.** As written it says the connection "fails the Endorsement Guides materiality test in the direction of 'disclosure not required'", which taken literally would authorise deleting the WRITER-side disclosure too. The defensible position is narrower and depends on three artifacts continuing to exist: the `{DISCLOSURE}` rendered above the assent box (`components/ReviewForm.tsx:164`), the string in `lib/markCopy.ts:70-71`, and the marks paragraph in Contributor Terms section 2. Reword to "disclosed at the point of writing and in the linked terms, so no in-line reader disclosure is required", and name those three as not removable without a fresh gate. Doc-only, no code change.
 
 ## 81. [ready] No `<h1>` anywhere on the site: every page's heading outline starts at `<h2>` (SEO + a11y)
 

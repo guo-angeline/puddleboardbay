@@ -73,9 +73,23 @@ export const REGIONS = [
 
 export const DIFFICULTIES: Difficulty[] = ["flatwater", "bay", "river"];
 
+// Item 78 (owner-directed, 2026-07-22): plain water-body nouns, because users
+// reported they did not know what "Flatwater" and "Open water" meant.
+//
+// The KEYS stay as they are on purpose. They feed DIFFICULTY_COLOR, the map pin
+// colours, filter state and analytics props, so renaming them would break pin
+// colours and destroy analytics comparability. Only what a reader sees changes.
+//
+// Naming this by water body rather than by exposure is a deliberate correction,
+// not a loss. The field is called `difficulty` and was meant to encode exposure,
+// but it never did so consistently: all four Lake Tahoe spots were split 2/2
+// across `bay` and `flatwater` with no principled difference between them. It
+// was a water-type taxonomy wearing a difficulty name. The live risk signal is
+// the conditions panel, `tide_sensitive`, and the spot notes, none of which
+// depend on this label.
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  flatwater: "Flatwater",
-  bay: "Open water",
+  flatwater: "Lake",
+  bay: "Coast",
   river: "River",
   unknown: "Unknown",
 };

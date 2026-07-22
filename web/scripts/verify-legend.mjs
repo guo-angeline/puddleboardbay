@@ -4,7 +4,7 @@
 //
 // For desktop (1280x800) and mobile (390x844) viewports, confirms:
 //   1. The legend ([data-testid="map-legend"]) is present and visible.
-//   2. Its labels/link text match DIFFICULTY_LEGEND (Flatwater, Ocean, River, Disclaimer).
+//   2. Its labels/link text match DIFFICULTY_LEGEND (Lake, Coast, River, Disclaimer).
 //   3. The legend is not occluded: document.elementFromPoint over its center resolves
 //      to the legend itself, not a Leaflet pane stacked above it.
 //   4. Exactly one Leaflet overlay-pane canvas exists (shared-renderer invariant).
@@ -18,7 +18,10 @@ const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844 },
 ];
 
-const EXPECTED_LABELS = ["Flatwater", "Ocean", "River"];
+// Item 78: Lake / Coast / River. Note this list was ALREADY stale before that
+// change: it expected "Ocean", a label the site stopped rendering when it
+// became "Open water", so the guard was asserting a string nobody shipped.
+const EXPECTED_LABELS = ["Lake", "Coast", "River"];
 
 const results = [];
 
@@ -49,9 +52,9 @@ async function checkViewport(browser, viewport) {
     const legendText = (await legend.innerText()).trim();
     const missingLabels = EXPECTED_LABELS.filter((label) => !legendText.includes(label));
     if (missingLabels.length === 0) {
-      record(`${prefix} legend labels (Flatwater, Ocean, River)`, true);
+      record(`${prefix} legend labels (Lake, Coast, River)`, true);
     } else {
-      record(`${prefix} legend labels (Flatwater, Ocean, River)`, false, `missing: ${missingLabels.join(", ")}`);
+      record(`${prefix} legend labels (Lake, Coast, River)`, false, `missing: ${missingLabels.join(", ")}`);
     }
 
     const disclaimerLink = legend.locator('a:has-text("Disclaimer")');

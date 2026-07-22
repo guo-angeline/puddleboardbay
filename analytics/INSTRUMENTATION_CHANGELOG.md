@@ -14,6 +14,35 @@ without touching this file.
 
 ---
 
+## 2026-07-22 (item 78): water-type LABELS renamed; two spots change `difficulty` value (semantics-changed)
+
+Owner-directed, from user feedback that nobody understood the vocabulary. The
+display strings became plain nouns: **Flatwater -> Lake**, **Open water ->
+Coast**. River and Unknown are unchanged.
+
+**No event name or prop name changes, and the enum keys are untouched.** The
+stored values are still `flatwater` / `bay` / `river`, so `difficulty` on
+`spot_viewed`, `conditions_viewed` and every other event keeps emitting exactly
+the same strings. Pin colours and filter state are likewise unaffected. If you
+are reading a chart, the series is continuous.
+
+**The one real discontinuity, and it is small and deliberate.** Two spots moved
+bucket: **Sand Harbor (#11)** and **Waterman's Landing (#15)**, both on Lake
+Tahoe, changed from `difficulty: "bay"` to `"flatwater"`. Before this, the four
+Lake Tahoe spots were split 2/2 across the two buckets with no principled
+difference (Kings Beach and Fallen Leaf were already `flatwater`), which is the
+evidence that the field was a water-type taxonomy wearing a difficulty name.
+
+**Comparability:** from 2026-07-22, any breakdown by `difficulty` shifts two
+spots' worth of events from `bay` to `flatwater`. At current volume that is a
+handful of events, but a like-for-like comparison across this date should either
+exclude spots 11 and 15 or note the move. Nothing else in the series changes.
+
+**Not a safety-signal change.** The label never carried the exposure warning
+reliably (see the Tahoe split above), and the live risk signals are the
+conditions panel, `tide_sensitive`, and the spot notes, none of which read this
+field.
+
 ## 2026-07-21 (item 83): `mark_shown` + `log_viewed` ADDED (INTENT); collectables ship
 
 Two new INTENT events for the marks system ("Your log"). No existing event

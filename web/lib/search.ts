@@ -21,11 +21,13 @@ import { REGIONS, DIFFICULTY_LABEL } from "./types";
  *      a query that names exactly one region restricts results to that region.
  */
 
-// Search synonyms per water type, anchored on the UI's own difficulty labels so a
-// user can type what they see on the filter ("Open water", "Flatwater", "River").
+// Search synonyms per water type. Anchored on the UI's own labels so a user can
+// type what they see on the filter ("Lake", "Coast", "River"), and the PREVIOUS
+// labels ("flatwater", "open water") are kept deliberately: someone who learned
+// the old vocabulary, or followed an old link, must still find the same spots.
 const TYPE_TERMS: Record<Difficulty, string[]> = {
-  flatwater: ["flatwater", "flat", "calm", "lake", "reservoir", "pond", "lagoon", "slough"],
-  bay: ["ocean", "bay", "sea", "saltwater", "tidal", "coast", "coastal", "surf", "pacific"],
+  flatwater: ["flatwater", "flat", "calm", "lake", "lakes", "reservoir", "pond", "lagoon", "slough"],
+  bay: ["coast", "coastal", "ocean", "bay", "sea", "saltwater", "tidal", "surf", "pacific", "open"],
   river: ["river", "creek", "rapids", "current", "whitewater"],
   unknown: [],
 };
