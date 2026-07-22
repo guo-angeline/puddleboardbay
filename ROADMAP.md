@@ -883,7 +883,7 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 **Acceptance:** a spot outside the Bay Area can be added with a valid region; the site title, description, keywords, tagline and `<h1>` no longer claim a coverage area the data contradicts; the region filter still fits at 390px without wrapping; `npm test`, lint and build pass; no existing `lat`/`lng` changes.
 
-## 90. [in-progress] LA County ingest: first 4 shipped 2026-07-22 (764378a); Marine Stadium + Alamitos still open
+## 90. [done] LA County ingest: 6 spots live, first coverage outside the Bay Area (deployed 2026-07-22, 67d150a)
 
 **Owner-directed 2026-07-22: start statewide expansion with LA.** Full analysis and the lookup list: `reports/la-ingest-candidates-2026-07-22.md`.
 
@@ -911,7 +911,9 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 1. **Reserializing `spots.json` rewrote 580 lat/lng lines.** Exactly the failure CLAUDE.md documents. Reverted and redone as a text-level append: 72 insertions, 0 deletions, 0 coordinate lines touched. **Never `JSON.stringify` this file.**
 2. **New spots have no NWS gridpoint until `scripts/precompute_gridpoints.py` is re-run**, so they would have shipped with no conditions, which is the app's differentiator. A test caught it. **Adding any spot requires re-running that script in the same change.**
 
-**Still open on this item:** Marine Stadium (owner confirmed paddling is allowed but gave no coordinate) and Alamitos Bay (the owner's Bayshore Beach point is 1,388 m from CCC's record at the San Gabriel River mouth, so it is a record-identity question: replace CCC's record, or add a second spot?).
+**COMPLETE 2026-07-22 (`67d150a`).** Marine Stadium shipped at the owner's coordinate (547 m from CCC's pin but **121 m from a mapped OSM slipway**, which is the stronger signal), with paddling confirmed permitted outside sanctioned events. For Alamitos Bay the owner said to use their point, so **CCC's record at the San Gabriel River mouth did not ship**; theirs is 1,388 m away and is a different place, so it is named **"Alamitos Bay - Bayshore Beach"** per the existing water-then-launch convention rather than inheriting CCC's name for somewhere else. The owner also corrected CCC's fields there: fee No, parking Yes, restrooms Yes, against CCC's no-to-all-three.
+
+**Final LA set: 6 spots** (Mother's Beach MdR, King Harbor, Cabrillo Beach Launch Ramp, Marine Park, Marine Stadium, Alamitos Bay - Bayshore Beach). 149 records total. **Next SoCal region: San Diego, 40 CCC candidates and the densest paddle water in the state.**
 
 **Acceptance:** only the verified set is ingested; every record carries per-field provenance; `BT_FACIL_TYPE` is used verbatim and never upgraded into "ramp"; each coordinate is a put-in verified against a second source; each is cross-checked against DBW's `Open To` for public/private; no existing `lat`/`lng` changes; data guards and `npm test` pass.
 
