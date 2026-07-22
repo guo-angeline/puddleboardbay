@@ -157,3 +157,21 @@ header {
   content: none;
 }
 .leaflet-control-attribution a { color: var(--accent); }
+
+/* Item 83: the one-stroke mark drawn after a review is submitted. Guarded by
+   prefers-reduced-motion in the component too (it simply omits the animation),
+   so this media query is a second belt, not the only one. */
+@keyframes ptw-mark-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes ptw-mark-fade {
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="ptw-mark-draw"],
+  [style*="ptw-mark-fade"] {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+  }
+}

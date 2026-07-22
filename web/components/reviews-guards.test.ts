@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { confirmation } from "@/lib/markCopy";
 
 // Item 43. These guard the parts that are legally load-bearing or that a
 // well-meaning later edit would quietly break.
@@ -11,6 +12,7 @@ const submitRoute = read("../app/api/reviews/route.ts");
 const moderateRoute = read("../app/api/reviews/moderate/route.ts");
 const aggRoute = read("../app/api/reviews/aggregates/route.ts");
 const card = read("./SpotCard.tsx");
+const markCopy = read("../lib/markCopy.ts");
 // Every component + page source, so an absence guard is proven against the
 // tree rather than against the files someone remembered to list.
 const sweep = (): string[] => {
@@ -87,14 +89,19 @@ describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
     // The stored terms hash must move whenever s6.1 changes in substance, or the
     // assent record points at text the contributor never saw.
     expect(fs.readFileSync(path.resolve(__dirname, "../lib/reviews/validation.ts"), "utf-8"))
-      .toContain('TERMS_VERSION = "v1.2"');
-    expect(form).toContain('TERMS_HASH = "ugc-v1.2-2026-07-21"');
+      .toContain('TERMS_VERSION = "v1.3"');
+    expect(form).toContain('TERMS_HASH = "ugc-v1.3-2026-07-21"');
     // v1.2 (2026-07-21): s6.4 had to change because the displayed score is now
     // computed by us and blends our own rating in. Leaving the old text live
     // would have kept a published promise ("an automated calculation from
     // contributor-supplied ratings") that the product no longer honours.
     const terms = read("../app/contributor-terms/page.tsx");
-    expect(terms).toContain("Version 1.2");
+    expect(terms).toContain("Version 1.3");
+    // v1.3 (2026-07-21, item 83): marks are an incentive to contribute, so the
+    // terms must say what they are given for and that it is never sentiment.
+    // Shipping the incentive without the clause is the FTC exposure.
+    expect(terms).toContain("Marks are for taking part, never for what you say");
+    expect(read("../lib/markCopy.ts")).toContain("never depend on what you say");
     expect(terms).toContain("The score shown for a spot is computed by us");
     expect(terms).not.toContain("automated calculation from");
   });
@@ -260,14 +267,26 @@ describe("the form carries no copy the owner cut (item 43)", () => {
     // Cutting the notice from the form is a copy decision, not a policy one:
     // /privacy still states it, and the post-submit confirmation still tells
     // the submitter. If both of those ever go, the promise is unstated.
-    expect(section).toContain("goes to a person for review before it appears");
+    //
+    // Item 83 moved the confirmation strings out of the component and into
+    // lib/markCopy.ts. Assert against the copy the component RENDERS, not
+    // against the file the copy used to live in, or this guard passes or fails
+    // on where a string sits rather than on whether the promise is made.
+    expect(section).toContain("confirmation(spot.water");
+    expect(markCopy).toContain("goes to a person for review before it appears");
     expect(read("../app/privacy/page.tsx")).toContain("read by a person before it appears");
   });
 
   it("tells the truth about BOTH paths after item 79", () => {
     // A text-less rating goes live at once; saying it was "sent for review"
-    // would be a false statement to the contributor.
-    expect(section).toContain("Thanks. Your rating is live.");
+    // would be a false statement to the contributor. Assert the two paths say
+    // different, accurate things, rather than pinning one exact sentence: the
+    // wording is free to change, the distinction is not.
+    const live = confirmation("Rollins Lake", true);
+    const held = confirmation("Rollins Lake", false);
+    expect(live).toMatch(/is live/);
+    expect(live).not.toMatch(/review before it appears/);
+    expect(held).toContain("goes to a person for review before it appears");
     expect(section).toMatch(/justSubmitted === "published"/);
     // And the published terms + privacy must disclose the immediate path.
     expect(read("../app/privacy/page.tsx")).toContain("appears immediately");

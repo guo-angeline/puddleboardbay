@@ -17,6 +17,8 @@ interface Props {
   conditionsBadge?: ReactNode;
   /** Item 43: raw published-review totals, absent until a spot has one review. */
   crowd?: SpotAggregate;
+  /** Item 83: this account has reported on this spot. */
+  reported?: boolean;
 }
 
 const DIFF_STYLES: Record<string, string> = {
@@ -32,7 +34,7 @@ function formatDistance(miles: number): string {
     : `${miles.toFixed(1)} mi`;
 }
 
-export default function SpotCard({ spot, selected, onClick, distance, isFavorite, onToggleFavorite, conditionsBadge, crowd }: Props) {
+export default function SpotCard({ spot, selected, onClick, distance, isFavorite, onToggleFavorite, conditionsBadge, crowd, reported }: Props) {
   const rating = displayRating(spot.owner_rating, crowd);
   return (
     // role="button" rather than a real <button>: this card contains the
@@ -54,7 +56,25 @@ export default function SpotCard({ spot, selected, onClick, distance, isFavorite
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-(--dark) text-sm leading-snug truncate">{spot.water}</p>
+          {/* The name truncates; the dot must not. Keeping the dot inside the
+              truncating element clipped it away on exactly the long spot names
+              most likely to need it (caught at 1280px, invisible at 390px). */}
+          <p className="flex items-center gap-1.5 font-semibold text-(--dark) text-sm leading-snug">
+            <span className="truncate">{spot.water}</span>
+            {/* Item 83: a dot, deliberately NOT a checkmark. A tick reads as an
+                item ticked off a list, and a list of launch sites is a list
+                nobody should feel invited to complete. */}
+            {reported && (
+              <>
+                <span
+                  aria-hidden
+                  title="You reported on this spot"
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-(--accent)"
+                />
+                <span className="sr-only">(you reported on this spot)</span>
+              </>
+            )}
+          </p>
           {/* Item 39 (D21): owner rating inline in the subtitle, bare star +
               number, matching the drawer. See SpotDrawer for the lawyer-gate
               note; the owner accepted the aggregate-read risk. sr-only "out of 5"

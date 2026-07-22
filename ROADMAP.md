@@ -151,6 +151,35 @@ Second attempt used the **Magic Link** template (`recovery_sent_at`), the first 
 
 ---
 
+## 83. [done] Collectables: "Your log", a private record of what you know about this water (built 2026-07-21)
+
+**Owner-directed 2026-07-21.** A collectable layer so people invest and build an identity here. Designed by the product-visionary against a competitive teardown of 14 B2C apps (Foursquare, Untappd, Strava, Pokemon Go, eBird, Yelp Elite, Local Guides, Stack Overflow badges, NPS passport, Letterboxd, and others).
+
+**Thesis: collect judgment, not launches.** The identity on offer is "I know this water", earned by knowing, never by going. Every comparable app is built on the check-in, and that is the one mechanic this product cannot have.
+
+**Three owner decisions shaped it, all settled in chat:**
+1. **Nothing rewards getting on the water. No check-ins.** A collection is a worse inducement surface than a push line if it ever nudges someone to launch, because a push expires and a collection accumulates. This also dodged a hard blocker: `spot_reviews_one_per_spot` is a unique index on `(user_id, spot_id)`, so a review could never have doubled as a repeatable check-in. Repurposing reviews as check-ins, from the original request, was not buildable as described.
+2. **Existing contributions count retroactively**, so marks derive from lifetime counts and **v1 needed no migration**.
+3. **Private to the earner.** Account sheet only, never on public bylines. Known cost, stated up front: the ask was "identity and reputation", and a private collection builds identity but cannot build reputation. v1 delivers half the ask on purpose; public standing is staged below.
+
+**What shipped:** six marks (First report, In your own words, Local knowledge, Scouted, Around the bay, Watching), a "Your log" section in the account sheet, a post-submit moment (a mark drawn in one 600ms stroke, reduced-motion aware), a quiet dot on spots you reported on, and an FTC disclosure above the submit button with a matching Contributor Terms clause (bumped to v1.3 in the same commit). Behind a `collectables` kill switch at 100%. Two INTENT events, `mark_shown` and `log_viewed`.
+
+**Rules the tests enforce, because each is one careless edit from a different product:** no denominator or progress bar ever (a completion meter over launch sites is the Pokemon Go mechanic rebuilt on purpose); unearned marks show their criterion, never the distance to it (the Stack Overflow steering effect, aimed at a safety product); no comparison to any other user; the reward function cannot read a rating at all, so sentiment-conditioned rewards are unwritable, not merely unwritten (16 CFR Part 465 bars both directions, which is why a "reported a hazard" mark was rejected too).
+
+**Two defects found by verifying the real flow rather than reasoning about it**, both fixed:
+- Marks keyed to `published` gave the bare-star path instant recognition and made the written-review path wait on our moderation queue, so "In your own words", the mark that exists to value sentences over stars, could never fire when someone wrote them. Marks now count `published` or `pending`; the log still says "N reports live" for published only, plus "N in review".
+- The reported-spot dot sat inside a `truncate` element, so it was clipped away on exactly the long spot names most likely to need it. Invisible at 390px, caught at 1280px.
+
+**Measurement, honestly:** the goal metric is repeat contribution from Supabase (not PostHog, per the house rule on the loop tail), and at ~2-3 genuine contributors it will be a count between 0 and 3 for months, not a rate. No A/B, no cohort read, no significance test will ever run on this. Safety guardrail to watch: `spot_action{action:"directions"}` per spot open, where a step change up would mean we built an inducement by accident. **Pre-registered kill criterion:** if 60 days after ship no account other than the operator's and known testers' has earned any mark, flip the kill switch off, leave the code, revisit at DAU 100.
+
+**Comparability warning:** `spot_viewed` and `conditions_viewed` are expected to rise for SIGNED-IN users from ship date, because two marks are earned by dwell-qualified spot views. Retention reads must segment signed-in from anonymous from 2026-07-21. Recorded in `analytics/INSTRUMENTATION_CHANGELOG.md`.
+
+**Staged, not now:** v1.5 at 25 signed-in accounts, persist the explored set server-side (the one mechanic that genuinely forces a migration). v2 at 25 reviewing accounts, public standing as a factual qualifier ("Angeline · 6 reports"), never a rank, needing a fresh lawyer gate. v3 at 100 contributors and not before an entity exists (D25 Q2), discretionary owner-granted recognition in `app_metadata` (barnstar, not karma). **Never without a specific gate:** check-ins, streaks, leaderboards, "first to report", completion percentages, novelty rewards, marks with monetary value, any push or email about a mark.
+
+**Strategy note.** This is the third deliberate exception to this roadmap's own retention-first thesis (items 43 and 44 were the first two, recorded the same way). The thesis has not changed: the owner is exercising the call it reserves. A later reader should not mistake this for a pivot.
+
+---
+
 ## 80. [proposed] Native app shows a different number than the web under the same star
 
 **Flagged by the 2026-07-21 legal gate (D30, good-practice action 9), filed rather than fixed because the native app is not shipped yet.**
@@ -352,6 +381,28 @@ Remaining owner steps (see `native/README.md` runbook): run `supabase/migrations
 ## Owner item, added 2026-07-17 (queued top-most on purpose)
 
 ## Verify-loop findings, added 2026-07-17 (end-to-end quality pass)
+
+## 81. [ready] No `<h1>` anywhere on the site: every page's heading outline starts at `<h2>` (SEO + a11y)
+
+**Found by the 2026-07-21 radical journey harness.** Measured with a direct fetch, **zero `<h1>` elements** on the home page and on spot pages, on **both local and production**:
+
+```
+/            -> <h1> count: 0     (local and paddletowater.com)
+/spot/1      -> <h1> count: 0     (local and paddletowater.com)
+```
+
+**There is a documentation drift here, do not assume this is already done.** ROADMAP items 63 and 64 both describe the spot title as "the `<h1>`" ("the same name repeats immediately below as the large `<h1>` title", "spot name renders once (the `<h1>`)"). The code does not match: `components/SpotDrawer.tsx:438` renders that title as **`<h2 id="spot-sheet-title">`**. The standalone spot page (`app/spot/[id]/page.tsx:62`) then adds another `<h2>` ("More paddleboard spots in {region}"), so the outline is h2 -> h2 with no h1 above it.
+
+**Why it matters:**
+- **SEO across 139 spot pages, which are the entire organic growth plan.** The strategy section notes growth is ~82% direct and the spot pages are "too new to rank"; shipping them all without an `<h1>` removes the strongest on-page topical signal exactly where ranking is the goal.
+- **Accessibility.** Screen-reader users navigate by heading level. With no `<h1>` there is no top-level document heading, and starting an outline at `<h2>` breaks the expected hierarchy.
+
+**Fix (small, but needs two decisions):**
+- **Standalone `/spot/[id]`:** the spot name should be the `<h1>`. Promote the `SpotDrawer.tsx:438` title from `<h2>` to `<h1>` **when it is rendering as a page** (not when it is the home-page dialog). Keep `id="spot-sheet-title"` intact, `aria-labelledby` on the dialog points at it.
+- **Home page:** it needs its own `<h1>`. The visible wordmark is an interactive control, so design-lead should decide between styling a real heading or adding a visually-hidden `<h1>` carrying the site's purpose (something like "Paddleboard and kayak launch spots in the SF Bay Area"). Do not put a second `<h1>` on the page when the drawer is open as a dialog.
+- Keep exactly one `<h1>` per rendered page in every state (home, home-with-drawer, standalone spot, 404).
+
+**Acceptance:** `/` and `/spot/<id>` each expose exactly one `<h1>` in the served HTML (verify by fetch, not by inspecting React), the dialog's `aria-labelledby` still resolves, heading order is h1 -> h2 with no skips, and the 139 spot pages all carry the spot name as their `<h1>`. Add a test that fetches a couple of routes and asserts the `<h1>` count, so this cannot silently regress again.
 
 ## 76. [ready] Tablet (md, 768-1023px) with a spot open: three panes do not fit, the map collapses to a 128px dead sliver
 
@@ -829,4 +880,19 @@ Acceptance (owner OK needed on one judgment call: extending the calm->good frami
 - **Optional Google sign-in** to sync push subscriptions and saved spots across devices (the engine ships anonymous; this is the upgrade path). *(Now item 44, promoted to `[ready]` by the owner 2026-07-17.)*
 - **PaddlePass premium tier:** alerts + multi-day forecast windows + offline, as the freemium paywall.
 - **Community spot submissions** with admin approval.
+
+## 82. [proposed] Social layer: profile headshot, leaderboard, adding friends (PLACEHOLDER)
+
+**Owner-added 2026-07-21 as a placeholder.** Deliberately not specced yet. Capture the idea now, size it later.
+
+The idea: turn the app from a solo tool into something with people in it. Profile **headshot**, a **leaderboard**, and **adding friends**.
+
+**Gating (why it sits here, not in the active backlog).** The vision already sequences this: community "is deferred until there are retained users to seed it. Habit first; community is a consequence of habit." Retention is the current #1 goal and is not yet proven, and a leaderboard with nobody on it is worse than no leaderboard. Do not promote before the retention read. The one prerequisite that now exists is identity: optional Google sign-in shipped (item 44).
+
+**Flags to respect when this is actually specced, so it does not get under-scoped:**
+- **Headshot = user-uploaded images.** Storage, plus a real moderation path. Item 75 already established that moderation cannot depend on a bounceable email. Assume abuse (nudity, impersonation, other people's faces) and a lawyer gate: likeness, personal data, minors, and the privacy policy all move.
+- **Leaderboard needs a metric that is real and hard to game.** Ranked on what? Paddles logged depends on trip logs, which are still a "Later" bullet above and do not exist. Also weigh the incentive: this is a safety-adjacent product, and a ranking that rewards going out more is a nudge toward paddling in worse conditions. That is a product-safety question, not just a design one.
+- **Friends = a social graph on a location app.** Whom you paddle with, where, and when is sensitive. Needs privacy defaults (opt-in, not opt-out), consent, blocking and reporting from day one, and another lawyer gate.
+
+**Next step when promoted:** a PRD from product-visionary that picks ONE of the three to prove the appetite (friends and leaderboard both fail without a base of active users; headshot is the cheapest and least useful alone), plus a lawyer gate before any build.
 - **Tide-window refinement** in the cron's "good window" evaluator (it ships wind-only).

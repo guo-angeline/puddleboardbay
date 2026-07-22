@@ -15,8 +15,10 @@ export const metadata: Metadata = {
 // components/ReviewForm.tsx), because a contributor is bound only by the version
 // they actually saw and accepted.
 const VERSION =
-  "Version 1.2. Last updated: July 21, 2026. " +
-  "(v1.2: Section 6.4 amended because the score shown for a spot is now computed by us, blending " +
+  "Version 1.3. Last updated: July 21, 2026. " +
+  "(v1.3: Section 2 gained a clause on contribution marks, which are given for taking part and " +
+  "never for what a review says. " +
+  "v1.2: Section 6.4 amended because the score shown for a spot is now computed by us, blending " +
   "our own rating with contributor ratings, rather than being a contributor-only average. " +
   "v1.1: Section 6.1 amended so a star rating with no text publishes immediately, without a byline. " +
   "v1.0, July 21, 2026: original.)";
@@ -115,6 +117,14 @@ export default function ContributorTermsPage() {
               material connection to a spot or a business named at a spot, including employment,
               ownership, a family relationship, or free or discounted goods or services, you must
               disclose it clearly in the review itself.
+            </p>
+            <p style={pStyle}>
+              <strong>Marks are for taking part, never for what you say.</strong> We give small marks
+              for contributing, and they are shown only to you. They are awarded on whether you took
+              part, never on what you wrote or how you rated a spot, in either direction. They have
+              no cash value, they buy nothing, and they do not make your review more or less likely
+              to be published. Marks are not payment, and a review you submit is still your own
+              honest first-hand account.
             </p>
           </Section>
 

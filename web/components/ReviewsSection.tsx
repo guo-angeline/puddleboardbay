@@ -7,6 +7,21 @@ import { trackIntent } from "@/lib/analytics";
 import { useGenuineView } from "@/lib/useGenuineView";
 import { useKillSwitch } from "@/lib/experiments";
 import ReviewForm from "@/components/ReviewForm";
+import MarkMoment from "@/components/MarkMoment";
+import { deriveLog, newlyEarned, type LogState, type MarkId } from "@/lib/marks";
+import { confirmation } from "@/lib/markCopy";
+import { exploredRegions } from "@/lib/exploredSpots";
+
+/** The device's saved spots. Same localStorage key HomeClient owns. */
+function readSavedIds(): number[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = JSON.parse(localStorage.getItem("ptw-favorites") || "[]");
+    return Array.isArray(raw) ? raw.filter((x): x is number => typeof x === "number") : [];
+  } catch {
+    return [];
+  }
+}
 
 export interface PublishedReview {
   id: string;
@@ -39,6 +54,60 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
   // null = nothing submitted this session; otherwise the server-reported status,
   // so the confirmation tells the truth for both paths (item 79).
   const [justSubmitted, setJustSubmitted] = useState<"pending" | "published" | null>(null);
+  // Item 83: the mark this submission earned, if any.
+  //
+  // Compared BEFORE against AFTER rather than against a remembered set. The
+  // first version kept a device-local "already seen" list so retroactive marks
+  // would not throw a party for old work, but that silenced the one moment that
+  // matters most: a brand-new contributor's FIRST report, on a device that had
+  // never recorded anything. A before/after diff is exact for everyone, with no
+  // history to keep and nothing to get stale.
+  const [earnedMark, setEarnedMark] = useState<MarkId | null>(null);
+  const [logBefore, setLogBefore] = useState<LogState | null>(null);
+  const collectablesOn = useKillSwitch("collectables");
+
+  async function fetchLog(): Promise<LogState | null> {
+    try {
+      const res = await fetch("/api/account");
+      if (!res.ok) return null;
+      const summary: {
+        reviews?: { status: string; body: string | null }[];
+        savedCount?: number;
+      } = await res.json();
+      return deriveLog(
+        summary.reviews ?? [],
+        exploredRegions(),
+        readSavedIds(),
+        summary.savedCount ?? 0
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  // Snapshot the log while the form is open, so the diff after submitting is
+  // exactly what THIS report earned.
+  useEffect(() => {
+    if (!formOpen || !collectablesOn) return;
+    let active = true;
+    void fetchLog().then((log) => {
+      if (active && log) setLogBefore(log);
+    });
+    return () => {
+      active = false;
+    };
+  }, [formOpen, collectablesOn]);
+
+  async function resolveEarnedMark() {
+    if (!collectablesOn) return;
+    const after = await fetchLog();
+    if (!after) return; // a failed lookup costs a mark, never the submission
+    const fresh = newlyEarned(logBefore ?? { ...after, earned: [] }, after);
+    if (fresh) {
+      setEarnedMark(fresh);
+      trackIntent("mark_shown", { mark: fresh, trigger: "submit", reports: after.reportsLive });
+    }
+  }
 
   // No state reset here: SpotDrawer mounts this with key={spot.id}, so React
   // gives us a fresh component per spot. Resetting in the effect body instead
@@ -101,11 +170,10 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
       )}
 
       {justSubmitted && (
-        <p className="mt-2 rounded-lg bg-(--fill) px-3 py-2 text-sm text-(--dark)">
-          {justSubmitted === "published"
-            ? "Thanks. Your rating is live."
-            : "Thanks. Your review goes to a person for review before it appears."}
-        </p>
+        <MarkMoment
+          message={confirmation(spot.water, justSubmitted === "published")}
+          mark={earnedMark}
+        />
       )}
 
       {hasReviews && (
@@ -134,6 +202,7 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
             onCloseForm();
             // An auto-published rating should appear without a page reload.
             if (status === "published") setReload((n) => n + 1);
+            void resolveEarnedMark();
           }}
           onCancel={onCloseForm}
         />

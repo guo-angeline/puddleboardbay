@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAccount } from "@/lib/useAccount";
 import { MAX_DISPLAY_NAME } from "@/lib/account/displayName";
 import { trackIntent } from "@/lib/analytics";
+import { useKillSwitch } from "@/lib/experiments";
+import YourLog from "@/components/YourLog";
 
 // Item 78: account management. Everything the account holds, in one sheet
 // opened from the header identity: your display name (editable, and it
@@ -42,6 +44,8 @@ const STATUS_LABEL: Record<string, { text: string; className: string }> = {
 
 export default function AccountSheet({ onClose }: { onClose: () => void }) {
   const { user, displayName, saveDisplayName, deleteAccount, signOut } = useAccount();
+  // Ship at 100% behind a kill switch, per the no-A/B-until-DAU-100 directive.
+  const collectablesOn = useKillSwitch("collectables");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [name, setName] = useState(displayName);
   const [savingName, setSavingName] = useState(false);
@@ -153,6 +157,11 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
           </div>
           {nameMsg && <p className="mt-1.5 text-xs text-(--muted)">{nameMsg}</p>}
         </form>
+
+        {/* Item 83: the personal collection, above the reviews it draws from. */}
+        {collectablesOn && summary && (
+          <YourLog reviews={summary.reviews} savedCount={summary.savedCount} />
+        )}
 
         {/* Your reviews */}
         <div className="mt-6 border-t border-(--border) pt-4">

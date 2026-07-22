@@ -8,6 +8,8 @@ import { isEmailConfirmed } from "@/lib/email/subscriptionState";
 import { useGenuineView } from "@/lib/useGenuineView";
 import SpotCard from "./SpotCard";
 import { useReviewAggregates } from "@/lib/useReviewAggregates";
+import { useOwnReports } from "@/lib/useOwnReports";
+import { useAccount } from "@/lib/useAccount";
 import { rankSavedSpotsByConditions, type SavedConditionState } from "@/lib/savedConditions";
 import ConditionsBadge from "./ConditionsBadge";
 
@@ -34,6 +36,9 @@ export default function SpotList({
 }: Props) {
   // Item 43: one aggregate fetch for the whole list, passed down per card.
   const aggregates = useReviewAggregates();
+  // Item 83: spots this account has reported on, marked with a quiet dot.
+  const { user } = useAccount();
+  const reported = useOwnReports(user?.id ?? null);
   const selectedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -145,6 +150,7 @@ export default function SpotList({
               <SpotCard
                 spot={spot}
                 crowd={aggregates[spot.id]}
+                reported={reported.has(spot.id)}
                 selected={selected?.id === spot.id}
                 onClick={() => onSelect(spot, "list")}
                 distance={distanceMap?.[spot.id]}
@@ -171,6 +177,7 @@ export default function SpotList({
               <SpotCard
                 spot={spot}
                 crowd={aggregates[spot.id]}
+                reported={reported.has(spot.id)}
                 selected={selected?.id === spot.id}
                 onClick={() => {
                   trackIntent("recent_spot_clicked", { spot_id: spot.id, region: spot.region });
@@ -193,6 +200,7 @@ export default function SpotList({
           <SpotCard
             spot={spot}
             crowd={aggregates[spot.id]}
+                reported={reported.has(spot.id)}
             selected={selected?.id === spot.id}
             onClick={() => onSelect(spot, "list")}
             distance={distanceMap?.[spot.id]}

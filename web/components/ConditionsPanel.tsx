@@ -16,6 +16,7 @@ import {
 import { trackSystem, trackIntent } from "@/lib/analytics";
 import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
+import { recordExplored } from "@/lib/exploredSpots";
 import NextGoodWindowPanel from "@/components/NextGoodWindowPanel";
 
 /**
@@ -220,6 +221,11 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
         had_data: viewRef.current.hadData,
       });
       recordConditionsInterest(spot.id);
+      // Item 83: the same dwell gate that qualifies conditions_viewed also
+      // qualifies "known" in the log. Reusing it rather than adding a second
+      // observer means a spot counts only when someone actually read its
+      // conditions, which is what makes casual farming cost real seconds.
+      recordExplored(spot.id, spot.region);
     },
   });
 

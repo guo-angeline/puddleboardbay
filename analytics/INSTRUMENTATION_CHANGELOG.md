@@ -14,6 +14,49 @@ without touching this file.
 
 ---
 
+## 2026-07-21 (item 83): `mark_shown` + `log_viewed` ADDED (INTENT); collectables ship
+
+Two new INTENT events for the marks system ("Your log"). No existing event
+changes name, props, or emitter, so every current series stays comparable
+except as noted below.
+
+- **`mark_shown`**: props `{ mark, trigger: "submit" | "log", reports }`. Fires
+  on the impression that FOLLOWS a deliberate act (submitting a review, or a
+  dwell-qualified view of the log), never on a fetch settle. INTENT, not SYSTEM,
+  for that reason.
+- **`log_viewed`**: props `{ reports, spots_known, marks }`. Dwell-gated via
+  `lib/useGenuineView`, same as `reviews_viewed`. Means "someone actually looked
+  at their log", not "the account sheet mounted".
+
+Neither event carries a rating and neither ever will: rewarding sentiment is the
+FTC line (16 CFR Part 465), and `deriveMarks`/`confirmation` do not receive a
+rating value at all. Both are gated behind the `collectables` kill switch
+(100%, default ON, no A/B per the DAU-100 directive), so an explicit PostHog
+disable stops them.
+
+**Comparability:**
+- **`spot_viewed` and `conditions_viewed` are expected to RISE for SIGNED-IN
+  users from 2026-07-21, as a mechanic effect and not a behaviour change.** Two
+  marks ("Scouted" at 10 spots, "Around the bay" at 5 regions) are earned by
+  dwell-qualified spot views, which gives a signed-in user a reason to open
+  spots they would otherwise skip. The owner accepted this knowingly, because an
+  empty log for ~99% of accounts is the worse failure. **From this date,
+  retention and engagement reads that use either series must segment signed-in
+  from anonymous**, or the anonymous baseline will look like it declined
+  relative to a total that grew for a mechanical reason. The dwell gate
+  (`useGenuineView`, unchanged) is what keeps this bounded: a scroll-past still
+  does not count.
+- `review_submitted` may rise on emphasis alone: the post-submit receipt became
+  a reward moment. Same event, same props, more reason to reach it. No control
+  arm exists by design.
+- Nothing is discontinuous for anonymous users; they see none of this.
+
+**Safety guardrail to watch, not to optimise:** `spot_action{action:"directions"}`
+per spot open. The design deliberately rewards nothing about getting on the
+water, so a step change UP after this ship would be evidence we built an
+inducement by accident. Watching it is not the same as making it a goal (the
+standing "directions is not a conversion goal" directive stands).
+
 ## 2026-07-21: `spot_action` loses `action: "photos"` (removed); CTA row re-ordered
 
 Owner direction: the **Photos** button is gone from the spot sheet. It opened a

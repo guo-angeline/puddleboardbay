@@ -6,6 +6,8 @@ import { trackIntent } from "@/lib/analytics";
 import { useAccount } from "@/lib/useAccount";
 import { MAX_DISPLAY_NAME } from "@/lib/account/displayName";
 import type { Spot } from "@/lib/types";
+import { useKillSwitch } from "@/lib/experiments";
+import { DISCLOSURE } from "@/lib/markCopy";
 
 // Item 43: the review submit form. Two things here are legally load-bearing and
 // must not be "simplified" later:
@@ -20,7 +22,7 @@ import type { Spot } from "@/lib/types";
 
 // Identifies the exact published text. Bump both together whenever Part 1 of
 // docs/legal/ugc-contributor-terms.md changes in substance.
-const TERMS_HASH = "ugc-v1.2-2026-07-21";
+const TERMS_HASH = "ugc-v1.3-2026-07-21";
 
 export default function ReviewForm({
   spot,
@@ -31,6 +33,8 @@ export default function ReviewForm({
   onSubmitted: (status: "pending" | "published") => void;
   onCancel: () => void;
 }) {
+  // Item 83: the disclosure appears only when marks are actually being given.
+  const collectablesOn = useKillSwitch("collectables");
   const { displayName, saveDisplayName } = useAccount();
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState("");
@@ -151,6 +155,13 @@ export default function ReviewForm({
           </p>
         </>
       )}
+
+      {/* Item 83: the incentive disclosure. It sits where the incentive is
+          acting on the reader (at the point of writing), not buried in the
+          terms, because that is what FTC guidance on incentivised reviews
+          expects. It is also literally true: the derivation cannot read a
+          rating (lib/marks.ts). */}
+      {collectablesOn && <p className="mt-3 text-xs text-(--muted)">{DISCLOSURE}</p>}
 
       {/* Assent: unchecked by default, directly above submit, link inside the label. */}
       <label className="mt-3 flex items-start gap-2 text-sm text-(--dark)">

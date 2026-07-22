@@ -114,7 +114,14 @@ export type IntentEventName =
   // reviews_viewed is dwell-gated, never a fetch settle.
   | "review_form_opened"
   | "review_submitted"
-  | "reviews_viewed";
+  | "reviews_viewed"
+  // Item 83: collectables. Both INTENT: `mark_shown` fires on the impression
+  // that FOLLOWS a deliberate act (a submit, or opening the log), never on a
+  // fetch settle; `log_viewed` is dwell-gated like reviews_viewed. Neither
+  // carries a rating, and neither ever will: rewarding sentiment is the FTC
+  // line (16 CFR Part 465) and the derivation cannot read one.
+  | "mark_shown"
+  | "log_viewed";
 
 export type EventName = SystemEventName | IntentEventName;
 
@@ -211,6 +218,11 @@ export interface EventPropMap {
   review_form_opened: { spot_id: number; region: string };
   review_submitted: { spot_id: number; region: string; rating: number; has_text: boolean };
   reviews_viewed: { spot_id: number; region: string; count: number };
+  // `mark` is the MarkId; `trigger` says which surface showed it. `reports` is
+  // the contributor's published count at that moment, so adoption can be read
+  // without joining back to Supabase.
+  mark_shown: { mark: string; trigger: "submit" | "log"; reports: number };
+  log_viewed: { reports: number; spots_known: number; marks: number };
   email_capture_submitted: {
     platform: OptInPlatform;
     trigger: OptInTrigger | "push_denied";

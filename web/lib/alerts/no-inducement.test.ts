@@ -182,6 +182,13 @@ describe("item 34: alert copy cannot read as an instruction to launch", () => {
       "lib/email/templates.ts",
       "app/api/cron/send-reminders/route.ts",
       "components/AlertInterstitial.tsx",
+      // Item 83: the collectables copy. A collection is a WORSE inducement
+      // surface than a push line if it ever tells someone to go paddle,
+      // because a push expires and a collection sits there accumulating.
+      "lib/markCopy.ts",
+      "lib/marks.ts",
+      "components/MarkMoment.tsx",
+      "components/YourLog.tsx",
     ];
     for (const f of PROSE_MODULES) {
       const literals = asProse(read(f)).match(/"[^"]{12,}"|`[^`]{12,}`/g)?.join(" ") ?? "";
