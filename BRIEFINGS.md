@@ -1,3 +1,17 @@
+# 2026-07-22: San Diego is live, and it found a hole in the differentiator
+
+**Shipped.** 16 San Diego spots (165 total). 5 paddle launches plus the 11 ramps you asked to include, La Jolla Shores carrying an explicit surf caveat, Cardiff excluded.
+
+**The part worth your attention is not the spots.** All 16 were marked tide sensitive, and the tide station list stopped at Port San Luis. So every San Diego spot, **and the 4 LA spots that went live two days ago**, showed "no tide station near this spot". Conditions is the product's differentiator and it was dark on the whole new region, in production, for two days.
+
+Every gate passed while that was true. Lint, 582 tests, the build, the LA deploy. It surfaced only because a page got read after it rendered. Now fixed: 13 stations pulled from NOAA's own metadata and each confirmed live, a proxy validator that no longer silently rejects Mission Bay's non-numeric station ids, and a test that fails if a tide-sensitive spot has no station in range.
+
+**The transferable lesson:** a boolean that gates a feature is a claim, and nothing was testing that we could honour it. When coverage expands, ask what quietly degrades, not just what breaks.
+
+**Method upgrade, from your challenge.** You asked whether anything more sophisticated had been tried. It had not. Google Places is unusable here on licensing, not capability, but **public-domain USGS aerial imagery is**, and it read four of the five coordinates you were asked to look up. Your lookup list should get shorter from here.
+
+**Your move:** nothing on San Diego. D31 (form the LLC) is still open and still the only thing gating v3 recognition work.
+
 ## 2026-07-22 · Studio loop STOPPED: backlog dry (wrap-up across 7 items)
 
 **Your move.**

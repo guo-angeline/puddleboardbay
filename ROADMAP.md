@@ -883,9 +883,25 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 **Acceptance:** a spot outside the Bay Area can be added with a valid region; the site title, description, keywords, tagline and `<h1>` no longer claim a coverage area the data contradicts; the region filter still fits at 390px without wrapping; `npm test`, lint and build pass; no existing `lat`/`lng` changes.
 
-## 94. [blocked(owner-lookup)] San Diego ingest from CCC YourCoast: 6 paddle-specific candidates, and CCC's fee field already caught lying
+## 94. [done] San Diego ingest: 16 spots live, and the tide fix the batch exposed (deployed 2026-07-22, 297c367)
 
-**Owner-directed 2026-07-22, after LA shipped.** Full analysis and lookup list: `reports/sd-ingest-candidates-2026-07-22.md`.
+**Shipped 165 records total.** 5 paddle launches (El Carmel Point, Playa Pacifica, Crown Cove, Agua Hedionda, La Jolla Shores) + the 11 boat ramps the owner asked to include. Cardiff State Beach excluded as recommended.
+
+**The method changed mid-item, because the owner asked "have you tried something more sophisticated" and the honest answer was no.** Google Places was ruled out on licensing (its terms bar use near a non-Google map and cap coordinate caching at 30 days; this app is Leaflet + CARTO and stores coordinates permanently). **USGS aerial imagery, public domain, is the answer and should have been first.** Every dataset here publishes a *site locator*; a put-in is a physical feature you can see. Four of the five coordinates the owner was asked to look up were readable off imagery in about a minute each. **Reach for imagery before asking a human to look something up.**
+
+**`has_fee` is deliberately asymmetric, and this is the durable rule.** CCC's `FEE` was caught wrong at Agua Hedionda (a Carlsbad permit is required). So CCC `Yes` -> `true`, CCC `No` -> `null`, never `false`. We do not tell someone a launch is free on the authority of a field that has already lied in exactly that direction.
+
+**THE FINDING THAT MATTERED MOST WAS NOT IN THE SPEC: 20 spots were asserting tide sensitivity while the conditions engine ran blind on them.** Every SoCal spot is `tide_sensitive: true`, and `TIDE_STATIONS` stopped at Port San Luis, so all 16 San Diego spots **and the 4 LA spots shipped two days earlier** resolved "no tide station near this spot". The differentiator was dark on the entire new region and **every gate passed**: lint, 582 tests, build, and the LA deploy. Nothing tied the flag to the coverage it implies. Found only by reading a rendered page.
+
+- 13 SoCal stations added from NOAA's own `tidepredictions` metadata, each confirmed to return hi/lo from the same endpoint `/api/tides` proxies. **No pre-existing spot changes station**, so no comparability break.
+- **`/api/tides` validated `station` as `\d{6,8}`.** Mission Bay is served by *subordinate* stations whose ids are not numeric (`TWC0413`), so the regex would have 400'd seven of these spots into silence with no error anyone would see. Replaced with an allowlist built from `TIDE_STATIONS`, which is **strictly tighter** than the regex it replaces.
+- A coverage test now fails if any `tide_sensitive` spot has no station in range, and it was **proven to bite**: removing the new stations fails it by spot name.
+
+**The lesson, and it generalizes past tides:** a boolean that gates a feature is a claim, and a claim needs a test that it can be honoured. `tide_sensitive` joins the list of load-bearing booleans (2026-07-16 sweep) that were wrong in a way no gate could see. **Ask what silently degrades when a region expands, not just what fails.**
+
+<details><summary>Original analysis and lookup list (superseded by the above)</summary>
+
+Full analysis: `reports/sd-ingest-candidates-2026-07-22.md`.
 
 **San Diego is the better county, as the statewide inventory predicted.** 197 CCC records, 65 paddle-plausible, 17 with an explicit launch type, and **6 paddle-specific** (hand / kayak / small-craft) against LA's 2. Most sit in **Mission Bay**, which is protected, purpose-built for watersports, and the densest paddle water in the state. None is within 500 m of an existing spot.
 
@@ -904,6 +920,8 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 **The 11 boat ramps** (6 in Mission Bay, 5 on San Diego Bay, plus Oceanside Harbor) are all protected water, but **the owner's LA precedent was to exclude the Fiji Way ramp** because a trailer ramp is not obviously somewhere a paddler is welcome. That precedent should settle these as a category.
 
 **Acceptance:** only owner-confirmed records ship; `FEE` is verified per record or stored `null`; each coordinate is a put-in, not CCC's locator; `BT_FACIL_TYPE` used verbatim; `precompute_gridpoints.py` re-run in the same change (item 90's lesson); `spots.json` edited text-level, never reserialized (item 90's other lesson); no existing `lat`/`lng` touched.
+
+</details>
 
 ## 90. [done] LA County ingest: 6 spots live, first coverage outside the Bay Area (deployed 2026-07-22, 67d150a)
 
