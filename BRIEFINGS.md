@@ -1,3 +1,15 @@
+## 2026-07-22 · Studio iteration: item 87 (one item, shipped)
+
+**Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.
+
+**Shipped.** Both follow-ups from the item-85 re-gate (`a89f037`).
+
+**The a11y one is a good example of a fix creating a defect.** Removing the marks sentence in item 85 also removed the thing that made the Contributor Terms link an acceptable touch target: WCAG's "inline" exception applied precisely because the link sat inside a sentence. Alone in its own paragraph it was a 16px tall tap target. It is now a measured 24px, checked in the browser on prod rather than inferred from the CSS classes.
+
+**The second one I did not leave as a doc change.** The item asked to reword item 85's recorded rationale, which was broad enough that, read literally, it would have authorised deleting the writer-side disclosure too. I narrowed the wording, and then made the dependency executable: the three artifacts the narrower position rests on are now asserted in a test. Prose-only dependencies are exactly how the item-83 reader disclosure ended up unguarded and got deleted without breaking anything.
+
+**Queue.** Items 81 and 76 remain `[ready]`. The 30-minute cron is running.
+
 ## 2026-07-22 · Studio iteration: item 86 (one item, shipped)
 
 **Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.

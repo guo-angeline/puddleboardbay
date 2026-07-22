@@ -459,13 +459,15 @@ Verified:
 
 **Shipped 2026-07-22.** All three `SpotList` card sites now gate on `useKillSwitch("reviews")`, matching `SpotDrawer`. **Verified behaviourally, not just structurally**, by forcing the flag off locally (reverted immediately after): Rollins Lake renders **3.9 with no attribution** when off, and **4.2 "our take, combining our own rating with 2 paddler reviews"** when on. Guard asserts both consumers read the same flag and that no ungated survivor remains. The pre-existing "gives EVERY card the review totals" guard asserted the old literal, so its intent was preserved and its string updated rather than deleted, and the per-card count stays owned by that one test rather than duplicated.
 
-## 87. [in-progress] 2026-07-22T09:04:13-07:00 Two small follow-ups from the item-85 lawyer re-gate
+## 87. [done] Two small follow-ups from the item-85 lawyer re-gate (deployed 2026-07-22, a89f037)
 
 **From the same re-gate (2026-07-22). Both minor, both cheap.**
 
 **(a) The now-bare Contributor Terms link fails WCAG 2.2 target size.** Item 85 removed the sentence around the link, so the anchor became the only content of its own paragraph at `text-xs` with no padding, roughly a 16px-tall hit area (`components/ReviewsSection.tsx:207-213`). WCAG 2.2 SC 2.5.8 wants 24x24 CSS px. The "inline" exception used to cover it precisely *because* it sat inside a sentence, and that sentence is what item 85 deleted. This repo already treats target size as live (`components/zoom-control-target-size.test.ts`). Fix: make the anchor `inline-block` with vertical padding so the box clears 24px, e.g. add `inline-block py-1`.
 
 **(b) Amend item 85's recorded rationale, it is broader than the position that actually holds.** As written it says the connection "fails the Endorsement Guides materiality test in the direction of 'disclosure not required'", which taken literally would authorise deleting the WRITER-side disclosure too. The defensible position is narrower and depends on three artifacts continuing to exist: the `{DISCLOSURE}` rendered above the assent box (`components/ReviewForm.tsx:164`), the string in `lib/markCopy.ts:70-71`, and the marks paragraph in Contributor Terms section 2. Reword to "disclosed at the point of writing and in the linked terms, so no in-line reader disclosure is required", and name those three as not removable without a fresh gate. Doc-only, no code change.
+
+**Shipped 2026-07-22.** (a) `inline-block py-1` takes the anchor to a measured **24px** box, verified in the browser locally and on prod rather than inferred from the classes. (b) Rationale narrowed in item 85 above. **Deliberately NOT left doc-only:** the three artifacts the narrower position depends on are now asserted in `components/reviews-killswitch.test.ts`, because a dependency recorded only in prose is exactly how the item-83 reader disclosure came to sit unguarded and get deleted without breaking a test.
 
 ## 81. [ready] No `<h1>` anywhere on the site: every page's heading outline starts at `<h2>` (SEO + a11y)
 
