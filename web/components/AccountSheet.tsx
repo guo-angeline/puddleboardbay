@@ -48,6 +48,9 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
   const collectablesOn = useKillSwitch("collectables");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [name, setName] = useState(displayName);
+  // Whether the user has typed in the field yet, so seeding it from the server
+  // can never overwrite something they are in the middle of writing.
+  const nameEdited = useRef(false);
   const [savingName, setSavingName] = useState(false);
   const [nameMsg, setNameMsg] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -73,7 +76,14 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
     fetch("/api/account")
       .then((r) => (r.ok ? r.json() : null))
       .then((j: Summary | null) => {
-        if (active && j) setSummary(j);
+        if (!active || !j) return;
+        setSummary(j);
+        // Seed the input from the SERVER's value, not from the auth hook.
+        // This sheet calls useAccount() itself, and that instance has not
+        // resolved the user on first render, so `useState(displayName)`
+        // captured "" and the field showed the "Not set" placeholder to
+        // someone who does have a name set. Reported 2026-07-22.
+        if (!nameEdited.current) setName(j.displayName ?? "");
       })
       .catch(() => {});
     return () => {
@@ -109,7 +119,10 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
     onClose(); // account gone; header returns to the signed-out state
   }
 
-  const nameChanged = name.trim() !== displayName;
+  // Compare against the server value once it has arrived; the auth hook's copy
+  // can still be "" while this sheet is rendering.
+  const serverName = summary?.displayName ?? displayName;
+  const nameChanged = name.trim() !== serverName;
 
   return (
     <>
@@ -141,7 +154,10 @@ export default function AccountSheet({ onClose }: { onClose: () => void }) {
               id="account-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value.slice(0, MAX_DISPLAY_NAME))}
+              onChange={(e) => {
+                nameEdited.current = true;
+                setName(e.target.value.slice(0, MAX_DISPLAY_NAME));
+              }}
               maxLength={MAX_DISPLAY_NAME}
               autoComplete="nickname"
               placeholder="Not set"

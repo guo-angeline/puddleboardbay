@@ -196,6 +196,45 @@ Not user-visible today (native is gated on Apple Developer Program enrollment, i
 
 ---
 
+## Owner items, added 2026-07-21 (rating + reviews copy removal; both [ready], queued top-most on purpose)
+
+## 84. [ready] Drop the "Paddle score" label next to the rating number
+
+**Owner-directed 2026-07-21.** Remove the "Paddle score" wording that sits beside the rating numbers.
+
+**Where it lives:** `components/SpotRating.tsx` renders it twice, and the two are not the same thing:
+- **line 34**, the visible `aria-hidden` label under/next to the number. This is the one the owner means.
+- **line 30**, inside the screen-reader string: `" out of 5, Paddle score combining our own rating with {n} paddler {reviews}"`. This is the accessible description, not visible copy.
+
+**Two things to decide, do not just delete both strings:**
+1. **Keep the accessible description meaningful.** If line 30 loses the whole phrase, a screen-reader user hears a bare "4.6 out of 5" with no idea what it blends. Drop the brand term but keep the sense, e.g. `"4.6 out of 5, combining our own rating with 3 paddler reviews"`.
+2. **The label was doing provenance work.** Per the comment at `SpotRating.tsx:10`, "Paddle score" specifically marks the BLENDED number (owner rating + paddler reviews) as ours rather than a pure crowd rating. With no label, a blended number can read as if it were purely user-generated. That is the owner's call, but make it knowingly; if the label goes, consider whether the blend is disclosed anywhere else.
+
+**Guards that will fail and must be updated deliberately (not deleted wholesale):** `components/reviews-guards.test.ts` asserts the label at **lines 179, 189, 203, 208** (`expect(blended).toContain("Paddle score")` and two `aria-hidden ... Paddle score` matchers). Rewrite them to assert the NEW intended state so the guard still bites. Also update the now-stale comments referencing the label in `SpotDrawer.tsx:465-468` and `SpotRating.tsx:10`.
+
+**Acceptance:** no visible "Paddle score" text anywhere; the screen-reader description still explains what the number is; guards updated to the new state and passing; verified at 390px and desktop on a spot with reviews and one without. No em dashes.
+
+## 85. [ready] Remove the contributor-marks line from the paddler reviews section (NEEDS A LAWYER RE-GATE FIRST)
+
+**Owner-directed 2026-07-21.** Remove this from the reviews section (`components/ReviewsSection.tsx:182-189`):
+
+> "Contributors get small participation marks. They are private, have no cash value, and never depend on what a review says. [Contributor Terms]"
+
+**Flagging this before it is actioned, because it is not decorative copy.** The code comment directly above it (`ReviewsSection.tsx:178-180`) records why it shipped, as part of item 83: *"the reader of a review, not just its writer, should know contributors get something. Weak material connection (private, no cash value, never conditioned on opinion), so one quiet line is proportionate."* **"Material connection" is FTC Endorsement Guides language.** This line is a disclosure to the *reader* that the people writing reviews receive something (participation marks). It came out of the collectables legal gate (`199cfa7`, "legal gate fixes, needs-changes -> all eight actions done").
+
+Deleting it while the app still awards marks for contributing removes a disclosure that was added on purpose. That may be perfectly fine, the connection really is weak (private, no cash value, not conditioned on opinion), but it is a compliance decision, not a copy tweak.
+
+**Required first step: run the `lawyer` agent on this removal.** Give it the item-83 context and ask specifically whether the disclosure can be dropped from the reviews surface given marks are private, valueless and unconditioned, or whether it must merely be relocated.
+
+**Options for the lawyer to weigh, cheapest first:**
+- Remove entirely (the owner's request), if the material connection is judged too weak to require reader-side disclosure.
+- Keep the disclosure but move it off the reviews list, e.g. only on the Contributor Terms page and in the review form (where the writer already sees it).
+- Shorten to a single short clause plus the existing Contributor Terms link.
+
+**Also note:** the reviews guards reference contributor terms (`reviews-guards.test.ts:45`, and `:98`/`:306` cover the `/contributor-terms` page). Removing the paragraph must not silently weaken those guards; update them to match whatever the lawyer approves, and leave the `/contributor-terms` page itself in place.
+
+**Acceptance:** the lawyer verdict is recorded (in DECISIONS.md if it escalates); the reviews section matches the approved outcome; guards updated to assert the new intended state and still passing; the review form's own disclosure and the Contributor Terms page are unaffected unless the lawyer says otherwise.
+
 ## Owner items, added 2026-07-21 (header polish + label clarity; both [ready], queued top-most on purpose)
 
 ## 77. [ready] Header: make the account/Sign-in button visually consistent with the Feedback button beside it
