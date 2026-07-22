@@ -643,4 +643,18 @@ Build prerequisites before item 44 can DEPLOY a working sign-in: (1) Google OAut
 - Options: **(a)** keep 5; **(b)** lower the weight (3 reaches a 50/50 split at 3 reviews instead of 5); **(c)** keep 5 but surface the paddler average on the CARD too whenever it is more than a point below the blended score (the gate's suggested mitigation, ~20 lines).
 - Recommended: **(c)**, cheap and targeted at the only case that actually worries me.
 
+### Appended 2026-07-21 (item 83 legal gate): the same question, with more volume behind it
+
+The collectables gate returned `needs-changes` (all findings fixed before deploy) but escalated one thing, and asked for it to land here rather than as a new decision, because it is D30 Q1 with a second input.
+
+You are now deliberately increasing the volume of contributor prose about named private businesses (marinas, private launches, paddle shops), via a mark called "In your own words" that exists specifically to reward writing sentences. At the same time you publish a score you author part of (D30 itself). Neither change alone moves the legal posture. Together they raise the frequency of the risk the Contributor Terms already name as the largest un-researched item in the document: defamation and anti-SLAPP exposure from hosting reviews of named businesses. D25 Q2 (LLC) and Q3 (insurance) are both still deferred, so it lands on you personally.
+
+Why this is a counsel question and not one I should answer: anti-SLAPP coverage is state by state, there is a federal-circuit split on whether a state anti-SLAPP motion is even available in federal court, and none of that was verified. The realistic downside stays a demand letter rather than a judgment, but the cost of winning a meritless speech suit in a weak anti-SLAPP state does not scale down with your traffic.
+
+- **(a)** Proceed as planned, revisit when D25 Q2/Q3 are answered.
+- **(b) [recommended]** Proceed, and bound the exposure now by taking the one cheap structural step: form the LLC before contributor prose volume grows. It is the only action that helps against every version of this risk and costs nothing to reverse.
+- **(c)** Engage a licensed attorney on the combined host-versus-co-author and anti-SLAPP question, answering D30 Q1 and this at once.
+
+Also recorded, so it is not re-litigated later: **marks staying private is a legal constraint, not a v1 scoping choice.** The day a mark is visible to a reader it becomes site-conferred credibility attached to third-party speech, which re-opens Q1 directly and adds FTC exposure. Any future public display needs its own gate.
+
 Answer:

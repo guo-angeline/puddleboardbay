@@ -59,6 +59,13 @@ export const LOG_LABELS = {
 /**
  * Sits above the submit button. The FTC expects a reader to learn that a review
  * followed an incentive, at the place the incentive is acting on them.
+ *
+ * The wording conditions on OPINION, not on content, and that distinction is
+ * load-bearing. The first draft said "never depend on what you say", which was
+ * not true: "In your own words" fires only if you wrote sentences, so a mark
+ * does depend on what you say, just never on your view of a spot. An
+ * over-broad promise in published terms is the same Section 5 problem as an
+ * under-disclosed one.
  */
 export const DISCLOSURE =
-  "We give marks for taking part. They never depend on what you say or how you rate a spot.";
+  "We give marks for taking part. They never depend on your opinion of a spot or on how you rate it.";

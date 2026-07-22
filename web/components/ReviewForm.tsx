@@ -161,7 +161,7 @@ export default function ReviewForm({
           terms, because that is what FTC guidance on incentivised reviews
           expects. It is also literally true: the derivation cannot read a
           rating (lib/marks.ts). */}
-      {collectablesOn && <p className="mt-3 text-xs text-(--muted)">{DISCLOSURE}</p>}
+      {collectablesOn && <p className="mt-3 text-sm text-(--dark)">{DISCLOSURE}</p>}
 
       {/* Assent: unchecked by default, directly above submit, link inside the label. */}
       <label className="mt-3 flex items-start gap-2 text-sm text-(--dark)">

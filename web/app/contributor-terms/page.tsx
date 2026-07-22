@@ -16,8 +16,9 @@ export const metadata: Metadata = {
 // they actually saw and accepted.
 const VERSION =
   "Version 1.3. Last updated: July 21, 2026. " +
-  "(v1.3: Section 2 gained a clause on contribution marks, which are given for taking part and " +
-  "never for what a review says. " +
+  "(v1.3: Section 2 gained a clause on contribution marks, given for taking part and never for " +
+  "your opinion, and Section 5 replaced open-ended rejection discretion with a written, " +
+  "content-neutral list of the only reasons we reject a review. " +
   "v1.2: Section 6.4 amended because the score shown for a spot is now computed by us, blending " +
   "our own rating with contributor ratings, rather than being a contributor-only average. " +
   "v1.1: Section 6.1 amended so a star rating with no text publishes immediately, without a byline. " +
@@ -119,9 +120,9 @@ export default function ContributorTermsPage() {
               disclose it clearly in the review itself.
             </p>
             <p style={pStyle}>
-              <strong>Marks are for taking part, never for what you say.</strong> We give small marks
+              <strong>Marks are for taking part, never for your opinion.</strong> We give small marks
               for contributing, and they are shown only to you. They are awarded on whether you took
-              part, never on what you wrote or how you rated a spot, in either direction. They have
+              part, never on your opinion of a spot or how you rated it, in either direction. They have
               no cash value, they buy nothing, and they do not make your review more or less likely
               to be published. Marks are not payment, and a review you submit is still your own
               honest first-hand account.
@@ -195,8 +196,14 @@ export default function ContributorTermsPage() {
               factual claims you make about third parties.
             </p>
             <p style={pStyle}>
-              We may reject any submission for any reason or no reason, and we are under no
-              obligation to publish or to explain a rejection.
+              <strong>Why we reject a review, and why we do not.</strong> Because taking part earns
+              marks (section 2.5), our reasons for rejecting have to be written down rather than left
+              open. We reject a submission only because it: is not based on your own first-hand
+              experience; has an undisclosed material connection; contains abuse, harassment, or
+              slurs; contains another person&rsquo;s personal information; accuses someone of a crime
+              or a regulatory violation; is off-topic or spam; or is illegible. <strong>We do not
+              reject a review for being critical or negative, and a rejection never depends on your
+              rating.</strong> We are under no obligation to explain an individual rejection.
             </p>
             <p style={pStyle}>
               <strong>Honest reviews of us are welcome.</strong> Nothing in these terms restricts or

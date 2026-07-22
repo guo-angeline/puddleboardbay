@@ -124,7 +124,10 @@ describe("the reward cannot depend on what someone said (16 CFR Part 465)", () =
   });
 
   it("discloses the incentive in the contributor's own words", () => {
-    expect(DISCLOSURE).toContain("never depend on what you say");
+    // Conditions on OPINION, not on content: "In your own words" does depend
+    // on what you wrote, so the broader claim would have been false.
+    expect(DISCLOSURE).toContain("never depend on your opinion of a spot");
+    expect(DISCLOSURE).not.toContain("what you say");
   });
 });
 

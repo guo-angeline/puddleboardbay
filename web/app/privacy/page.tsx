@@ -21,7 +21,11 @@ const LAST_UPDATED = "July 22, 2026";
 // - Supabase tables: supabase/migrations/*.sql
 // - PostHog config (autocapture, pageview/pageleave, localStorage+cookie
 //   persistence, person profiles via $set_once): components/PostHogProvider.tsx
-// - localStorage keys: ptw-favorites, ptw-internal
+// - localStorage keys: ptw-favorites, ptw-internal, ptw-recent, ptw-explored
+//   (ptw-explored is a per-spot browsing record with region, written on a
+//   dwell-qualified conditions view and gated on the `collectables` kill
+//   switch. It never leaves the device, but it IS browsing history by
+//   category, so it is disclosed. The lawyer gate flagged its absence.)
 // - Geolocation never leaves the device: HomeClient reads coords into state for
 //   distanceMiles() only; no track*/fetch call carries lat/lng. Do not weaken
 //   that without changing this page in the same commit.
@@ -178,6 +182,12 @@ export default function PrivacyPage() {
               <strong>Your location stays on your device.</strong> If you use &quot;Near me&quot; and allow
               location access, your coordinates are used inside your browser to sort spots by distance. They
               are never sent to us, never stored, and never attached to an analytics event.
+            </p>
+            <p style={{ marginTop: "0.75rem" }}>
+              <strong>What your browser remembers about your reading.</strong> Your browser keeps a list of the
+              spots you saved, the ones you opened recently, and the ones you read the conditions for. That
+              list is what fills in your log if you have an account. It stays in your browser, it is never
+              sent to us, and clearing your browser storage clears it.
             </p>
           </Section>
 

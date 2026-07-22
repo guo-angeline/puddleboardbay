@@ -100,8 +100,21 @@ describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
     // v1.3 (2026-07-21, item 83): marks are an incentive to contribute, so the
     // terms must say what they are given for and that it is never sentiment.
     // Shipping the incentive without the clause is the FTC exposure.
-    expect(terms).toContain("Marks are for taking part, never for what you say");
-    expect(read("../lib/markCopy.ts")).toContain("never depend on what you say");
+    expect(terms).toContain("Marks are for taking part, never for your opinion");
+    // The rejection standard is the FTC-load-bearing half of v1.3. Marks are
+    // conditioned on a review NOT being rejected, so open-ended "any reason or
+    // no reason" discretion behind that reward is an implied sentiment
+    // condition (16 CFR Part 465), whatever the code does or does not read.
+    // The enumerated list and the never-for-being-negative promise are what
+    // close it, and both must survive any copy edit.
+    expect(terms).toContain("We do not");
+    expect(terms).toMatch(/reject a review for being\s+critical or negative/);
+    expect(terms).toMatch(/rejection never depends on your\s+rating/);
+    expect(terms).not.toContain("any reason or no reason");
+    for (const ground of ["first-hand", "material connection", "slurs", "off-topic or spam"]) {
+      expect(terms, `rejection ground missing: ${ground}`).toContain(ground);
+    }
+    expect(read("../lib/markCopy.ts")).toContain("never depend on your opinion of a spot");
     expect(terms).toContain("The score shown for a spot is computed by us");
     expect(terms).not.toContain("automated calculation from");
   });

@@ -53,6 +53,31 @@ describe("privacy policy matches what the code actually does", () => {
     }
   });
 
+  it("discloses every localStorage key that records what you looked at", () => {
+    // The policy opens "Only these six things", so a device-local record of
+    // which spots you read is a claim the page has to cover. `ptw-explored` is
+    // browsing history by category even though it never leaves the device, and
+    // the lawyer gate (2026-07-21) caught its absence. Sweep the tree for
+    // reading-history stores rather than trusting a remembered list.
+    expect(policy).toMatch(/what your browser remembers about your reading/i);
+    expect(policy).toMatch(/never sent to us/i);
+
+    const READING_STORES = ["ptw-explored", "ptw-recent"];
+    const src = READING_STORES.map((k) => {
+      const hit = ["lib/exploredSpots.ts", "lib/recentSpots.ts"]
+        .map((f) => read(f))
+        .find((body) => body.includes(k));
+      expect(hit, `no module defines ${k}; update this guard if it was renamed`).toBeTruthy();
+      return k;
+    });
+    expect(src).toHaveLength(READING_STORES.length);
+
+    // And the comment block at the top of the page, which is what a future
+    // editor reads before changing a claim, must list them too. That block is
+    // a comment, so it lives in the raw source, not in the prose view.
+    expect(policySrc).toContain("ptw-explored");
+  });
+
   it("names every third party that actually processes data", () => {
     // If you add a subprocessor, name it on the page in the same commit.
     for (const name of ["Vercel", "Supabase", "PostHog", "Resend", "National Weather Service"]) {

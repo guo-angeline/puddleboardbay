@@ -150,7 +150,7 @@ export default function SpotList({
               <SpotCard
                 spot={spot}
                 crowd={aggregates[spot.id]}
-                reported={reported.has(spot.id)}
+            reported={reported.has(spot.id)}
                 selected={selected?.id === spot.id}
                 onClick={() => onSelect(spot, "list")}
                 distance={distanceMap?.[spot.id]}
@@ -177,7 +177,7 @@ export default function SpotList({
               <SpotCard
                 spot={spot}
                 crowd={aggregates[spot.id]}
-                reported={reported.has(spot.id)}
+            reported={reported.has(spot.id)}
                 selected={selected?.id === spot.id}
                 onClick={() => {
                   trackIntent("recent_spot_clicked", { spot_id: spot.id, region: spot.region });
@@ -200,7 +200,7 @@ export default function SpotList({
           <SpotCard
             spot={spot}
             crowd={aggregates[spot.id]}
-                reported={reported.has(spot.id)}
+            reported={reported.has(spot.id)}
             selected={selected?.id === spot.id}
             onClick={() => onSelect(spot, "list")}
             distance={distanceMap?.[spot.id]}

@@ -80,12 +80,18 @@ export default function YourLog({
               className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                 has ? "border-(--accent) text-(--accent)" : "border-(--border) text-(--muted)"
               }`}
-              // The criterion is the accessible description either way, so a
-              // screen reader hears what a mark is for, not just its name.
               title={m.criterion}
             >
               <span className={has ? "font-semibold" : undefined}>{m.name}</span>
-              {!has && <span className="ml-1.5 opacity-80">{m.criterion}</span>}
+              {/* An unearned mark shows its criterion in the open. An earned one
+                  does not need the visual clutter, but `title` alone is
+                  invisible to touch users and to most screen readers, so it
+                  gets the same text via sr-only. */}
+              {has ? (
+                <span className="sr-only"> ({m.criterion}), earned</span>
+              ) : (
+                <span className="ml-1.5 opacity-80">{m.criterion}</span>
+              )}
             </li>
           );
         })}

@@ -115,6 +115,8 @@ function WindReading({ wind, isFlatwater }: { wind: WindInfo; isFlatwater: boole
 }
 
 export default function ConditionsPanel({ spot }: { spot: Spot }) {
+  // Item 83: one switch stops the marks UI and the collecting behind it.
+  const collectablesOn = useKillSwitch("collectables");
   // Wind and tide resolve independently so the wind verdict (the ~300ms dominant
   // signal) paints without waiting on the slower tide hop. Keyed slots, see above.
   const [wind, setWind] = useState<WindSlot | null>(null);
@@ -225,7 +227,12 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
       // qualifies "known" in the log. Reusing it rather than adding a second
       // observer means a spot counts only when someone actually read its
       // conditions, which is what makes casual farming cost real seconds.
-      recordExplored(spot.id, spot.region);
+      //
+      // Gated on the kill switch so switching the feature OFF stops the
+      // collecting, not just the display. Writing a per-spot browsing record
+      // while the surface that explains it is hidden is exactly the
+      // policy-versus-practice drift this repo tests for elsewhere.
+      if (collectablesOn) recordExplored(spot.id, spot.region);
     },
   });
 

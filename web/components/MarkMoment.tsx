@@ -22,7 +22,10 @@ export default function MarkMoment({ message, mark }: { message: string; mark: M
   const CIRCUMFERENCE = 94.2;
 
   return (
-    <div className="mt-2 flex items-start gap-3 rounded-lg bg-(--fill) px-3 py-2.5">
+    // role="status" because this replaces the submit confirmation: it appears
+    // with no focus change, and it carries the moderation promise, which is the
+    // one string in the flow that most needs to reach everyone (WCAG 4.1.3).
+    <div role="status" className="mt-2 flex items-start gap-3 rounded-lg bg-(--fill) px-3 py-2.5">
       {earned && (
         <svg
           width="34"

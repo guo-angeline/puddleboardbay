@@ -176,6 +176,19 @@ export default function ReviewsSection({ spot, formOpen, onCloseForm, ref }: Pro
         />
       )}
 
+      {/* Item 83: the reader of a review, not just its writer, should know
+          contributors get something. Weak material connection (private, no cash
+          value, never conditioned on opinion), so one quiet line is proportionate. */}
+      {hasReviews && collectablesOn && (
+        <p className="mt-1 text-xs text-(--muted)">
+          Contributors get small participation marks. They are private, have no cash value, and never
+          depend on what a review says.{" "}
+          <a href="/contributor-terms" target="_blank" rel="noopener noreferrer" className="underline">
+            Contributor Terms
+          </a>
+        </p>
+      )}
+
       {hasReviews && (
         <ul className="mt-2 flex flex-col gap-3">
           {reviews!.map((r) => (
