@@ -203,7 +203,7 @@ describe("Review is a primary CTA, not a stray control (item 43, restyled 2026-0
     expect(flat.split(FILL).length - 1).toBe(2);
     expect(flat).toContain(
       'className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border transition-colors" ' +
-      "style={" + FILL + "} > Review <"
+      "style={" + FILL + "} > Write a review <"
     );
   });
 
@@ -219,7 +219,7 @@ describe("Review is a primary CTA, not a stray control (item 43, restyled 2026-0
   it("pairs Share with Get directions in the bottom row, Share first", () => {
     // Match rendered labels, not prose: the section comment above these
     // buttons names them too, and would satisfy a naive indexOf.
-    expect(flat.indexOf('"Copied!" : "Share"')).toBeGreaterThan(flat.indexOf("> Review <"));
+    expect(flat.indexOf('"Copied!" : "Share"')).toBeGreaterThan(flat.indexOf("> Write a review <"));
     expect(flat.indexOf("> Get directions <")).toBeGreaterThan(flat.indexOf('"Copied!" : "Share"'));
   });
 
@@ -234,9 +234,11 @@ describe("Review is a primary CTA, not a stray control (item 43, restyled 2026-0
     }
   });
 
-  it("is labelled Review, not the old lone-button copy", () => {
-    expect(drawer).toMatch(/>\s*Review\s*</);
-    expect(section).not.toContain("Write a review");
+  it("is labelled 'Write a review', and the trigger lives only in the action row", () => {
+    expect(drawer).toMatch(/>\s*Write a review\s*</);
+    // The reviews section must not grow a second trigger: item 43 moved the
+    // lone button out of it, and two triggers would double-count the event.
+    expect(section).not.toMatch(/>\s*Write a review\s*</);
   });
 
   it("scrolls the form into view, since the trigger is not next to it", () => {

@@ -306,9 +306,9 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
     }
   }
 
-  // "Review" sits in the action row next to Share, so the tap target and the
-  // form it opens are in different places. Scroll the reviews section back into
-  // view so the form is never opened off-screen above the fold.
+  // "Write a review" sits in the action row, so the tap target and the form it
+  // opens are in different places. Scroll the reviews section back into view so
+  // the form is never opened off-screen above the fold.
   function handleReview() {
     trackIntent("review_form_opened", { spot_id: spot!.id, region: spot!.region });
     if (user) setReviewFormFor(spot!.id);
@@ -613,7 +613,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border transition-colors"
                 style={{ borderColor: "transparent", color: "#fff", background: "var(--accent)" }}
               >
-                Review
+                Write a review
               </button>
             )}
             <div className="flex gap-2">
