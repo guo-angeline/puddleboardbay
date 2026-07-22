@@ -1,3 +1,17 @@
+# 2026-07-22: the conditions panel now shows temperature, rain, and storms
+
+**Shipped item 97**, the first of the three-part conditions upgrade. Live and verified.
+
+Every spot now shows the air temperature and, when it matters, the chance of rain, both pulled from data the app was already downloading and throwing away. So this cost nothing in speed. Two of the five steps in your own decision process ("is it warm", "is it stormy") were simply missing from the panel until now.
+
+The storm piece is the one that matters for safety. Until today a thunderstorm forecast with light wind still read "Calm, good for flatwater", because the verdict only ever looked at wind speed. Now a lightning forecast shows a storm warning that overrides the calm badge, on every kind of spot. It is a keyword check on the forecast text, not a full weather-alert feed, so I have written in the code that it is a first pass and not exhaustive, to stop a later change from assuming it catches everything.
+
+I also labelled the temperature as "Air", deliberately. The app has no water temperature, and cold water, not air comfort, is what actually gets paddlers into trouble here. A bare number could be mistaken for a water reading.
+
+All of it sits behind one off switch, so if anything looks wrong you can revert the whole thing from the dashboard without a redeploy.
+
+**Your move:** nothing blocking. D32 is still open from this morning. Items 98 and 99 finish this set (tide direction, and putting the wind-direction sentence you already own in front of every visitor); 99 has a legal rewrite already specced from its gate.
+
 # 2026-07-22: a live instruction removed from the map, and the deploy guard was not running
 
 **Shipped item 102.** Four spot notes rewritten, deployed and verified.

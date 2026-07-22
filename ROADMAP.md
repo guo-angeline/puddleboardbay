@@ -210,7 +210,7 @@ Say which of 1 or 3 you recommend, and why. A recommendation with the risk named
 
 **Acceptance:** a written recommendation between options 1 and 3, with its risk named (option 2 is out of scope, see the owner directive above); the free-today findings (temperature, precipitation) confirmed against a live NWS response and either scoped or explicitly deferred with a reason; the relationship to items 61 and 53 and `nextWindow.ts` stated; a metric that would move; and the build filed as new numbered roadmap items. The lawyer gate and the per-spot geography cost move to item 93's decision point, since nothing that needs them is being built here. No em dashes.
 
-## 97. [ready] Air temperature and precipitation, from the payload already downloaded
+## 97. [done] Air temperature, precipitation and storm gating in the panel (deployed 2026-07-22, 852fd8a)
 
 Read `temperature`, `temperatureUnit`, `probabilityOfPrecipitation`, `isDaytime` off `periods[0]` in `fetchWind` (`web/lib/conditions.ts`). Zero new requests.
 
@@ -236,7 +236,7 @@ Copy: "Rising, turns to falling at {time}." / "Falling, turns to rising at {time
 
 **Acceptance:** in the bundle; the vocabulary test bites; existing degraded states (no station in range, NOAA down, no further events) unchanged; no em dashes.
 
-## 99. [blocked(item 102)] Port the existing launch-direction tip into the conditions panel
+## 99. [ready] Port the existing launch-direction tip into the conditions panel
 
 One import. The highest-value line in this whole item, because it is the closest thing the codebase has to an answer to "which way do I go so I get back safely", and today only alert enrollees (single digits) ever see it.
 
