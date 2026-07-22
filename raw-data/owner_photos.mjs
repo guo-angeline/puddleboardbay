@@ -92,7 +92,9 @@ for (const f of files) {
 
 manifest.total_with_photo = Object.keys(manifest.photos).length;
 manifest.generated = manifest.generated || "";
-const today = new Date().toISOString().slice(0, 10);
+// Local date, not toISOString(): after ~17:00 Pacific that returns tomorrow's
+// UTC date and the curation log ends up stamped a day ahead.
+const today = new Date().toLocaleDateString("en-CA");
 manifest.curation =
   (manifest.curation || "") +
   ` | ${today} owner first-party import: +${added} owner-supplied photos` +
