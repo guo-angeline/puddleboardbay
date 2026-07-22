@@ -1,3 +1,17 @@
+## 2026-07-22 · Studio iteration: item 81 (one item, shipped)
+
+**Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.
+
+**Shipped.** Every page now serves exactly one `<h1>` (`0f2ac73`). Before this, `/` and all 139 spot pages served zero.
+
+**The item told me to do the wrong thing, and its own acceptance line caught it.** The fix it prescribed was to promote the spot sheet's title from h2 to h1. That would have looked correct in React and changed nothing at all for search engines: the sheet is rendered client-side after the page loads, so it simply is not in the HTML a crawler fetches. The only heading `/spot/1` served was a screen-reader-only "More paddleboard spots in North Bay". The h1 had to come from the server, and now does.
+
+**Why this one is worth more than it looks.** The spot pages are the entire organic growth plan, and they were shipping without the strongest on-page signal a page can carry. Screen-reader users also had no top-level heading to navigate from on any of the 140 pages.
+
+**Both headings are screen-reader-only, on purpose.** On a spot page the visible title arrives with the sheet a moment later, so a visible h1 would show the name twice. On home, the wordmark is a button and the tagline is hidden below large screens, so promoting either would have produced a heading that is invisible to most users and worth little.
+
+**Queue.** Item 76 (tablet layout) is the last `[ready]` item. The 30-minute cron is running.
+
 ## 2026-07-22 · Studio iteration: item 87 (one item, shipped)
 
 **Your move.** Nothing blocking. **D31** (form the LLC) is still the only open decision.

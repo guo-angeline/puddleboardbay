@@ -471,7 +471,7 @@ Verified:
 
 **Shipped 2026-07-22.** (a) `inline-block py-1` takes the anchor to a measured **24px** box, verified in the browser locally and on prod rather than inferred from the classes. (b) Rationale narrowed in item 85 above. **Deliberately NOT left doc-only:** the three artifacts the narrower position depends on are now asserted in `components/reviews-killswitch.test.ts`, because a dependency recorded only in prose is exactly how the item-83 reader disclosure came to sit unguarded and get deleted without breaking a test.
 
-## 81. [ready] No `<h1>` anywhere on the site: every page's heading outline starts at `<h2>` (SEO + a11y)
+## 81. [done] Every page now serves exactly one `<h1>` (deployed 2026-07-22, 0f2ac73)
 
 **Found by the 2026-07-21 radical journey harness.** Measured with a direct fetch, **zero `<h1>` elements** on the home page and on spot pages, on **both local and production**:
 
@@ -492,6 +492,12 @@ Verified:
 - Keep exactly one `<h1>` per rendered page in every state (home, home-with-drawer, standalone spot, 404).
 
 **Acceptance:** `/` and `/spot/<id>` each expose exactly one `<h1>` in the served HTML (verify by fetch, not by inspecting React), the dialog's `aria-labelledby` still resolves, heading order is h1 -> h2 with no skips, and the 139 spot pages all carry the spot name as their `<h1>`. Add a test that fetches a couple of routes and asserts the `<h1>` count, so this cannot silently regress again.
+
+**Shipped 2026-07-22, and this item's own fix instruction was wrong.** It said to promote the drawer's `spot-sheet-title` from `<h2>` to `<h1>`. That would have changed nothing a crawler sees: the drawer mounts CLIENT-side after an effect selects the spot, so `/spot/1` served exactly one heading (the sr-only "More paddleboard spots in {region}" h2) and no `spot-sheet-title` at all. The acceptance line, "verify by fetch, not by inspecting React", is what caught it.
+
+The h1 is therefore **server-rendered by the page component**: `app/spot/[id]/page.tsx` renders the spot name above the existing nav h2, and `HomeClient` renders the site-purpose h1 gated on `initialSpotId === undefined` so a spot page never serves two. `sr-only` in both cases: on a spot page the visible title arrives with the drawer moments later, and on home the wordmark is a button while the tagline is `hidden lg:inline`, so promoting either would have produced an h1 that is `display:none` for most users. The drawer title stays `<h2 id="spot-sheet-title">`, so the dialog's `aria-labelledby` still resolves.
+
+**Verified live by fetch:** `/`, `/spot/1`, `/spot/33`, `/spot/120` each serve exactly one h1, carrying the spot name on spot pages. `/privacy` and the 404 already had one and were untouched.
 
 ## 76. [ready] Tablet (md, 768-1023px) with a spot open: three panes do not fit, the map collapses to a 128px dead sliver
 
