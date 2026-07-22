@@ -777,6 +777,8 @@ The owner chose this knowingly over a relabelled "Add push" button, to keep the 
 
 **Weigh before building:** this is 37 candidate sites in a region that is a 2-4 hour drive from the Bay Area user base, and the app's traffic is overwhelmingly Bay Area. Coverage there may serve trip planning rather than daily use. Classify first (cheap, high information), then decide whether to ingest.
 
+**Pin lead found 2026-07-22 by the OSM sweep (`reports/osm-discovery-sweep-2026-07-22.md`), handle it inside this item:** OSM carries a slipway named "Sand harbor" (`node/4320621468`) **582 m north** of our spot 11 pin, with a second unnamed node at 574 m. That is the parking-vs-dock fingerprint from spots 127/130/132. Do NOT move the coordinate on OSM's word alone; the Water Trail-equivalent Tahoe source should settle it, and a coordinate change is gated (D19/D23).
+
 **Acceptance:** every published Lake Tahoe Water Trail site is classified with counts published in a report under `reports/`; any record added carries per-field provenance and a put-in coordinate verified against a second source (OSM slipway/beach node or the site's own map); `npm test` and the data guards pass; no existing `lat`/`lng` changes.
 
 ## 45. [blocked(no-source)] Expand coverage: ALL of California, SoCal first (RESCOPED AGAIN 2026-07-22 by owner directive; was Northern California)
