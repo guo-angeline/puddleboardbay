@@ -1,3 +1,13 @@
+# 2026-07-22: the map opens on California now, but nothing new can go live until you approve item 107
+
+**Item 108 is coded and tested.** The map no longer opens on the Bay for a first-time visitor: it now frames the whole state, from Humboldt to San Diego, so someone arriving from LA immediately sees their own coast instead of a Bay-only view that contradicts the "across California" headline. The region filter pills are reordered north to south for the same reason. Working out the exact map framing caught a real bug before it shipped: my first center clipped the far-north-coast spots off a phone screen, which the viewport math flagged since another session's dev server was holding the preview port.
+
+**But here is the thing that now matters most, and it is one decision from you.** Item 107, the alert-safety fix from earlier, is committed and waiting on your deploy approval because it changes what the push and email alerts send. Deploys ship the entire site at once, so item 107 sitting on the branch means item 108 cannot go live either, and neither can anything the loop does next. The deploy train is parked behind one safety fix awaiting your yes.
+
+So the loop can keep writing code, but none of it reaches real users until you approve item 107. Approving it releases 107 and 108 together in one deploy.
+
+**Your move:** reply "deploy 107" (or "deploy") and I will ship item 107 and item 108 together, verify them live, and the train is moving again. Until then both sit done-but-not-live. D32 (the review-byline question) is also still open, but it is not blocking anything.
+
 # 2026-07-22: the deploy safety-gate actually works now
 
 **Shipped item 106.** No user-facing change, but it closes a real hole in the safety net around your alerts.
