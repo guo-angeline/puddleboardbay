@@ -87,8 +87,16 @@ describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
     // The stored terms hash must move whenever s6.1 changes in substance, or the
     // assent record points at text the contributor never saw.
     expect(fs.readFileSync(path.resolve(__dirname, "../lib/reviews/validation.ts"), "utf-8"))
-      .toContain('TERMS_VERSION = "v1.1"');
-    expect(form).toContain('TERMS_HASH = "ugc-v1.1-2026-07-21"');
+      .toContain('TERMS_VERSION = "v1.2"');
+    expect(form).toContain('TERMS_HASH = "ugc-v1.2-2026-07-21"');
+    // v1.2 (2026-07-21): s6.4 had to change because the displayed score is now
+    // computed by us and blends our own rating in. Leaving the old text live
+    // would have kept a published promise ("an automated calculation from
+    // contributor-supplied ratings") that the product no longer honours.
+    const terms = read("../app/contributor-terms/page.tsx");
+    expect(terms).toContain("Version 1.2");
+    expect(terms).toContain("The score shown for a spot is computed by us");
+    expect(terms).not.toContain("automated calculation from");
   });
 
   it("the public read path returns published rows only, and never a user_id", () => {
@@ -106,18 +114,97 @@ describe("no TEXT publishes without a human (item 43, amended item 79)", () => {
   });
 });
 
-describe("crowd rating only appears once it means something (item 43)", () => {
-  it("holds the aggregate back below the cleared threshold", () => {
-    expect(aggRoute).toMatch(/MIN_REVIEWS_FOR_AGGREGATE = 5/);
-    expect(aggRoute).toMatch(/if \(t\.count < MIN_REVIEWS_FOR_AGGREGATE\) continue;/);
+describe("the displayed rating only says what it can back up (item 43, D24 amended 2026-07-21)", () => {
+  // The owner replaced the 5-review threshold with a weighted blend: their
+  // rating counts as 5 reviews, each user review as 1. The math and its edge
+  // cases are covered in lib/rating.test.ts; these guard the DISPLAY promises
+  // that D24 was cleared on, which no unit test of the arithmetic can see.
+  const drawer = read("./SpotDrawer.tsx");
+  const rating = read("../lib/rating.ts");
+  const ratingUI = read("./SpotRating.tsx");
+
+  it("serves raw totals, since a rounded average cannot be blended", () => {
+    // Re-adding a threshold or an average here would silently strip the
+    // reviews the blend needs, and the UI would show the owner's rating alone
+    // while looking exactly as if it had blended.
+    expect(aggRoute).toContain("sum: t.sum, count: t.count");
+    expect(aggRoute).not.toMatch(/if \(t\.count < \w+\) continue;/);
+    expect(aggRoute).not.toMatch(/avg:/);
   });
 
-  it("always shows the count alongside the average, never a bare star", () => {
-    expect(card).toMatch(/\{crowd\.count\}/);
+  it("keeps a threshold where there is no owner prior to damp a lone review", () => {
+    // Removing this without an owner rating in play would put a raw "1.0 out
+    // of 5" off a single review onto a spot, which is the exact thing D24's
+    // safety rationale forbids.
+    expect(rating).toMatch(/MIN_REVIEWS_WITHOUT_PRIOR = 5/);
+    expect(rating).toMatch(/if \(count >= MIN_REVIEWS_WITHOUT_PRIOR\)/);
   });
 
-  it("falls back to the owner rating when there is no crowd number", () => {
-    expect(card).toMatch(/\) : typeof spot\.owner_rating === "number" \? \(/);
+  it("computes the display number in exactly one place", () => {
+    // Two call sites, one formula. A second inlined average anywhere is how
+    // the list and the sheet start disagreeing about the same spot.
+    for (const src of [card, drawer]) {
+      expect(src).toContain("displayRating(");
+      expect(src).toContain("<SpotRating rating={rating} />");
+    }
+  });
+
+  // The legal gate (2026-07-21) returned needs-changes on the first draft of
+  // this display: with the owner's rating weighted as 5, a one-review spot is
+  // 5/6 the owner's own opinion, and the draft still labelled it "(1)" and
+  // "from 1 paddler review". These four guards are that finding in executable
+  // form. They are not style rules.
+  it("never credits a blended number to the contributors who did not produce it", () => {
+    const blended = ratingUI.slice(ratingUI.indexOf("rating.blended ? ("), ratingUI.indexOf(") : rating.count > 0"));
+    expect(blended).toContain("Paddle score");
+    expect(blended).toContain("combining our own rating with");
+    // The bare parenthesized count is the crowd-average idiom. Not on a blend.
+    expect(blended).not.toMatch(/\(\{rating\.count\}\)/);
+    expect(blended).not.toMatch(/from \$\{rating\.count\}/);
+  });
+
+  it("names the blended number as ours, visibly and not only to a screen reader", () => {
+    // A star + number with no label reads as a consumer aggregate. The label
+    // has to be in the visible tree, so `aria-hidden` (sighted) text carries it.
+    expect(ratingUI).toMatch(/aria-hidden[\s\S]{0,80}Paddle score/);
+  });
+
+  it("keeps the plain-average display for spots the owner never rated", () => {
+    // Those numbers ARE pure contributor averages, so they keep D24's count.
+    const crowdOnly = ratingUI.slice(ratingUI.indexOf(") : rating.count > 0"));
+    expect(crowdOnly).toContain("from ${rating.count} paddler");
+    expect(crowdOnly).toMatch(/\(\{rating\.count\}\)/);
+  });
+
+  it("shows both inputs and the weighting wherever a blended number appears", () => {
+    // The raw paddler average is the honest arithmetic fact and must stay
+    // reachable next to the number that overrode it.
+    expect(drawer).toMatch(/rating\?\.blended && \(/);
+    expect(drawer).toContain("Our take");
+    expect(drawer).toContain("paddlers");
+    expect(drawer).toMatch(/crowd!\.sum \/ crowd!\.count/);
+    expect(drawer).toContain("counts as five reviews");
+  });
+
+  it("gives EVERY card the review totals, not just the pinned strips", () => {
+    // The main list rendered <SpotCard> with no `crowd` prop from item 43 until
+    // 2026-07-21. Nobody saw it, because no spot had cleared the 5-review
+    // threshold, so the payload was always empty. The blend made it visible:
+    // the list showed the owner's raw rating while the sheet showed the
+    // blended score, for the same spot. Count the usages so a fourth card
+    // added without the prop fails here rather than in production.
+    const list = read("./SpotList.tsx");
+    const usages = list.split("<SpotCard").length - 1;
+    expect(usages).toBeGreaterThan(0);
+    expect(list.split("crowd={aggregates[spot.id]}").length - 1).toBe(usages);
+  });
+
+  it("keeps the blended score out of structured data", () => {
+    // Google's rating markup is for crowd ratings; an operator-weighted score
+    // there is a manual-action and a deception risk at once.
+    const sd = read("../lib/structured-data.ts");
+    expect(sd).not.toContain("aggregateRating");
+    expect(sd).not.toContain("ratingValue");
   });
 });
 

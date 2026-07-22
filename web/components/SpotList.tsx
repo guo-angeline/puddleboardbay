@@ -192,6 +192,7 @@ export default function SpotList({
         <div key={spot.id} ref={selected?.id === spot.id ? selectedRef : null}>
           <SpotCard
             spot={spot}
+            crowd={aggregates[spot.id]}
             selected={selected?.id === spot.id}
             onClick={() => onSelect(spot, "list")}
             distance={distanceMap?.[spot.id]}

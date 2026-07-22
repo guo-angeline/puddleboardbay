@@ -151,6 +151,22 @@ Second attempt used the **Magic Link** template (`recovery_sent_at`), the first 
 
 ---
 
+## 80. [proposed] Native app shows a different number than the web under the same star
+
+**Flagged by the 2026-07-21 legal gate (D30, good-practice action 9), filed rather than fixed because the native app is not shipped yet.**
+
+The web score is now the blend of the owner rating with published paddler reviews (D30). `native/src/components/SpotCard.tsx:53` and `native/src/components/SpotSheet.tsx:141` still render `spot.owner_rating` raw, because native never fetches `/api/reviews/aggregates`. Same spot, same star glyph, two different numbers, with no label on either telling you which is which.
+
+Not user-visible today (native is gated on Apple Developer Program enrollment, item 72), which is the only reason this is `[proposed]` and not `[ready]`. It MUST be resolved before the first TestFlight build goes to anyone outside the owner.
+
+**Two ways to close it, in order of preference:**
+1. Have native fetch the aggregates endpoint and use the shared `web/lib/rating.ts` (already a pure module, already imported by native via the `@/` alias, already unit-tested). One formula, both platforms.
+2. If the fetch is not worth it, label the native number "our take" so it is at least honestly attributed, and accept that the two platforms show different numbers.
+
+**Acceptance:** a spot with published reviews shows the same number on web and native, or native labels its number as the owner's own rating. Web's `lib/rating.test.ts` covers the math; native needs no second copy of it.
+
+---
+
 ## Owner items, added 2026-07-21 (header polish + label clarity; both [ready], queued top-most on purpose)
 
 ## 77. [ready] Header: make the account/Sign-in button visually consistent with the Feedback button beside it

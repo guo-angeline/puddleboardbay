@@ -5,19 +5,26 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Item 43: the crowd rating shown in the list and the spot sheet.
+ * Item 43: published-review totals for the list and the spot sheet.
  *
- * MIN_REVIEWS is the legally cleared threshold from D24: show a crowd rating
- * only past a handful of genuine reviews (note since item 79: star-only ratings feed this average without human review; written reviews are still held), as a plain arithmetic fact.
- * Below it, a "4.0 average" off one review is noise that reads as a verdict, and
- * on a site carrying drowning-risk exposure an average that looks like a safety
- * judgement is the thing to avoid. Spots under the threshold are simply absent
- * from the payload, so the caller renders the owner's own rating instead.
+ * This route returns RAW totals (sum + count), not an average, and applies no
+ * threshold. That is deliberate as of the 2026-07-21 owner direction: the
+ * displayed number is now a weighted blend of the owner's rating with the user
+ * reviews, and a pre-averaged, pre-thresholded payload cannot be blended (the
+ * sum is unrecoverable from a rounded average, and a spot withheld below the
+ * threshold has no reviews to blend at all).
+ *
+ * The display policy that used to live here, including D24's threshold for
+ * spots with no owner rating to fall back on, now lives in `lib/rating.ts` so
+ * there is exactly one place deciding what number a reader sees.
+ *
+ * (Note since item 79: star-only ratings feed these totals without human
+ * review; written reviews are still held for moderation.)
  */
-export const MIN_REVIEWS_FOR_AGGREGATE = 5;
 
 export interface SpotAggregate {
-  avg: number;
+  /** Sum of published ratings. Blend with the owner prior via lib/rating. */
+  sum: number;
   count: number;
 }
 
@@ -42,9 +49,7 @@ export async function GET() {
 
   const aggregates: Record<number, SpotAggregate> = {};
   for (const [spotId, t] of totals) {
-    if (t.count < MIN_REVIEWS_FOR_AGGREGATE) continue;
-    // One decimal, a plain arithmetic fact. Never rounded up to flatter a spot.
-    aggregates[spotId] = { avg: Math.round((t.sum / t.count) * 10) / 10, count: t.count };
+    aggregates[spotId] = { sum: t.sum, count: t.count };
   }
 
   return NextResponse.json(

@@ -15,8 +15,10 @@ export const metadata: Metadata = {
 // components/ReviewForm.tsx), because a contributor is bound only by the version
 // they actually saw and accepted.
 const VERSION =
-  "Version 1.1. Last updated: July 21, 2026. " +
-  "(v1.1: Section 6.1 amended so a star rating with no text publishes immediately, without a byline. " +
+  "Version 1.2. Last updated: July 21, 2026. " +
+  "(v1.2: Section 6.4 amended because the score shown for a spot is now computed by us, blending " +
+  "our own rating with contributor ratings, rather than being a contributor-only average. " +
+  "v1.1: Section 6.1 amended so a star rating with no text publishes immediately, without a byline. " +
   "v1.0, July 21, 2026: original.)";
 
 export default function ContributorTermsPage() {
@@ -213,9 +215,11 @@ export default function ContributorTermsPage() {
               publisher. Reviews reflect the views of the contributors who wrote them, not the views
               of Paddle to Water or its owner. Our decision to publish, reject, or later remove a
               review does not make us the author of that Content, and we do not adopt or endorse it.
-              Any rating average shown on the Site is an automated calculation from
-              contributor-supplied ratings. It is not our own statement about a spot or any business,
-              and it is not a statement that a spot is safe.
+              The score shown for a spot is computed by us. It combines our own rating of the spot,
+              weighted as five reviews, with every published contributor rating. It is therefore our
+              statement, not the contributors&rsquo;, and it is not a statement that a spot is safe.
+              Where a spot has no rating of our own, the number shown is a plain average of
+              contributor ratings.
             </p>
           </Section>
 

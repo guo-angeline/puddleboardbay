@@ -12,6 +12,8 @@ import ReviewsSection from "@/components/ReviewsSection";
 import SignInSheet from "@/components/SignInSheet";
 import { useAccount } from "@/lib/useAccount";
 import { useReviewAggregates } from "@/lib/useReviewAggregates";
+import { displayRating } from "@/lib/rating";
+import SpotRating from "@/components/SpotRating";
 
 interface Props {
   spot: Spot | null;
@@ -70,7 +72,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // resize handle is gone. Behind a kill switch (default ON, no A/B, DAU<100);
   // if disabled it falls back to the old peek + drag behavior for rollback.
   const fullScreen = useKillSwitch("sheet-auto-expand");
-  // Item 43: crowd rating (present only at 5+ published reviews).
+  // Item 43: published-review totals, blended into the displayed score.
   const reviewsOn = useKillSwitch("reviews");
   const aggregates = useReviewAggregates();
   const { user, enabled: authOn } = useAccount();
@@ -225,11 +227,13 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // analytics. `spot_action` still carries owner_rating + owner_rating_shown,
   // so engagement with rated spots is still measurable without an experiment.
   const showOwnerRating = typeof spot?.owner_rating === "number";
-  // Item 43: present only once this spot has 5+ published reviews.
-  // The `reviews` kill switch must pull the crowd number too, not just the
-  // reviews list: an average left standing with its source hidden is worse
-  // than no average.
+  // Item 43: raw published-review totals for this spot, if any.
+  // The `reviews` kill switch must pull them out of the displayed score too,
+  // not just hide the reviews list: a number shaped by reviews whose source is
+  // hidden is worse than a number without them.
   const crowd = spot && reviewsOn ? aggregates[spot.id] : undefined;
+  // The one number a reader sees (lib/rating): owner prior + user reviews.
+  const rating = displayRating(spot?.owner_rating, crowd);
 
   // Item 31: per-spot photo. Kill-switch flag (default ON, no A/B per the
   // DAU<100 rule); only ~57 spots have a vision-verified free-licensed photo,
@@ -445,33 +449,33 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 so a screen reader does not announce a bare "4.5".
               */}
               <p className="text-sm text-(--muted) mt-1">
-                {/* Item 43 (owner decision): at 5+ published reviews the CROWD
-                    number takes this slot. The owner's own rating is not lost,
-                    it moves to its own labelled line below, so the two are
-                    never blended into one ambiguous star (D24). */}
-                {crowd ? (
+                {/* Owner direction 2026-07-21 (amends D24): this slot holds the
+                    blended number, the owner's rating weighted as 5 reviews
+                    against every published user review. The inputs are not
+                    lost: the raw owner rating keeps its own labelled line
+                    below, and the reviews themselves are listed in the sheet. */}
+                {rating ? (
                   <span className="font-semibold text-(--dark)">
-                    <span aria-hidden className="text-(--accent)">&#9733;</span> {crowd.avg.toFixed(1)}
-                    <span className="sr-only"> out of 5 from {crowd.count} paddler reviews</span>
-                    <span aria-hidden className="font-normal text-(--muted)"> ({crowd.count})</span>
-                    {" · "}
-                  </span>
-                ) : showOwnerRating ? (
-                  <span className="font-semibold text-(--dark)">
-                    <span aria-hidden className="text-(--accent)">&#9733;</span> {spot.owner_rating!.toFixed(1)}
-                    <span className="sr-only"> out of 5</span>
+                    <SpotRating rating={rating} />
                     {" · "}
                   </span>
                 ) : null}
                 {spot.city} &middot; {spot.region}
               </p>
-              {/* Once the crowd number is in the subtitle, the owner's rating is
-                  shown separately and explicitly attributed, so a reader can
-                  always tell which is which. */}
-              {crowd && showOwnerRating && (
+              {/* Both inputs, one line under the number, plus how they combine.
+                  The raw paddler average is the honest arithmetic fact and stays
+                  available: a reader (or a business asking about its spot) can
+                  always separate our opinion from theirs. Required by the
+                  2026-07-21 legal gate. */}
+              {rating?.blended && (
                 <p className="text-xs text-(--muted) mt-0.5">
-                  <span aria-hidden className="text-(--accent)">&#9733;</span>{" "}
-                  {spot.owner_rating!.toFixed(1)} our take
+                  Our take {spot.owner_rating!.toFixed(1)} &middot; paddlers{" "}
+                  {(crowd!.sum / crowd!.count).toFixed(1)} from {rating.count}{" "}
+                  {rating.count === 1 ? "review" : "reviews"}.{" "}
+                  <span className="block mt-0.5">
+                    Our rating counts as five reviews, so the score moves toward the paddler
+                    average as more come in.
+                  </span>
                 </p>
               )}
             </div>

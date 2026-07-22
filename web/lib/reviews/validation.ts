@@ -1,7 +1,7 @@
 // Item 43: submit-payload validation for crowd reviews. Pure and DOM-free so it
 // unit-tests without a server, same shape as lib/email/validation.ts.
 
-export const TERMS_VERSION = "v1.1";
+export const TERMS_VERSION = "v1.2";
 export const MAX_BODY_LENGTH = 1500;
 
 export interface ReviewInput {

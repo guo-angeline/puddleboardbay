@@ -2,18 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-export interface SpotAggregate {
-  avg: number;
-  count: number;
-}
-export type Aggregates = Record<number, SpotAggregate>;
+export type { CrowdTotals as SpotAggregate } from "@/lib/rating";
+import type { CrowdTotals } from "@/lib/rating";
+export type Aggregates = Record<number, CrowdTotals>;
 
-// Item 43: crowd ratings for the list and the spot sheet.
+// Item 43: published-review totals for the list and the spot sheet.
 //
 // One fetch for the whole app, shared through a module-level promise, because
-// the list renders ~139 cards and a per-card request would be absurd. The
-// endpoint only returns spots that have cleared the 5-review threshold, so this
-// payload is empty until a spot actually earns a crowd rating.
+// the list renders ~139 cards and a per-card request would be absurd. These are
+// raw sums and counts; `lib/rating.displayRating` turns them into the number a
+// reader sees, blended with the spot's owner rating.
 let cache: Aggregates | null = null;
 let inFlight: Promise<Aggregates> | null = null;
 
@@ -27,8 +25,8 @@ function load(): Promise<Aggregates> {
       return cache;
     })
     .catch(() => {
-      // A failed aggregate fetch must never break the list. Falling back to an
-      // empty map simply means every spot shows the owner's rating instead.
+      // A failed fetch must never break the list. Falling back to an empty map
+      // simply means every spot shows the owner's rating unblended.
       cache = {};
       return cache;
     })

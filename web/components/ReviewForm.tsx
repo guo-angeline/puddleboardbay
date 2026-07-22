@@ -20,7 +20,7 @@ import type { Spot } from "@/lib/types";
 
 // Identifies the exact published text. Bump both together whenever Part 1 of
 // docs/legal/ugc-contributor-terms.md changes in substance.
-const TERMS_HASH = "ugc-v1.1-2026-07-21";
+const TERMS_HASH = "ugc-v1.2-2026-07-21";
 
 export default function ReviewForm({
   spot,

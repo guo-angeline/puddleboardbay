@@ -624,3 +624,23 @@ Answer: (owner, 2026-07-20, in chat).
 - **Q4 = migration-not-reset, acked.** On first sign-in an anonymous user keeps their saved spots (localStorage -> `user_saved_spots`) and push subscription (link existing `push_subscriptions` rows via a `user_id` FK); add a `users`/accounts table. Owner acknowledges the Supabase schema change is owner-reviewed at deploy per the PROTECTED gate.
 
 Build prerequisites before item 44 can DEPLOY a working sign-in: (1) Google OAuth client id + secret in env (owner, Q1); (2) auth lawyer-gate `clear` (privacy-policy update for the new PII, run in the ship pipeline); (3) for the Apple half only, Apple Developer Program enrollment complete. The loop may start building the Google/web + Supabase-Auth + migration code now (tests with mocked auth) and escalate the deploy for the real credentials + lawyer gate.
+
+## D30 [OPEN] 2026-07-21 · D24 amended: the displayed score now blends your rating with paddler reviews, and the legal gate wants two answers
+
+**Shipped in the same change (owner-directed, in chat 2026-07-21).** The number shown for a spot is now `(5 x your rating + sum of paddler ratings) / (5 + review count)`. Your pre-generated rating carries the weight of five reviews; each published review carries one. You chose per-review weighting (so the crowd overtakes you as reviews accumulate) and display from the first review, over the alternatives.
+
+**This reverses part of D24**, which cleared a display where the crowd average appeared only past 5 reviews and the two numbers were "never blended". The volatility half of D24's safety rationale is satisfied arithmetically: one 1-star review moves a 4.0 spot to 3.5, not to 1.0. Spots with no rating of yours (~26) keep D24's 5-review threshold unchanged, since there is no prior there to damp anything.
+
+**The legal gate returned `needs-changes`, and all seven ship-blocking actions were implemented before deploy:** the blended number is labelled "Paddle score" and never carries a bare "(N)" or the words "paddler reviews"; the sheet shows both inputs and the weighting; Contributor Terms s6.4 was rewritten (the live text said any average was "an automated calculation from contributor-supplied ratings", which this change made false) and TERMS_VERSION/TERMS_HASH bumped to v1.2; no `aggregateRating` in structured data; the old cleared controls were replaced with new executable guards rather than deleted.
+
+**Two questions the gate escalated, both genuinely yours:**
+
+**Q1 (posture).** Blending your own opinion into the number weakens the "we are only a host" position that Section 230 protection rests on. Your own repo already decided this once the other way: item 39's computed rubric was cut because a computed average is arguably first-party speech, and `docs/legal/ugc-contributor-terms.md` lists "you add editorial voice on top of user content" as the move most likely to turn you from a protected host into a co-author. Realistic downside is a demand letter from a named marina or private launch whose score you influenced, not a judgment. It lands on you personally because D25 Q2 (LLC) and Q3 (insurance) are both still deferred.
+- Options: **(a)** keep the blend as shipped and accept the exposure; **(b)** revert to two clearly separated numbers (paddler average with its count, "our take" beside it) and instead lower the crowd threshold if the goal was showing user input sooner; **(c)** keep the blend and engage a licensed attorney on the host-vs-co-author question.
+- Recommended: **(a) for now**, revisit at the same time as D25 Q2/Q3. The exposure is real but small at current volume, and (b) gives up the thing you asked for.
+
+**Q2 (safety weighting).** Is `OWNER_WEIGHT = 5` the number you want? The gate's sharpest point: the first negative review of a spot is the highest-value safety signal this product will ever get, and the blend guarantees it is outweighed 5 to 1 by a rating generated before anyone reviewed anything. Concrete case: a spot you rated 5.0 gets one 1-star review describing a dangerous shore break, and the card shows 4.3. The sheet now discloses both numbers, but the card does not.
+- Options: **(a)** keep 5; **(b)** lower the weight (3 reaches a 50/50 split at 3 reviews instead of 5); **(c)** keep 5 but surface the paddler average on the CARD too whenever it is more than a point below the blended score (the gate's suggested mitigation, ~20 lines).
+- Recommended: **(c)**, cheap and targeted at the only case that actually worries me.
+
+Answer:
