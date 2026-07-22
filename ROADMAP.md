@@ -425,7 +425,7 @@ Same shape as the "tests must grep the tree, not your memory" rule: the exclusio
 
 **Done: a TENTH query (`experiment_next_good_window`) was found by grepping the tree rather than trusting this list, which is why the fix ships with `web/lib/analytics-owner-exclusion.test.ts` (fails when any events+person_id query omits the exclusion; `token_leak_check` allowlisted with reason) instead of a one-time edit. `alert_ctr` was Supabase-keyed, so it drops the owner push subscription, not a person_id. Delta re-read flagged for the next report (needs the PostHog personal key). Full note in the changelog.**
 
-## 106. [in-progress] 2026-07-22T16:07:55 The predeploy gate cannot see the code that decides which push alerts fire
+## 106. [done] The predeploy gate now sees the send-path libraries (2026-07-22, 39482d0; script + doc only, no deploy)
 
 `scripts/predeploy-gate.py` has `PROTECTED_PATTERNS = ("web/app/api/cron/*", "web/app/api/alerts/*")`, matched on **path**. Exercising the gate's own matcher:
 

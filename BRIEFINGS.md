@@ -1,3 +1,15 @@
+# 2026-07-22: the deploy safety-gate actually works now
+
+**Shipped item 106.** No user-facing change, but it closes a real hole in the safety net around your alerts.
+
+There is a guard that is supposed to stop me deploying changes to your push-notification and email code without your review. It had two flaws, both now fixed. First, it only ran when the deploy command was typed one specific way, and that way stopped working weeks ago, so the guard had been silent for every deploy I have run. Second, even when it ran, it only watched the two obvious files and not the shared code that actually decides whether an alert fires and what it says.
+
+Both are fixed, and I proved it rather than assuming: I made a throwaway edit to the exact file that decides which "good to paddle" alerts go out, and confirmed the gate now blocks that deploy and asks for your review, while an ordinary page-styling change still sails through untouched. There is also a built-in self-check I can run any time I touch the gate.
+
+This matters right now because the next item on the list (107) is a genuine bug in that same alert-decision code: on missing weather data it currently treats the spot as dead calm and can tell someone by push that it is a good time to paddle when it has no data at all. Fixing the gate first means that fix, when it comes, gets the owner-review it should.
+
+**Your move:** nothing blocking. D32 is still open from this morning. The studio loop is now running every 30 minutes and will keep working down the ready list on its own.
+
 # 2026-07-22: your own devices were in ten analytics numbers
 
 **Shipped item 105.** A data-quality fix, not a user-facing one, so nothing deployed.
