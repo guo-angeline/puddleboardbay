@@ -91,11 +91,14 @@ describe("nothing rewards getting on the water", () => {
     expect(marks).not.toMatch(/checkin|check_in|check-in|visited|launched|paddled/i);
   });
 
-  it("marks a reported spot with a dot, never a tick", () => {
-    // A checkmark reads as an item ticked off a list.
-    const dot = card.slice(card.indexOf("reported &&"));
-    expect(dot).toContain("rounded-full");
-    expect(dot).not.toMatch(/✓|✔|&check;|check(mark)?["'\s]/i);
+  it("puts no per-spot progress marker in the list", () => {
+    // The "you reported on this" dot was removed at the owner's request
+    // (2026-07-22). Beyond taste, a per-spot marker on a list of launch sites
+    // is the seed of a collect-them-all display, which is the one shape this
+    // feature must never take. Keep the list free of it.
+    expect(card).not.toMatch(/reported/);
+    expect(read("./SpotList.tsx")).not.toMatch(/reported|useOwnReports/);
+    expect(card).not.toMatch(/✓|✔|&check;/);
   });
 });
 
