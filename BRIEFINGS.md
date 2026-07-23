@@ -1,3 +1,13 @@
+# 2026-07-22: shared spot links now show the spot's photo
+
+**Shipped item 112.** Live and verified.
+
+When someone shares a spot link, the preview card used to be a generic navy card for every spot, even though we already had real photos for 131 of them, on a channel where roughly four in five of our visitors come from word of mouth. The card now shows the spot's own photo behind the title, and falls back to the old navy card when a spot has no photo.
+
+The one thing worth your attention is the legal side, because most of these photos are Creative Commons and the sharing card puts them on a new surface. I ran the licensing review before shipping. It flagged that because we lay our gradient and text over the photo, we are technically creating a modified version, which the licences require us to label. So each credit now reads, for example, "Photo: Noah_Loverbear / CC BY-SA 3.0 (modified) · Wikimedia Commons". Owner photos and public-domain photos still show no credit, as before. The alternative the review offered was to drop the ~71 share-alike photos from cards entirely, which would have gutted the feature, so I kept them and labelled them properly instead. A test now locks that labelling in so it cannot quietly regress.
+
+**Your move:** nothing. D32 (the review-byline question) is still the only thing waiting on you.
+
 # 2026-07-22: AlertInterstitial light-card reskin shipped
 
 **Your move:** Nothing needed from you.
