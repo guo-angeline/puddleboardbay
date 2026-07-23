@@ -14,6 +14,20 @@ without touching this file.
 
 ---
 
+## 2026-07-23 (item 120): mobile map-tab cold-open banner events added (added)
+
+The mobile map tab (the ~82%-of-traffic cold open) gets a slim banner: a value-prop line that swaps to a "Good today: {spot} · {badge}" teaser once item 61's `goodTodaySpots` resolves.
+
+- **`map_banner_loaded`** (SYSTEM, fires when the banner content settles). Props: `variant` ("good_today" | "value_prop"), `spot_id?` (the surfaced spot, good_today variant), `located` (nearest-to-user vs default-anchored candidate set). This is availability, NOT engagement: the banner is guaranteed above-the-fold, so a bare "shown" would repeat the old conditions_viewed fetch-settle error. Read it as "what fraction of mobile cold opens could answer 'what's good today' vs only 'what is this'".
+- **`map_banner_clicked`** (INTENT). Props: `spot_id`, `region`, `variant: "good_today"`. The tap-through to the surfaced spot (also carries `spot_viewed` `source: "map_banner"`, a NEW SpotViewedSource value, so map-banner opens are separable from map-pin ("map") and list good-today ("list") opens).
+- **`map_banner_dismissed`** (INTENT). No props. The session-scoped X (sessionStorage, so it returns on a fresh visit, since good-today is a daily-changing answer).
+
+**How to read it.** Cold-open engagement on mobile. The conversion is `map_banner_clicked / map_banner_loaded[variant=good_today]`. Dismissal rate gauges annoyance against the bounce guardrail. Segment the good_today variant by `located`.
+
+**Comparability:** all three NEW from 2026-07-23, no prior series. Behind the `map-cold-open-banner` kill switch (default ON). `spot_viewed source:"map_banner"` splits out of no prior bucket (it is a brand-new open path), so total `spot_viewed` is unaffected but the source distribution gains a value from this date.
+
+---
+
 ## 2026-07-23 (item 8): "go here instead" redirect events added (added)
 
 Two INTENT events for the in-drawer "go here instead" surface: when the OPENED spot has no calm daytime window left today, the drawer offers up to 2 nearest spots that do.
