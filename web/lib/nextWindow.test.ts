@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { getNextWindow, formatNextWindow, noWindowLine } from "@/lib/nextWindow";
+import { getNextWindow, getTodaysShape, formatNextWindow, noWindowLine } from "@/lib/nextWindow";
 import type { GoodWindow } from "@/lib/alerts/conditions-window";
 
 // 2026-07-01 is a Wednesday.
@@ -30,12 +30,12 @@ const NO_CALM_RUN = [
 
 describe("formatNextWindow", () => {
   it("formats a same-period window with a single trailing meridiem", () => {
-    const w: GoodWindow = { windowKey: "2026-07-04", label: "Saturday morning", startHour: 7, endHour: 10 };
+    const w: GoodWindow = { windowKey: "2026-07-04", label: "Saturday morning", startHour: 7, endHour: 10, maxWindMph: 6, windDirection: "NW" };
     expect(formatNextWindow(w)).toBe("Sat 7 to 10am");
   });
 
   it("formats a window that crosses noon with a meridiem on each end", () => {
-    const w: GoodWindow = { windowKey: "2026-07-04", label: "Saturday midday", startHour: 11, endHour: 13 };
+    const w: GoodWindow = { windowKey: "2026-07-04", label: "Saturday midday", startHour: 11, endHour: 13, maxWindMph: 6, windDirection: "NW" };
     expect(formatNextWindow(w)).toBe("Sat 11am to 1pm");
   });
 });
@@ -105,5 +105,43 @@ describe("getNextWindow", () => {
     expect(a).toEqual(b);
     const pointsCalls = fetchMock.mock.calls.filter(([url]) => String(url).startsWith("https://api.weather.gov/points/"));
     expect(pointsCalls.length).toBe(1);
+  });
+});
+
+// Item 100: the whole point of the consolidation. The next-good-window and
+// today's-shape must come from ONE hourly forecast fetch per spot, not two.
+describe("getNextWindow + getTodaysShape share one hourly fetch (item 100)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it("resolves both surfaces from a single forecast request for the same spot", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.startsWith("https://api.weather.gov/points/")) return pointsResponse();
+      return forecastResponse(CALM_RUN);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Evaluate the shape relative to the CALM_RUN's own day so it has daytime
+    // hours ahead of "now".
+    const shapeNow = Date.parse("2026-07-02T06:30:00-07:00");
+    const [win, shape] = await Promise.all([
+      getNextWindow(9, 47.6, -122.3, NOW),
+      getTodaysShape(9, 47.6, -122.3, shapeNow),
+    ]);
+    expect(win.ok).toBe(true);
+    expect(shape.ok).toBe(true);
+
+    const forecastCalls = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes("/hourly")
+    );
+    expect(forecastCalls.length).toBe(1); // one hourly fetch, both surfaces
+  });
+
+  it("getTodaysShape resolves ok:false when the fetch fails", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => pointsResponse(false)));
+    const shape = await getTodaysShape(10, 47.6, -122.3, NOW);
+    expect(shape).toEqual({ ok: false });
   });
 });

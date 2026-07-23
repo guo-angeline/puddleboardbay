@@ -1,10 +1,13 @@
-import { evaluateGoodWindow, DEFAULT_HORIZON_DAYS, type GoodWindow, type HourlyPeriod } from "@/lib/alerts/conditions-window";
+import { evaluateGoodWindow, DEFAULT_HORIZON_DAYS, type GoodWindow } from "@/lib/alerts/conditions-window";
 import { conditionsFetchConfig, precomputedForecastUrl } from "@/lib/conditions";
+import { buildTodaysShape, type RawHourly, type TodayShape } from "@/lib/todaysShape";
 
 export type NextWindowResult = { ok: true; window: GoodWindow | null } | { ok: false };
+export type TodayShapeResult = { ok: true; shape: TodayShape | null } | { ok: false };
+type HourlyOutcome = { ok: true; periods: RawHourly[] } | { ok: false };
 
 interface CacheEntry {
-  promise: Promise<NextWindowResult>;
+  promise: Promise<HourlyOutcome>;
   createdAt: number;
 }
 const cache = new Map<number, CacheEntry>();
@@ -14,22 +17,18 @@ const cache = new Map<number, CacheEntry>();
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
- * Fetch the NWS hourly forecast for a spot in the browser and evaluate the
- * next calm window via the shared evaluateGoodWindow. Fails quietly: any
- * fetch error, thrown exception, or non-ok response resolves { ok: false }
- * so the caller can render nothing, exactly like conditions. Cached per spot
- * id with in-flight dedup so concurrent opens share one fetch.
+ * Fetch (once per spot, 30-min TTL) the NWS hourly forecast and return its raw
+ * periods. Item 100: this is the SINGLE hourly request per spot open. Both the
+ * next-good-window and today's-shape derive from this one payload, so opening a
+ * spot no longer makes two hourly fetches to the same gridpoint. Fails quietly:
+ * any fetch error, throw, or non-ok resolves { ok: false }. Cached with in-flight
+ * dedup so concurrent opens share one fetch.
  */
-export function getNextWindow(
-  spotId: number,
-  lat: number,
-  lng: number,
-  nowMs: number = Date.now()
-): Promise<NextWindowResult> {
+export function getHourlyPeriods(spotId: number, lat: number, lng: number): Promise<HourlyOutcome> {
   const cached = cache.get(spotId);
   if (cached && Date.now() - cached.createdAt < CACHE_TTL_MS) return cached.promise;
 
-  const promise = (async (): Promise<NextWindowResult> => {
+  const promise = (async (): Promise<HourlyOutcome> => {
     try {
       // The hourly forecast lives at the precomputed gridpoint URL + "/hourly"
       // (NWS's stable scheme), so a precomputed spot skips the /points hop. A spot
@@ -50,9 +49,8 @@ export function getNextWindow(
       if (!forecastUrl) return { ok: false };
       const fRes = await fetch(forecastUrl, { headers: nwsHeaders });
       if (!fRes.ok) return { ok: false };
-      const data = (await fRes.json()) as { properties?: { periods?: HourlyPeriod[] } };
-      const periods = data.properties?.periods ?? [];
-      return { ok: true, window: evaluateGoodWindow(periods, nowMs) };
+      const data = (await fRes.json()) as { properties?: { periods?: RawHourly[] } };
+      return { ok: true, periods: data.properties?.periods ?? [] };
     } catch {
       return { ok: false };
     }
@@ -65,6 +63,38 @@ export function getNextWindow(
   }).catch(() => cache.delete(spotId));
 
   return promise;
+}
+
+/**
+ * The next calm window via the shared evaluateGoodWindow, from the one hourly
+ * fetch above. Evaluated against `nowMs` on each call (the fetch is cached, the
+ * window is not, so a reopen re-reads "next" relative to the current time).
+ */
+export function getNextWindow(
+  spotId: number,
+  lat: number,
+  lng: number,
+  nowMs: number = Date.now()
+): Promise<NextWindowResult> {
+  return getHourlyPeriods(spotId, lat, lng).then((r) =>
+    r.ok ? { ok: true, window: evaluateGoodWindow(r.periods, nowMs) } : { ok: false }
+  );
+}
+
+/**
+ * Today's intra-day shape (item 100), from the SAME cached hourly payload as
+ * getNextWindow, so it adds no network request. `shape` is null when there is
+ * nothing clean to draw (fewer than two daytime hours left).
+ */
+export function getTodaysShape(
+  spotId: number,
+  lat: number,
+  lng: number,
+  nowMs: number = Date.now()
+): Promise<TodayShapeResult> {
+  return getHourlyPeriods(spotId, lat, lng).then((r) =>
+    r.ok ? { ok: true, shape: buildTodaysShape(r.periods, nowMs) } : { ok: false }
+  );
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

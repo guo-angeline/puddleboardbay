@@ -21,6 +21,7 @@ import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
 import { recordExplored } from "@/lib/exploredSpots";
 import NextGoodWindowPanel from "@/components/NextGoodWindowPanel";
+import TodaysShapePanel from "@/components/TodaysShapePanel";
 
 /**
  * Live tide + wind for the selected spot. Client-only: fetches NOAA tides and
@@ -321,7 +322,7 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
     >
       <div className="flex items-center justify-between mb-2.5">
         <p className="text-xs font-semibold text-(--muted) uppercase tracking-wide">
-          Conditions today
+          Right now
         </p>
         {anyLoaded && !bothErrored && fetchedAt ? (
           <span className="text-[10px] text-gray-400">Live as of {formatFetchedAt(fetchedAt)}</span>
@@ -419,14 +420,23 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
               </p>
             );
           })()}
-
-          <p className="text-[10px] text-gray-400 leading-snug">
-            Guidance only, not a safety guarantee. Conditions shift fast on the water.
-          </p>
         </div>
       )}
 
+      {/* Item 100: today's intra-day shape, then the multi-day look-ahead. Both
+          draw from the one shared hourly fetch (getTodaysShape / getNextWindow),
+          so this pair adds no requests beyond the single hourly call. */}
+      <TodaysShapePanel spot={spot} />
       <NextGoodWindowPanel spot={spot} />
+
+      {/* The safety disclaimer renders UNCONDITIONALLY at the foot of the panel,
+          not inside the current-reading branch, so it always co-renders with the
+          shape and look-ahead blocks. Those two run their own hourly fetch and
+          can paint even when the current-reading fetch errored; a forecast read
+          must never show without this line (item 100 lawyer gate). */}
+      <p className="text-[10px] text-gray-400 leading-snug mt-3">
+        Guidance only, not a safety guarantee. Conditions shift fast on the water.
+      </p>
     </section>
   );
 }

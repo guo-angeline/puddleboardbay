@@ -14,6 +14,18 @@ without touching this file.
 
 ---
 
+## 2026-07-23 (item 100): today's-shape view event added (added)
+
+One INTENT event for the new intra-day "today's shape" wind curve in the conditions panel (the summary line + daytime sparkline, from the same hourly payload the next-good-window already fetches).
+
+- **`todays_shape_viewed`** (INTENT, dwell-gated via `useGenuineView`, not on mount). Props: `spot_id`, `region`, `has_summary` (the shape produced a clean one-line read vs curve-only), `hours` (daytime hours drawn).
+
+**How to read it.** This is engagement with the new surface, a genuine dwell-gated view, not a fetch settle. Segment by `has_summary`: an omitted summary (multi-transition or all-windy day) is expected to read differently from a clean "Calm the rest of today.", so pooling the two would blur whether the line, or the curve, is what people look at. No new network request underlies it (the curve shares getNextWindow's cached hourly fetch), so it does not affect `conditions_loaded` latency or volume.
+
+**Comparability:** NEW from 2026-07-23, no prior series. Gated behind the `todays-shape` kill switch (default ON), so a PostHog disable stops emission cleanly (a gap, not a semantics change). Sits alongside `next_window_viewed` on the same panel; the two are independent dwell gates and should not be summed.
+
+---
+
 ## 2026-07-22 (item 93): trip-planner fake-door events added (added)
 
 Two INTENT events for the demand test measuring interest in a future trip planner (a placeholder "Plan my trip" button near the conditions panel; D33).

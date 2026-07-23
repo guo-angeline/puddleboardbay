@@ -554,7 +554,7 @@ export function tideDirectionLine(next: TideEvent[]): string | null {
  * True when a NOAA event time falls on a later calendar day than now. Late in
  * the evening the next tide events are tomorrow's (the fetch pulls a 2-day
  * window), so the UI labels them "tomorrow" instead of letting them read as
- * today's under the "Conditions today" header.
+ * today's under the "Right now" header.
  */
 export function isNextDay(noaaTime: string): boolean {
   const d = new Date(noaaTime.replace(" ", "T"));

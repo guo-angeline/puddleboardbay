@@ -91,6 +91,11 @@ export type IntentEventName =
   | "alert_interstitial_shown"
   | "alert_interstitial_result"
   | "next_window_viewed"
+  // Item 100: dwell-gated genuine view of the intra-day "today's shape" curve.
+  // `has_summary` segments the shape-had-a-clean-line cases from the curve-only
+  // ones, so a low read rate on omitted-summary opens can't be mistaken for
+  // disinterest in the feature.
+  | "todays_shape_viewed"
   | "experiment_exposed"
   | "email_capture_submitted"
   | "email_capture_confirmed"
@@ -209,6 +214,15 @@ export interface EventPropMap {
     difficulty: string;
     /** Block rendered with a real window vs. the quiet no-window line. */
     had_window: boolean;
+  };
+  // Item 100. `has_summary` = the shape produced a clean one-line read; false
+  // means curve-only (multi-transition or all-windy). `hours` = daytime hours
+  // drawn, so a two-hour tail isn't read like a full-day curve.
+  todays_shape_viewed: {
+    spot_id: number;
+    region: string;
+    has_summary: boolean;
+    hours: number;
   };
   experiment_exposed: { experiment: string; variant: string };
   // Item 71: `method` is a compile-enforced union so a wrong value can't ship
