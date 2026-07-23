@@ -111,9 +111,12 @@ describe("buildTodaysShape windowing", () => {
     expect(buildTodaysShape(periods, late)).toBeNull();
   });
 
-  it("returns null when fewer than two daytime hours remain", () => {
-    const periods = [period(17, CALM)];
-    expect(buildTodaysShape(periods, NOW)).toBeNull();
+  it("returns null when fewer than three daytime hours remain (two bars is not a shape)", () => {
+    // One remaining hour.
+    expect(buildTodaysShape([period(17, CALM)], NOW)).toBeNull();
+    // Two remaining hours: the exact late-day case that rendered as two flat
+    // full-height blocks (4pm + 5pm). Must now draw nothing.
+    expect(buildTodaysShape([period(16, "11 mph"), period(17, "11 mph")], NOW)).toBeNull();
   });
 });
 

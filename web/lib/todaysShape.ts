@@ -43,7 +43,9 @@ export interface TodayShape {
    * current reading already conveys) gets no line, only the curve.
    */
   summary: string | null;
-  /** Remaining daytime hours, in order, for the curve. Always >= 2 when non-null. */
+  /** Remaining daytime hours, in order, for the curve. Always >= 3 when non-null:
+   * two bars is not a shape (late-day it rendered as two flat blocks), so below
+   * three remaining hours we draw nothing and let the live wind pill cover "now". */
   samples: HourSample[];
 }
 
@@ -76,8 +78,10 @@ export function formatShapeHour(hour: number): string {
 /**
  * Build today's shape from hourly periods. Considers only the REST of today:
  * periods at or after `nowMs`, on the same spot-local date as the first such
- * period, within the 6am-6pm daytime bound. Returns null when fewer than two
- * such hours remain (nothing worth drawing). Pure.
+ * period, within the 6am-6pm daytime bound. Returns null when fewer than three
+ * such hours remain: two bars is not a shape (late in the day it degenerated to
+ * two flat full-height blocks that said nothing), so below three we draw nothing
+ * and leave "right now" to the live wind pill above. Pure.
  */
 export function buildTodaysShape(periods: RawHourly[], nowMs: number): TodayShape | null {
   const HOUR_MS = 3600000;
@@ -122,7 +126,7 @@ export function buildTodaysShape(periods: RawHourly[], nowMs: number): TodayShap
     });
   }
 
-  if (samples.length < 2) return null;
+  if (samples.length < 3) return null;
 
   return { summary: summarize(samples), samples };
 }
