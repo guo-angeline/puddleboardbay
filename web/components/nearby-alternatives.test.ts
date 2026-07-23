@@ -40,7 +40,7 @@ describe("Go-here-instead wiring (item 8)", () => {
   it("shows the eyebrow and the honest lead line verbatim, no em dash", () => {
     expect(alt).toContain("Go here instead");
     expect(alt).toContain("No calm window left here today. Try one of these:");
-    expect(alt).not.toContain("—");
+    expect(alt).not.toContain(String.fromCharCode(0x2014)); // em dash, escaped so a repo grep never false-matches
   });
 
   it("hides entirely when the opened spot is fine or nothing nearby is calm", () => {
