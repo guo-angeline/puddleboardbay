@@ -492,7 +492,7 @@ Two tiers, different severities: a **hard exclusion** for thunderstorm hours (ch
 
 **Do NOT fold into 97.** Owner escalation required before deploy. Note item 106: the predeploy gate would **not** currently catch this change, which is why the escalation has to be deliberate rather than relied on.
 
-## 104. [ready] Water temperature: source hunt before any feature
+## 104. [in-progress] 2026-07-23T17:43:13Z Water temperature: source hunt before any feature
 
 Confirmed absent from the whole stack; NWS does not provide it. NOAA CO-OPS publishes `water_temperature` at sensor stations, but most of `TIDE_STATIONS` are harmonic and subordinate *prediction* stations, so statewide coverage is probably thin. **That is an assumption, not a measurement.** Measure coverage across all 177 spots before scoping anything. Cold shock, not air comfort, is the real safety variable, so this is the one genuinely valuable new dependency.
 
