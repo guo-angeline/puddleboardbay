@@ -114,7 +114,7 @@ Push variant of the conditions moat: a once-per-local-day, home-only, closable d
 
 ## Owner item, added 2026-07-23 (SoCal coverage expansion; owner-directed [ready])
 
-## 138. [ready] Expand SoCal coverage: find more California launches / boat ramps and add them as spots
+## 138. [in-progress] 2026-07-23T23:30:00Z Expand SoCal coverage: find more California launches / boat ramps and add them as spots
 
 **Owner directive 2026-07-23:** SoCal coverage is too low; search for additional California boat ramps and launches and add them as new spots. This promotes the SoCal slice of item 45 (the ALL-of-California umbrella, still `[blocked(no-source)]` for the regions with no registry) from blocked to ready. Item 45 stays open for the un-sourced regions (Delta, Central Valley, un-registried coast).
 
