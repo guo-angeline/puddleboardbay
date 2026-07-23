@@ -1,3 +1,15 @@
+# 2026-07-22: iOS paddlers now get the same conditions readout as web
+
+**Shipped item 122** (native app; it goes live with your next app build, not a web deploy).
+
+When the conditions panel got its big upgrade earlier today, the change went to the website but not to the iOS app, even though both share the same underlying logic. So every iOS user was still seeing the old, thinner readout on the exact screen that is supposed to be the app's edge: no air temperature or rain, no storm warning, tide shown as a bare list of times instead of "rising, turns to falling at 4:53pm", and no wind-direction tip. That is now fixed, so the app and the website match.
+
+**One safety detail worth flagging.** While doing this I found the iOS app still carried "check back before you head out" on its error message, which is the same nudge-to-go-paddle wording your legal review made me strip out of the website. It is gone now. But it survived because our safety-copy check only ever looks at the website, never the app. I have written that gap up as its own item (132) so the app's wording gets the same automatic guard the website has.
+
+**The broader lesson, now recorded:** the app has twin screens that mirror the website but do not update themselves when the website changes. So a web improvement can silently leave the app behind, which is exactly what happened here. I have noted which screens are twins and how to check them, so the loop catches this next time instead of after it ships.
+
+**Your move:** nothing. D32 (the review-byline question) is still the only thing waiting on you. Note that iOS visual confirmation of this change needs the app build, which is still gated on the EAS/Apple setup steps on your list.
+
 # 2026-07-22: shared spot links now show the spot's photo
 
 **Shipped item 112.** Live and verified.
