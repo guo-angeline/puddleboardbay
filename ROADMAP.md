@@ -249,6 +249,21 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Grade:** [proposed], medium. Plausible bounce-rate cost on cold mobile landings, but unproven without data. Cheap to test.
 
+## 134. [proposed] Onboarding flow to let users customize their experience
+
+**Owner-added 2026-07-22.** A first-run flow that lets a new user set up the app to their taste (candidate inputs: home region(s), difficulty/water-type preference, a home spot or two to watch, units, whether to be asked about alerts). The intent is a more personal first session than the current cold map of colored dots.
+
+**Read this against the strategy before scoping, because it cuts two ways.** The product's #1 problem is 78% one-and-done, and the explicit bet is a **low-friction** anonymous experience (no signup wall, no gate). An onboarding flow that stands between a cold visitor and the map risks *raising* the bounce it is meant to reduce, this is the single highest-stakes moment for a new visitor and 82% of them arrive direct on mobile. So the design question is not "what can we ask" but "what earns its friction". Likely answers:
+- **Optional and skippable, never a wall.** The map must remain reachable in one tap. Default to showing the product, then offering to tailor it, not the reverse.
+- **Prefer inferring over asking.** Geolocation already sorts by distance and "Recently checked" already personalizes on return; much of what an onboarding form would ask can be inferred or deferred to the moment it matters (ask about alerts when they save a spot, not upfront).
+- **Persist without an account.** All current personalization is anonymous localStorage (`ptw-favorites`, recents); onboarding choices should store the same way so the flow does not smuggle in a sign-in requirement (accounts exist but are optional, item 44).
+
+**Relationship to existing items, do not duplicate:**
+- **Item 120** ([proposed]) is the narrow first-run *value prop* strip (tell mobile users what the product is). Onboarding is the broader *customization* flow; 120 could be its first screen, or they could stay separate. Decide when both are specced.
+- The 2026-06 mobile UX pass already shipped a first-run *save-heart nudge* and a region-pill peek hint (see Shipped), so some first-run scaffolding exists to build on rather than reinvent.
+
+**Gating:** [proposed]. Retention is the current focus, and this is squarely a retention play, but it is also a friction risk, so it needs a PRD from product-visionary that (a) picks the minimum set of inputs that measurably help, (b) proves skip is truly free, and (c) defines the guardrail metric (cold-mobile bounce must not regress) before any build. No A/B until DAU > 100 still applies; ship skippable at 100% behind a kill switch and watch the bounce guardrail.
+
 ## 121. [proposed] Map loading skeleton on cold load
 
 **Problem:** `dynamic(() => import("MapView"), { ssr: false })` has no `loading` fallback, and map is the default mobile tab, so a cold visitor's first paint is header + filter bar + an unstyled blank pane where the map will mount.
@@ -432,7 +447,7 @@ Also expand the raw compass string unconditionally: the panel prints "from WNW" 
 
 **The boundary, recorded so the next item does not have to guess:** this stays inside the gated envelope because it names the direction the wind comes FROM and states a tradeoff. **The moment the panel names a direction for the paddler to GO, or pairs a launch time with a heading, it is option 2**: it needs the per-spot shoreline field and licensed counsel first.
 
-## 100. [proposed] Today's shape, from the hourly payload already in flight
+## 100. [ready] Today's shape, from the hourly payload already in flight
 
 Consolidate `NextGoodWindowPanel`'s fetch into `ConditionsPanel` (two components, two effects, one gridpoint today), extend `HourlyPeriod` past its three fields, and render the intra-day curve. **The item most likely to move the metric, because "when today" is the actual question.** Also asks whether `fetchWind`'s separate twelve-hourly fetch is needed at all once the hourly payload is fully read.
 
