@@ -241,13 +241,15 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Grade:** [proposed], medium. Real but purely aesthetic; reasonable to sequence behind photo-coverage growth (item 56).
 
-## 120. [proposed] Mobile first-run value prop before the map loads
+## 120. [ready] Mobile first-run value prop before the map loads
+
+**Promoted [proposed] -> [ready] 2026-07-23 (owner).** Chosen as the multiplier on the just-shipped conditions moat (items 100/61/8): ~82% of traffic is mobile cold-open landing on unlabeled dots, and those retention features sit one tab away under "List" while the app opens on "Map", so the exact one-and-done cohort barely sees them. Fixing the cold-open funnel step is higher leverage this week than more depth. **Absorb item 61's deferred escalation E1** while speccing: prefer surfacing a compact "good today" answer on the mobile Map tab (its E1 map-tab banner), not just a generic value-prop strip, so the moat work actually reaches the mobile landing. Ship at 100% behind a kill switch (no A/B, DAU<100); guardrail is cold-mobile bounce must not regress. No owner decision, no legal surface.
 
 **Problem:** the only descriptive copy ("Paddleboard & kayak spots across California") lives in a `hidden lg:inline` span, so mobile visitors (the majority, ~82% direct) land on a map of unlabeled colored dots with nothing saying what the product does or its scope.
 
-**Direction:** surface a compact one-line value prop on mobile too: a dismissible one-time strip above the filter bar, or fold the count/scope into the mobile "Map (N)" tab label.
+**Direction:** surface a compact one-line value prop on mobile too: a dismissible one-time strip above the filter bar, or fold the count/scope into the mobile "Map (N)" tab label. Per the E1 note above, the stronger version answers "what's good today" on the map tab, not just "what is this".
 
-**Grade:** [proposed], medium. Plausible bounce-rate cost on cold mobile landings, but unproven without data. Cheap to test.
+**Grade:** medium. Plausible bounce-rate cost on cold mobile landings, but unproven without data. Cheap to test.
 
 ## 134. [proposed] Onboarding flow to let users customize their experience
 
@@ -482,7 +484,9 @@ Note the adjacency risk this closes: notes carrying launch timing, directly abov
 
 **Acceptance:** four notes rewritten with no lat/lng touched (text-level edit, `git diff` shows zero removed coordinate lines); the sweep covers spots.json and fails when a promise is reintroduced; deployed.
 
-## 103. [proposed, PROTECTED] `evaluateGoodWindow` has no precipitation or thunderstorm term
+## 103. [ready] PROTECTED: `evaluateGoodWindow` has no precipitation or thunderstorm term
+
+**Promoted [proposed] -> [ready] 2026-07-23 (owner).** The correctness backbone of the just-shipped conditions features (100/61/8 all call `evaluateGoodWindow`), scheduled before the wet season. STILL PROTECTED: it feeds the push cron + alert emails, so the deploy requires owner approval (do NOT auto-deploy; build + escalate the deploy per the PROTECTED rule, and note the deploy-train-freeze implication if it lands unapproved).
 
 `web/lib/alerts/conditions-window.ts` gates a good window on three things only: inside the horizon, spot-local hour 6 to 18, and wind calm. **No precipitation term, though precipitation sits unread in the same payload.** That function feeds the in-app panel, **the push cron and the alert emails**, so the product can name a window "good" during a thunderstorm.
 
