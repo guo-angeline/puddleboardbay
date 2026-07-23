@@ -734,7 +734,7 @@ Not up for grabs (item + house rules): no price shown in v1; honest "not built y
 
 Answer: (owner, 2026-07-22, in chat) **Accept the defaults EXCEPT the decision rule.** Pure count (no email capture), spot-sheet placement near conditions, web only, and the expiry (400 impressions or 21 days) all stand. **No pre-registered build/kill/run-longer rule**, the owner will judge the numbers manually. The expiry is retained, so the fake door still self-terminates rather than becoming permanent; the owner reads the result and decides by eye.
 
-## D34 [OPEN] 2026-07-23 · Retention is bet on a push loop that cannot work at this scale; re-baseline onto the pull channel?
+## D34 [RESOLVED] 2026-07-23 · Retention is bet on a push loop that cannot work at this scale; re-baseline onto the pull channel?
 
 **This came from the strategy pass, and it is the one finding both the ceo and product-visionary agents reached independently, from different angles, same conclusion. Filing it as your decision, not acting on the big moves without you.**
 
@@ -758,7 +758,12 @@ Answer: (owner, 2026-07-22, in chat) **Accept the defaults EXCEPT the decision r
 
 My recommendation: **(a)**, or **(b)** if you want to move the measurement without touching the push build yet. The evidence for "the push read can't come" is airtight; the only inference is that enrollment won't self-accelerate, which 8 weeks of flat ~2% supports.
 
-Answer:
+Answer: (owner, 2026-07-23, in chat) **(a), REVISED to build both tracks in parallel, pull prioritized.** Prioritize building the pull features that optimize 2nd-time visits, AND keep building the push engine. So this is NOT the "demote push / park 117 / recast push as enhancer" version of (a): push stays a live build track, item 117 is NOT parked. What holds from (a): pull-first priority for retention, and the near-term retention signal we watch is the PULL metric (distinct days a device fires `conditions_viewed` / `recent_spot_clicked`), which is measurable now, while the push read stays the push track's own metric.
+
+Actioned this pass:
+- **Pull track (priority):** item 61 (cold-open ranked surface) already [in-progress]; promoted item 8 ("go here instead" nearby calmer alternative) to [ready]. These are the two pull, 2nd-visit features (item 61's own text pairs 61 + 8 as one epic). Their "sequence after the retention read" deferrals are lifted by this decision.
+- **Push track (parallel, keep building):** item 117 (weekend digest) stays [proposed] as a push-channel item, not parked; existing alert-loop work continues.
+- Not touched (separate decision): UGC/monetization gating, and native (D35).
 
 ## D35 [OPEN] 2026-07-23 · Native iOS is accruing parity debt for zero users; commit to enrollment, or freeze it?
 

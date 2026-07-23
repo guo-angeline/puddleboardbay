@@ -1579,9 +1579,11 @@ Then: merge `studio/item-44-google-auth` to main, set `LAST_UPDATED` to the real
 - Legal gate (marketing claims): the lawyer reviews the framing before deploy.
 - New user-facing surface: flag or staged tranche per the major-update directive.
 
-## 8. [proposed] "Go here instead": nearby calmer alternative when your spot is blown out
+## 8. [ready] "Go here instead": nearby calmer alternative when your spot is blown out
 
 *(Proposed by the studio 2026-07-05. Sequenced AFTER the ~2026-07-15 retention read, not before.)*
+
+**Promoted [proposed] -> [ready] 2026-07-23 (D34).** The owner ruled: prioritize the pull, 2nd-visit features. This is the second of the two (item 61 is the first, already in-progress; item 61's own text pairs 61 + 8 as one epic), and it is the clearest in-app expression of the moat, a within-session reason to keep exploring instead of leaving. Build-ready: the one "decision to settle" (the not-good-enough threshold must equal the calm-window definition) is already answered in the acceptance criteria, no owner input needed. The old "A/B flag (control shows nothing)" line is SUPERSEDED by the no-A/B-until-DAU>100 rule: ship at 100% behind a kill switch, not an A/B. The "sequence after the retention read" deferral is lifted by D34.
 
 The vision's signature promise is a redirect, not a wind number: "Crissy is blown out by 10am, go to Richardson Bay instead" (line 18, the stated moat). Today an opened spot that reads breezy/windy dead-ends, yet ~half of conditions checks land there (breezy 569 / windy 62 of ~1,155, `reports/analytics-2026-06-27.md`). When the selected spot has no near-term calm window, surface the 1-2 nearest spots that are calm now or soonest, each a tap-through. Clearest in-app expression of the per-spot-judgment moat, and a within-session reason to keep exploring instead of leaving.
 
