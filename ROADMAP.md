@@ -87,7 +87,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Owner item, added 2026-07-23 (discoverability review; owner-directed [ready])
 
-## 136. [ready] Server-render real spot content + make pages AI-citable (one-time asset upgrade, not an SEO program)
+## 136. [in-progress] 2026-07-23T20:03:11Z Server-render real spot content + make pages AI-citable (one-time asset upgrade, not an SEO program)
 
 **Problem (grounded, verified in the build).** The SEO plumbing is excellent (one `SITE_URL` feeding canonical/OG/sitemap/JSON-LD, per-spot metadata, `TouristAttraction`+`GeoCoordinates`+`BreadcrumbList` schema, a crawlable `sr-only` `<h1>` + related-spot nav). But the spot pages are thin content shells: the rich per-spot data (full notes, fee, water type, tide, conditions) lives in a client-only drawer that mounts via an effect, so it is NOT in the served HTML. Confirmed: for spot 134 (767-char notes), text past ~155 chars is absent from the built `spot/134.html`, and `spotDescription` truncates the JSON-LD/meta description to 155 chars. We built 173 indexable pages and publish a caption of each. Crawlers and AI answer engines (which extract visible text) see the caption, not the article, on exactly the differentiated data (launch type, fee tri-state, tide, conditions) that is our only real SEO/AEO advantage.
 
