@@ -138,7 +138,18 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Grade:** [ready], high confidence. Applies an already-validated owner decision to a component that was missed; the fix pattern exists in the codebase.
 
-## 111. [in-progress] 2026-07-22T20:15:57 Weekend / multi-day outlook in the conditions panel
+## 111. [parked] Weekend / multi-day outlook in the conditions panel
+
+**PARKED 2026-07-22 with a finding: this is substantially already shipped, and the useful increment needs an owner call.** Verified against the code (specs-are-the-reference):
+
+- The premise "in-app a paddler only sees today" is **not accurate**. `NextGoodWindowPanel` (shipped as item 20, inside `ConditionsPanel`) already renders "Next good window: {Weekday} {range}" across the full `DEFAULT_HORIZON_DAYS = 3` horizon, using the same `evaluateGoodWindow`. A Wednesday visitor whose Saturday is calm already sees "Sat 7 to 10am".
+- The item's OWN free-tier boundary is "the existing 1-3 day good-window" with deeper multi-day left to PaddlePass. That existing 1-3 day window is exactly what is already live. So the free version the item asks for is done.
+
+**Two genuine but gated increments remain, both owner calls, which is why this is parked not shipped:**
+1. **Framing copy** ("this weekend looks good at X", or relative "today/tomorrow" labels instead of a bare weekday). Small, touches web + native panels, and borderline the "too trivial" line the owner drew on review batch 2. Worth a slot only if the owner wants it.
+2. **The real UX gap:** `evaluateGoodWindow` returns only the SOONEST window, so when today or tomorrow is also calm it CROWDS OUT the weekend view. Surfacing "today calm AND this weekend calm" needs a second, weekend-constrained evaluation and starts to look like the multi-day grid the item reserves for PaddlePass. **Where the free/premium line sits here is a monetization decision, not mine to make unilaterally.**
+
+**Recommendation:** close as already-delivered, or promote a narrow follow-up for increment 1 only if the owner judges the framing worth it. Do not build increment 2 without a PaddlePass free-vs-premium boundary decision.
 
 **Problem:** `nextWindow.ts` already computes a 1-to-3-day good-window for alerts, but in-app a paddler only sees "today". The most natural return trigger, checking Thursday to plan Saturday, has no surface. Retention is the #1 goal and this reuses logic already in flight.
 
