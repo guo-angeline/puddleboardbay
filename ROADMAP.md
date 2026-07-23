@@ -131,6 +131,33 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Open question for the owner (proceed with the default if unanswered):** should the modal appear on mobile, where the app cold-opens on the Map tab and item 120 already shows a map-tab banner? Default: show it on both, since it is the first-visit gate and item 120's banner is a persistent teaser, not a once-a-day prompt. Design-lead to confirm the two don't stack awkwardly on a mobile first-visit.
 
+## Owner item, added 2026-07-23 (SoCal coverage expansion; owner-directed [ready])
+
+## 138. [ready] Expand SoCal coverage: find more California launches / boat ramps and add them as spots
+
+**Owner directive 2026-07-23:** SoCal coverage is too low; search for additional California boat ramps and launches and add them as new spots. This promotes the SoCal slice of item 45 (the ALL-of-California umbrella, still `[blocked(no-source)]` for the regions with no registry) from blocked to ready. Item 45 stays open for the un-sourced regions (Delta, Central Valley, un-registried coast).
+
+**What's already been mined, so we don't re-ingest.** The CCC (California Coastal Commission) Coastal Access dataset was the working registry for the SoCal coast and is largely spent: LA (item 90, 6 spots), San Diego (item 94, 16), Orange County (item 95, 7), and a statewide close-out of the last CCC launches (item 96). CCC is **coastal only.** That is why the coast is covered but SoCal still feels thin: the population-dense **inland** paddle water is missing.
+
+**The real gap, and the source for it: inland SoCal reservoirs and lakes, via DBW.** Per item 40's own re-evaluation, CA DBW is the **only** source covering inland SoCal (Castaic, Pyramid, Perris, Silverwood, Big Bear, Salton Sea, Colorado River) and the only source with an ownership field (`Open To`: public / private / club / guests). These are exactly the "boat ramps" the owner named, and inland flatwater is high-value paddle water close to the LA / Inland Empire / San Diego user base. Bonus: `tide_sensitive` is trivially `false` on an inland lake (set from fact, not inference), so the #1 landmine that made coastal ingest risky does not apply here.
+
+**Method is FIXED. Do it the proven way (items 90 / 94 / 95 / 96), not the spot-79 way:**
+- A registry produces the candidate; a search NEVER produces a record (spot 79 lesson). Start from DBW facilities (inland SoCal) plus any county-park / harbor-district coastal launches CCC missed.
+- **DBW publishes no coordinates.** Geocode + re-pin every record to the actual put-in, verified against a second source (OSM slipway / beach node, satellite, or the operator's own map). A put-in coordinate, never a parking lot (the 127 / 130 / 132 trap).
+- **Use the facility type verbatim.** DBW and CCC distinguish hand-launch from boat ramp; never upgrade a beach or hand-launch into a "paved ramp" (defect 47 / 120).
+- **Confirm paddle access per site against the operating agency.** A DBW ramp is a motorized / trailered registry: some reservoirs ban body contact, cap horsepower, require an AIS inspection, or are drinking-water closed to SUP. `Open To` handles public / private (the spot-92 failure). A DBW type is NEVER grounds to hide a spot.
+- **Per-field provenance on every record.** A guessed boolean is worse than an absent one.
+- Notes are evergreen description of the spot (house rule), never a reply to anyone.
+- Run the per-coordinate lookups a new region needs: `web/scripts/precompute_gridpoints.py` (NWS gridpoints) always; `TIDE_STATIONS` in `web/lib/conditions.ts` only for any genuinely tide-sensitive coastal additions (inland lakes need neither a station nor the flag). Extend `REGIONS` in `lib/types.ts` by ADDING values, never renaming.
+
+**Acceptance:**
+- Scope the tranche before building: pick ONE SoCal sub-region to start (recommend inland SoCal reservoirs via DBW, or a single named county), list the candidate launches, and publish a CARRIED / MERGED / GENUINE-GAP classification (item-45 method) under `reports/` so only genuine gaps are ingested.
+- Every new record carries per-field provenance, a put-in coordinate verified against a second source, facility type verbatim, and confirmed public paddle access.
+- New spots flow through the full pipeline to every surface (list, map, `/spot/[id]`, sitemap, OG, JSON-LD, and both alert crons via `lib/spots.ts`), fully enriched (difficulty, fee tri-state, notes, amenities), not just geocoded.
+- Data guards + `npm test` + build pass; `precompute_gridpoints.py` re-run; no existing coordinate churn (`git diff data/spots.json | grep '"lat"\|"lng"'` shows only new rows).
+
+**Priority note:** the roadmap's stated focus is retention first (items 61, 8, 137), coverage / SEO behind it (item 136, D34). This is owner-directed to `[ready]` regardless; sequence it against 137 at the owner's call.
+
 ## Studio review, added 2026-07-22 (high-bar hourly pass; one native-parity gap surfaced, filed [proposed] pending an owner call on native release scope)
 
 ## 133. [blocked(apple-enrollment)] Native app has no reviews surface at all, not a display bug, an entire UGC feature is absent
@@ -532,7 +559,9 @@ Note the adjacency risk this closes: notes carrying launch timing, directly abov
 
 **Acceptance:** four notes rewritten with no lat/lng touched (text-level edit, `git diff` shows zero removed coordinate lines); the sweep covers spots.json and fails when a promise is reintroduced; deployed.
 
-## 103. [in-progress] 2026-07-23T19:35:56Z PROTECTED: `evaluateGoodWindow` has no precipitation or thunderstorm term
+## 103. [blocked(owner-deploy)] PROTECTED: `evaluateGoodWindow` has no precipitation or thunderstorm term
+
+**CODE DONE + VERIFIED, DEPLOY HELD FOR OWNER APPROVAL (2026-07-23).** Built on branch `studio/storm-precip-term` @ `61b244c` (two commits: `0ebf603` protected thunderstorm exclusion, `61b244c` in-app rain caveat). Verifier PASS (724 tests, +9; the protected diff is tight, storm exclusion reaches push+email via `findGoodWindow`, the rain label does NOT reach push/email, honesty mutation caught). Lawyer CLEAR (strictly risk-reducing; keep the framing at "a good window in the forecast", never "storm-safe"; keep the rain label factual, both already satisfied). NOT deployed: it changes push/email send behaviour, so it needs the owner's explicit deploy approval per the PROTECTED rule. **To release:** merge the branch to main, write its HEAD sha to a repo-root `DEPLOY_APPROVAL` file, `vercel deploy --prod --cwd web`, verify, tag `deployed-prod`, delete `DEPLOY_APPROVAL`. Until then the branch is NOT on main, so it does not freeze the deploy train for items 136/137.
 
 **Promoted [proposed] -> [ready] 2026-07-23 (owner).** The correctness backbone of the just-shipped conditions features (100/61/8 all call `evaluateGoodWindow`), scheduled before the wet season. STILL PROTECTED: it feeds the push cron + alert emails, so the deploy requires owner approval (do NOT auto-deploy; build + escalate the deploy per the PROTECTED rule, and note the deploy-train-freeze implication if it lands unapproved).
 
@@ -1477,6 +1506,8 @@ Full analysis: `reports/sd-ingest-candidates-2026-07-22.md`.
 **Acceptance:** every published Lake Tahoe Water Trail site is classified with counts published in a report under `reports/`; any record added carries per-field provenance and a put-in coordinate verified against a second source (OSM slipway/beach node or the site's own map); `npm test` and the data guards pass; no existing `lat`/`lng` changes.
 
 ## 45. [blocked(no-source)] Expand coverage: ALL of California, SoCal first (RESCOPED AGAIN 2026-07-22 by owner directive; was Northern California)
+
+**2026-07-23: the SoCal slice was promoted to `[ready]` as item 138** (owner directive, low SoCal coverage), scoped to the proven CCC / DBW registry method. This umbrella item stays `[blocked(no-source)]` for the regions still lacking a field-complete registry (Delta, Central Valley, un-registried coast).
 
 **OWNER DIRECTIVE 2026-07-22: the target is now ALL of California, not Northern California, and Southern California is the priority because that is where many target customers are.** This changes the item's shape twice over. The 2026-07-16 rescope concluded "no registry exists for the rest of NorCal"; that conclusion was reached having searched exactly ONE registry (SF Bay Water Trail) and disqualified one (DBW), with the Sierra, Delta, Valley and coast never searched at all. It was an honest finding about the Bay registry being spent, but it was never a statewide search. Treat it as such.
 
