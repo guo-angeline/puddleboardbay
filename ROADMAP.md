@@ -157,7 +157,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Grade:** [ready], high confidence. Cheap (logic exists), targets the actual #1 goal. Flag the premium-tier boundary in the spec.
 
-## 112. [ready] Spot photos in the per-spot OG share card
+## 112. [in-progress] 2026-07-22T20:20:41 Spot photos in the per-spot OG share card
 
 **Problem:** `spot-photos.json` has real photos for 109 of 177 spots (62%), but `app/spot/[id]/opengraph-image.tsx` never imports `getSpotPhoto`, so every shared link renders the same generic navy text card. Share is a primary tracked action and growth is ~82% word-of-mouth; the app's real social-distribution surface is not using the imagery it already has.
 
