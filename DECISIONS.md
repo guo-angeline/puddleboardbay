@@ -759,3 +759,20 @@ Answer: (owner, 2026-07-22, in chat) **Accept the defaults EXCEPT the decision r
 My recommendation: **(a)**, or **(b)** if you want to move the measurement without touching the push build yet. The evidence for "the push read can't come" is airtight; the only inference is that enrollment won't self-accelerate, which 8 weeks of flat ~2% supports.
 
 Answer:
+
+## D35 [OPEN] 2026-07-23 · Native iOS is accruing parity debt for zero users; commit to enrollment, or freeze it?
+
+**Second strategy pass, and again both the ceo and product-visionary agents reached this same finding independently. It is orthogonal to D34 (D34 is which web retention channel; this is whether native should consume build slots at all right now).**
+
+**The claim.** The native iOS app (item 72, built 2026-07-19) is not a shipping product, it is a growing liability. It reaches zero users and has no release date, because launch is gated on five owner-only steps unmoved since 2026-07-19: the push migration `20260719_native_push.sql` unapplied, the M5 backend committed but undeployed, `eas init` not run, `EXPO_PUBLIC_POSTHOG_KEY` unset, and Apple Developer enrollment (paid, the long pole at ~1-2 weeks) not started. Meanwhile the studio keeps spending on native parity: item 122 already consumed a full build slot (commit 889d772), and 135/133/132/80 are queued, each stamped "ships with next EAS build" and "must be resolved before the first TestFlight." Every web change now spawns a native shadow item by construction (135 exists only because item 100's web ship did not propagate), so the parity queue never closes.
+
+**Why it matters in a flat market.** Every existing user is on web. In a capped market the only levers are depth and monetization per existing user, and a native-parity slot is a slot not spent on the live web pull surface (item 61, in-progress) or the demand probe (item 93). Keeping a zero-user app in lockstep with a moving web app is unbounded work for no realizable value until an owner action that has sat undone for four days.
+
+**Your call. Options (answer on the line):**
+- **(a) Commit to native.** You take the five steps (Apple enrollment first, it gates real push and any external tester). Then the parity ledger (80/132/133/135) gets cleared in one focused sweep before TestFlight. Native becomes a real surface worth keeping in sync.
+- **(b) Freeze native.** Consolidate 80/132/133/135 and any future native twin under a single `[blocked(apple-enrollment)]` gate, stop grading native-parity items `[ready]`, and accept deliberate bounded drift: re-sync parity in one batch pass AFTER enrollment, not continuously before it. Frees the queue for web depth/monetization now.
+- **(c) Shelve native indefinitely.** Same as freeze, but you're signalling native is not happening this quarter at all, so even the batch re-sync is off until further notice.
+
+Until you answer, this loop will not promote any native item to `[ready]` (already its guardrail), and I'd recommend the build loop not pick native parity up either. My recommendation: **(b)**, freeze. The parity debt is only owed if native ships, and buying it now pre-pays for optionality you have not committed to. One line, "I'll enroll by X" or "freeze native", collapses the ambiguity and stops the leak.
+
+Answer:

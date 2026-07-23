@@ -492,9 +492,11 @@ Two tiers, different severities: a **hard exclusion** for thunderstorm hours (ch
 
 **Do NOT fold into 97.** Owner escalation required before deploy. Note item 106: the predeploy gate would **not** currently catch this change, which is why the escalation has to be deliberate rather than relied on.
 
-## 104. [proposed] Water temperature: source hunt before any feature
+## 104. [ready] Water temperature: source hunt before any feature
 
 Confirmed absent from the whole stack; NWS does not provide it. NOAA CO-OPS publishes `water_temperature` at sensor stations, but most of `TIDE_STATIONS` are harmonic and subordinate *prediction* stations, so statewide coverage is probably thin. **That is an assumption, not a measurement.** Measure coverage across all 177 spots before scoping anything. Cold shock, not air comfort, is the real safety variable, so this is the one genuinely valuable new dependency.
+
+**Promoted [proposed] -> [ready] 2026-07-23 (strategy pass).** The [ready] deliverable is the SOURCE HUNT only: measure real `water_temperature` coverage across the 177 spots (which stations actually return it, at what distance) and report whether statewide coverage is viable, before any feature is scoped. Self-contained, no owner decision, no legal surface, and it advances depth-per-user + cold-shock safety (a lever the owner named), orthogonal to the open D34/D35 decisions. If the hunt shows coverage is thin, the finding itself is the value; the feature build stays a separate later item.
 
 ## 105. [done] Owner traffic excluded from ten analytics queries, guarded (2026-07-22, 487f762; analytics-only, no deploy)
 
