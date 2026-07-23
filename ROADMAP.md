@@ -241,7 +241,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Grade:** [proposed], medium. Real but purely aesthetic; reasonable to sequence behind photo-coverage growth (item 56).
 
-## 120. [ready] Mobile first-run value prop before the map loads
+## 120. [in-progress] 2026-07-23T18:56:48Z Mobile first-run value prop before the map loads
 
 **Promoted [proposed] -> [ready] 2026-07-23 (owner).** Chosen as the multiplier on the just-shipped conditions moat (items 100/61/8): ~82% of traffic is mobile cold-open landing on unlabeled dots, and those retention features sit one tab away under "List" while the app opens on "Map", so the exact one-and-done cohort barely sees them. Fixing the cold-open funnel step is higher leverage this week than more depth. **Absorb item 61's deferred escalation E1** while speccing: prefer surfacing a compact "good today" answer on the mobile Map tab (its E1 map-tab banner), not just a generic value-prop strip, so the moat work actually reaches the mobile landing. Ship at 100% behind a kill switch (no A/B, DAU<100); guardrail is cold-mobile bounce must not regress. No owner decision, no legal surface.
 
