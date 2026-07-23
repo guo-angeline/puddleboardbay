@@ -15,6 +15,15 @@ Process: /ship PRD workflow skipped again (same StructuredOutput schema failure 
 Follow-ups: E1 (mobile map-tab banner, since mobile opens on Map and the list is one tap away) is a possible fast-follow, not built.
 Next up: Item 104 (water temperature source hunt), next [ready].
 
+## 2026-07-23 · Item 8 "Go here instead": nearby calmer alternative when blown out · SHIPPED
+What: When the opened spot has no calm daytime window left today, the drawer surfaces up to 2 nearest spots that do, each a tap-through. The vision's signature moat promise ("Crissy is blown out, go to Richardson Bay instead"), now live for the ~half of conditions checks that land on a breezy spot and used to dead-end.
+Evidence: Verifier PASS, 707 tests (+9). Legal gate CLEAR, no changes: the block sits above the panel's existing unconditional safety disclaimer, co-render met by placement, and a redirect toward calmer water reduces liability. Live proof: blown-out Calero County Park offered Coyote Lake (14.3mi) + Hooper Beach (18.2mi) both Calm, tap-through swapped the drawer to Coyote Lake, and Aquatic Park Cove (no calm neighbors) correctly showed nothing.
+Measure: New dwell-gated INTENT events alt_suggested_shown + alt_clicked (with from_spot_id), changelog entry filed. No experiment (below DAU 100), behind the go-here-instead kill switch, default ON.
+Architecture: Reuses item 61's machinery anchored to the opened spot (nearest K=8, one cached hourly fetch each, only when blown out); evaluateGoodWindow is the good-enough bar, so an alternative never contradicts its own drawer verdict. Renders between Today's-shape and Looking-ahead; hides when the spot is fine or nothing nearby is calm.
+Deployed: Production, paddletowater.com, 2026-07-23 (45954af). Confirmed live in the prod bundle and exhaustively live-verified locally against real NWS data.
+Decisions raised: none. D34 (pull-first 2nd-visit) prioritized this pair (item 61 + 8). Parked: none.
+Next up: none ready. Backlog is dry, 0 [ready], awaiting owner promotion of a [proposed] item.
+
 ## 2026-07-23 · Item 100: Today's shape from the in-flight hourly payload · SHIPPED
 What: Spot conditions panel now answers "when today" with a one-line rest-of-day wind read ("Calm the rest of today", "Winds pick up by 11am", "Winds ease by...", "Storms possible later today") plus an hour-by-hour wind sparkline. Live example resolves an ambiguous "Wind 7-15 mph" range into "calm now, winds pick up by 11am", the actual paddle-decision signal. Live-reading eyebrow renamed "Conditions today" to "Right now".
 Evidence: Adversarial verifier PASS, 679 tests (+22, incl. a transition-hour off-by-one mutation the tests caught), protected files untouched, no coordinate changes, no em dashes. Lawyer CLEAR (four strings are forecast facts, not directives); its optional note actioned same ship, the safety disclaimer now co-renders unconditionally and closes a prior gap where the panel could paint with none on a current-reading fetch error.
