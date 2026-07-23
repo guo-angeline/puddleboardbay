@@ -519,7 +519,7 @@ SKIPPED  'vercel deploy --prod --cwd web'     <- what actually works, and what w
 
 **Grade:** [proposed]. Real gap, but filing not building: it is a test-infra addition the owner may want scoped alongside the broader native-parity/QA posture.
 
-## 93. [ready] Demand test for the AI trip planner: a placeholder button that counts interest
+## 93. [in-progress] 2026-07-22T21:13:14 Demand test for the AI trip planner: a placeholder button that counts interest
 
 **Owner-directed 2026-07-22.** Do not build the trip planner. Build the button that measures whether anyone wants it, run it, and bring the owner a number they can decide on.
 
