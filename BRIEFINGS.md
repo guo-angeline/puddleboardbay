@@ -1,3 +1,17 @@
+# 2026-07-22: the trip-planner interest test is live
+
+**Shipped item 93**, the fake-door test you green-lit. Live and verified.
+
+Every spot sheet now has a "Plan my trip" button marked "Not built yet". Tapping it opens a short, honest sheet: it says the feature does not exist, describes what it would do (a suggested launch time and out-and-back direction that works with the wind and tide), and makes clear nothing has actually checked today's conditions. No spinner pretending to work, no email ask, no data collected beyond an anonymous count. It turns itself off automatically on 12 August, or sooner if you flip its switch.
+
+Per your call, there is no pre-set pass/fail rule, so you will read the numbers and decide by eye. The one worth watching is not raw taps (curiosity spikes early and means little) but the same person tapping on more than one day, which is the honest sign someone actually wants it. Those numbers will be in PostHog.
+
+The lawyer review of the wording came back clean, with one small consistency tweak I took (the badge now says "Not built yet" to match the sheet, rather than "Coming soon").
+
+**With 93 done, the ready queue is empty again.** D32 (the review-byline question) is still open, and 21 backlog ideas are waiting for you to promote any you want built. The loop idles until then.
+
+**Your move:** watch the trip-planner numbers over the next three weeks and decide; answer D32 whenever; promote a backlog idea to point the loop at something new.
+
 # 2026-07-22: the ready queue is empty, so the loop is now waiting on you
 
 **Item 88 (Lake Tahoe) done to the point it should be, and parked there deliberately.** I did the cheap, high-value half: confirmed the Lake Tahoe Water Trail is a real, complete registry like the one that made the Bay Area coverage possible, and that the gap is large and genuine (we have 3 of the 13 sites I could name, with roughly two dozen more to pull). I stopped before the expensive half, adding ~30 records one verified photo at a time, because Tahoe is a 2 to 4 hour drive from where essentially all your users are. Those records serve trip planning, not the daily "is it good today" use your retention work is built around, so they are the right work later, when reaching Tahoe users is actually the goal, not now. The full write-up is in reports/. I also cleared a flagged question about the Sand Harbor pin: it is correct as is.
