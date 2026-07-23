@@ -114,30 +114,9 @@ Push variant of the conditions moat: a once-per-local-day, home-only, closable d
 
 ## Owner item, added 2026-07-23 (SoCal coverage expansion; owner-directed [ready])
 
-## 138. [in-progress] 2026-07-23T23:30:00Z Expand SoCal coverage: find more California launches / boat ramps and add them as spots
+## 138. [done] Expand SoCal coverage, tranche 1: 5 inland reservoirs + Inland Empire region (deployed 2026-07-23, 6749d1d)
 
-**Owner directive 2026-07-23:** SoCal coverage is too low; search for additional California boat ramps and launches and add them as new spots. This promotes the SoCal slice of item 45 (the ALL-of-California umbrella, still `[blocked(no-source)]` for the regions with no registry) from blocked to ready. Item 45 stays open for the un-sourced regions (Delta, Central Valley, un-registried coast).
-
-**What's already been mined, so we don't re-ingest.** The CCC (California Coastal Commission) Coastal Access dataset was the working registry for the SoCal coast and is largely spent: LA (item 90, 6 spots), San Diego (item 94, 16), Orange County (item 95, 7), and a statewide close-out of the last CCC launches (item 96). CCC is **coastal only.** That is why the coast is covered but SoCal still feels thin: the population-dense **inland** paddle water is missing.
-
-**The real gap, and the source for it: inland SoCal reservoirs and lakes, via DBW.** Per item 40's own re-evaluation, CA DBW is the **only** source covering inland SoCal (Castaic, Pyramid, Perris, Silverwood, Big Bear, Salton Sea, Colorado River) and the only source with an ownership field (`Open To`: public / private / club / guests). These are exactly the "boat ramps" the owner named, and inland flatwater is high-value paddle water close to the LA / Inland Empire / San Diego user base. Bonus: `tide_sensitive` is trivially `false` on an inland lake (set from fact, not inference), so the #1 landmine that made coastal ingest risky does not apply here.
-
-**Method is FIXED. Do it the proven way (items 90 / 94 / 95 / 96), not the spot-79 way:**
-- A registry produces the candidate; a search NEVER produces a record (spot 79 lesson). Start from DBW facilities (inland SoCal) plus any county-park / harbor-district coastal launches CCC missed.
-- **DBW publishes no coordinates.** Geocode + re-pin every record to the actual put-in, verified against a second source (OSM slipway / beach node, satellite, or the operator's own map). A put-in coordinate, never a parking lot (the 127 / 130 / 132 trap).
-- **Use the facility type verbatim.** DBW and CCC distinguish hand-launch from boat ramp; never upgrade a beach or hand-launch into a "paved ramp" (defect 47 / 120).
-- **Confirm paddle access per site against the operating agency.** A DBW ramp is a motorized / trailered registry: some reservoirs ban body contact, cap horsepower, require an AIS inspection, or are drinking-water closed to SUP. `Open To` handles public / private (the spot-92 failure). A DBW type is NEVER grounds to hide a spot.
-- **Per-field provenance on every record.** A guessed boolean is worse than an absent one.
-- Notes are evergreen description of the spot (house rule), never a reply to anyone.
-- Run the per-coordinate lookups a new region needs: `web/scripts/precompute_gridpoints.py` (NWS gridpoints) always; `TIDE_STATIONS` in `web/lib/conditions.ts` only for any genuinely tide-sensitive coastal additions (inland lakes need neither a station nor the flag). Extend `REGIONS` in `lib/types.ts` by ADDING values, never renaming.
-
-**Acceptance:**
-- Scope the tranche before building: pick ONE SoCal sub-region to start (recommend inland SoCal reservoirs via DBW, or a single named county), list the candidate launches, and publish a CARRIED / MERGED / GENUINE-GAP classification (item-45 method) under `reports/` so only genuine gaps are ingested.
-- Every new record carries per-field provenance, a put-in coordinate verified against a second source, facility type verbatim, and confirmed public paddle access.
-- New spots flow through the full pipeline to every surface (list, map, `/spot/[id]`, sitemap, OG, JSON-LD, and both alert crons via `lib/spots.ts`), fully enriched (difficulty, fee tri-state, notes, amenities), not just geocoded.
-- Data guards + `npm test` + build pass; `precompute_gridpoints.py` re-run; no existing coordinate churn (`git diff data/spots.json | grep '"lat"\|"lng"'` shows only new rows).
-
-**Priority note:** the roadmap's stated focus is retention first (items 61, 8, 137), coverage / SEO behind it (item 136, D34). This is owner-directed to `[ready]` regardless; sequence it against 137 at the owner's call.
+Filled the zero-coverage inland-SoCal gap with the first tranche: Lake Perris, Silverwood Lake, Castaic Lagoon, Big Bear Lake, Pyramid Lake (ids 185-189), and a new `REGIONS` value "Inland Empire". Method was the proven items-90/94/95/96 way: operator/registry generates the candidate, the put-in coordinate is an OSM-verified slipway (not a geocoded address, several named identically to the operator's own ramp), public paddle access confirmed per site against the operating agency, every field with provenance, `tide_sensitive:false` from fact. Excluded with reasons (`reports/socal-inland-ingest-2026-07-23.md`): Lake Skinner + Diamond Valley (drinking-water body-contact bans, no SUP), Lake Cahuilla (conflicting access); deferred: Lake Elsinore + Lake Gregory (access confirmed, put-in not second-source-verified). gridpoints re-run (verified live: Big Bear conditions loaded real NWS data); no existing coordinate churn; verifier PASS on 9 data checks, lawyer CLEAR. The merge preserved the concurrently-landed Item 100 fix (the stale-worktree revert trap the verifier caught). **Follow-up tranches** (San Diego County inland reservoirs; the two deferrals) remain; item 45 stays open for the un-registried regions.
 
 ## Studio review, added 2026-07-22 (high-bar hourly pass; one native-parity gap surfaced, filed [proposed] pending an owner call on native release scope)
 
