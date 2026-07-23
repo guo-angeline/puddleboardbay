@@ -28,6 +28,9 @@ interface Props {
   // open, behind the spot_sheet_full_height flag (HomeClient decides the
   // value; this component stays a dumb consumer either way).
   startExpanded?: boolean;
+  // Item 8: open a different spot from inside the drawer (the "go here instead"
+  // tap-throughs). Wired to handleSelect(spot, "related") in HomeClient.
+  onSelectSpot?: (spot: Spot) => void;
 }
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
@@ -58,7 +61,7 @@ const FULL = 0.92; // dragged-up / expanded height
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite, startExpanded }: Props) {
+export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite, startExpanded, onSelectSpot }: Props) {
   const [copied, setCopied] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
 
@@ -161,6 +164,14 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
   // (`forceFull`); the desktop side panel is a persistent non-modal region and
   // keeps interacting with the map/list beside it, so it gets NONE of this.
   const panelRef = useRef<HTMLDivElement>(null);
+  // Item 8: a same-session spot swap (a "go here instead" tap-through, or a
+  // list-row tap while the drawer is open) otherwise keeps the previous scroll
+  // position, landing the reader mid-conditions on the new spot. Reset to the
+  // top so its name/photo are seen first. A fresh open is already at top, so
+  // this no-ops there.
+  useEffect(() => {
+    panelRef.current?.scrollTo({ top: 0 });
+  }, [spot?.id]);
   useEffect(() => {
     const forceFull = isMobile && fullScreen;
     const panel = panelRef.current;
@@ -570,7 +581,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
           )}
 
           {/* Live tide + wind — the reason to come back. */}
-          <ConditionsPanel spot={spot} />
+          <ConditionsPanel spot={spot} onSelectSpot={onSelectSpot} />
 
           {/* Item 93: fake-door demand test for a future trip planner, placed
               near conditions (its subject) where nearly every spot-opener sees

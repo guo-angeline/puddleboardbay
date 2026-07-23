@@ -8,6 +8,45 @@ import { evaluateGoodToday, selectGoodToday, type GoodTodayEntry, type GoodToday
 const UNKNOWN: GoodTodaySignal = { goodToday: false, nowPaddleability: "unknown", window: null };
 
 /**
+ * Item 8. Resolve ONE spot's good-today signal, to decide whether the opened
+ * spot is "blown out" (no calm window left today) and should offer alternatives.
+ * Rides the same shared `getHourlyPeriods` cache the drawer's NextGoodWindowPanel
+ * already fills for this spot, so it costs no extra fetch. `signal` is null until
+ * resolved for the current spot; `loading` follows the resolved-id pattern (no
+ * synchronous setState in the effect body).
+ */
+export function useGoodTodaySignal(
+  spot: Spot,
+  enabled = true
+): { signal: GoodTodaySignal | null; loading: boolean } {
+  const [signal, setSignal] = useState<GoodTodaySignal | null>(null);
+  const [resolvedId, setResolvedId] = useState<number | null>(null);
+  const loading = enabled && resolvedId !== spot.id;
+
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    const now = Date.now();
+    getHourlyPeriods(spot.id, spot.lat, spot.lng)
+      .then((r) => {
+        if (!alive) return;
+        setSignal(r.ok ? evaluateGoodToday(r.periods, now) : UNKNOWN);
+        setResolvedId(spot.id);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setSignal(UNKNOWN);
+        setResolvedId(spot.id);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [enabled, spot.id, spot.lat, spot.lng]);
+
+  return { signal: resolvedId === spot.id ? signal : null, loading };
+}
+
+/**
  * Item 61. Resolve "good to paddle today" for a BOUNDED candidate set and return
  * the top `limit` worth surfacing. Each candidate costs one hourly fetch via the
  * shared `getHourlyPeriods` cache (same payload the drawer's next-good-window /

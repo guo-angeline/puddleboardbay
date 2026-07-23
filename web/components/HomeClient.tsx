@@ -990,6 +990,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             startExpanded={startExpanded}
             isFavorite={selected ? favorites.has(selected.id) : false}
             onToggleFavorite={toggleFavorite}
+            onSelectSpot={(s) => handleSelect(s, "related")}
           />
         )}
 

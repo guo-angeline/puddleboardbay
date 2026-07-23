@@ -22,6 +22,7 @@ import { useGenuineView } from "@/lib/useGenuineView";
 import { recordExplored } from "@/lib/exploredSpots";
 import NextGoodWindowPanel from "@/components/NextGoodWindowPanel";
 import TodaysShapePanel from "@/components/TodaysShapePanel";
+import NearbyAlternatives from "@/components/NearbyAlternatives";
 
 /**
  * Live tide + wind for the selected spot. Client-only: fetches NOAA tides and
@@ -186,7 +187,13 @@ function WindReading({
   );
 }
 
-export default function ConditionsPanel({ spot }: { spot: Spot }) {
+export default function ConditionsPanel({
+  spot,
+  onSelectSpot,
+}: {
+  spot: Spot;
+  onSelectSpot?: (spot: Spot) => void;
+}) {
   // Item 83: one switch stops the marks UI and the collecting behind it.
   const collectablesOn = useKillSwitch("collectables");
   // Wind and tide resolve independently so the wind verdict (the ~300ms dominant
@@ -427,6 +434,12 @@ export default function ConditionsPanel({ spot }: { spot: Spot }) {
           draw from the one shared hourly fetch (getTodaysShape / getNextWindow),
           so this pair adds no requests beyond the single hourly call. */}
       <TodaysShapePanel spot={spot} />
+
+      {/* Item 8: when THIS spot is blown out today, the direct answer (a calmer
+          nearby spot) outranks the come-back-later "Looking ahead" below it, so
+          it renders between them. Above the foot disclaimer, which co-renders. */}
+      <NearbyAlternatives spot={spot} onSelectSpot={onSelectSpot} />
+
       <NextGoodWindowPanel spot={spot} />
 
       {/* The safety disclaimer renders UNCONDITIONALLY at the foot of the panel,

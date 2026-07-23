@@ -14,6 +14,19 @@ without touching this file.
 
 ---
 
+## 2026-07-23 (item 8): "go here instead" redirect events added (added)
+
+Two INTENT events for the in-drawer "go here instead" surface: when the OPENED spot has no calm daytime window left today, the drawer offers up to 2 nearest spots that do.
+
+- **`alt_suggested_shown`** (INTENT, dwell-gated via `useGenuineView`, not on mount). Props: `spot_id`, `region` (the BLOWN-OUT opened spot), `count` (alternatives offered). The impression, keyed to the spot that dead-ended.
+- **`alt_clicked`** (INTENT). Props: `spot_id`, `region` (the ALTERNATIVE tapped), `from_spot_id` (the blown-out spot it rescued). The redirect conversion; `from_spot_id` lets a blown-out -> alternative path be reconstructed.
+
+**How to read it.** This measures the moat promise (a within-session redirect that keeps a user exploring instead of leaving on a blown-out spot). The conversion is `alt_clicked / alt_suggested_shown`. The "good enough to recommend" bar is `evaluateGoodWindow` (the same calm-window definition the cron, the drawer, and item 61 use), so a recommended alternative never contradicts that spot's own drawer verdict. It only fires when the opened spot is blown out, so its denominator is blown-out opens, not all opens.
+
+**Comparability:** both NEW from 2026-07-23, no prior series. Gated behind the `go-here-instead` kill switch (default ON). Distinct from item 61's `good_today_*` (cold-open list surface, anchored to the user): this is the in-drawer surface anchored to the OPENED spot, so do not pool them.
+
+---
+
 ## 2026-07-23 (item 61): good-to-paddle-today surface events added (added)
 
 Two INTENT events for the cold-open "good to paddle today" ranked surface (a third pinned section in the list panel, above Recently checked): the top nearby spots that still have a calm daytime window left today.

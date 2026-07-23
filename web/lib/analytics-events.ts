@@ -82,6 +82,11 @@ export type IntentEventName =
   // whether the visitor was geolocated); `_clicked` is a tap into a surfaced row.
   | "good_today_shown"
   | "good_today_clicked"
+  // Item 8: the in-drawer "go here instead" redirect shown when the OPENED spot
+  // is blown out today. `_shown` is a dwell-gated impression on the blown-out
+  // spot; `_clicked` is a tap-through to a suggested alternative.
+  | "alt_suggested_shown"
+  | "alt_clicked"
   | "feedback_opened"
   | "view_switched"
   | "nav_home_clicked"
@@ -190,6 +195,11 @@ export interface EventPropMap {
   // to the map's default center (false). Segment adoption by both.
   good_today_shown: { count: number; located: boolean };
   good_today_clicked: { spot_id: number; region: string };
+  // Item 8. `alt_suggested_shown`: spot_id/region are the BLOWN-OUT opened spot;
+  // `count` is how many alternatives were offered. `alt_clicked`: spot_id/region
+  // are the ALTERNATIVE tapped; `from_spot_id` is the blown-out spot it rescued.
+  alt_suggested_shown: { spot_id: number; region: string; count: number };
+  alt_clicked: { spot_id: number; region: string; from_spot_id: number };
   alert_optin_shown: {
     platform: OptInPlatform;
     trigger: OptInTrigger;
