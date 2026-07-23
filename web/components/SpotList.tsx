@@ -106,13 +106,18 @@ export default function SpotList({
   // the same spot twice in the panel (both are pinned sections above the list).
   const mainSpots = spots.filter((s) => !favorites.has(s.id) && !recentIdSet.has(s.id));
 
-  if (mainSpots.length === 0 && savedSpots.length === 0 && recentSpots.length === 0) {
+  if (spots.length === 0 && savedSpots.length === 0 && recentSpots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="flex flex-col items-center justify-center py-16 text-center px-4"
+      >
         <p className="text-(--dark) font-semibold">{emptyState?.title ?? "No spots match your filters"}</p>
         <button
           onClick={onClearFilters}
-          className="mt-3 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-(--muted) hover:border-(--accent) hover:text-(--dark) transition-colors"
+          className="mt-3 min-h-11 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-(--muted) hover:border-(--accent) hover:text-(--dark) focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent) transition-colors"
         >
           {emptyState?.clearLabel ?? "Clear filters"}
         </button>
@@ -193,6 +198,25 @@ export default function SpotList({
             </div>
           ))}
           <div className="mx-4 my-1.5 border-t border-gray-200" />
+        </div>
+      )}
+
+      {/* Inline zero-match state follows pinned content so saved and recent spots
+          remain useful when the incoming filtered list has no matches. */}
+      {spots.length === 0 && (savedSpots.length > 0 || recentSpots.length > 0) && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="flex flex-col items-center py-8 text-center px-4"
+        >
+          <p className="text-(--dark) font-semibold">{emptyState?.title ?? "No spots match your filters"}</p>
+          <button
+            onClick={onClearFilters}
+            className="mt-3 min-h-11 px-4 py-1.5 rounded-full text-sm font-medium border border-gray-200 text-(--muted) hover:border-(--accent) hover:text-(--dark) focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent) transition-colors"
+          >
+            {emptyState?.clearLabel ?? "Clear filters"}
+          </button>
         </div>
       )}
 
