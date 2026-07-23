@@ -19,6 +19,9 @@ import { emptyStateCopy } from "@/lib/emptyStateCopy";
 import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSpotConditions } from "@/components/useSavedConditions";
 import { useGoodTodaySpots } from "@/components/useGoodToday";
+import { usePaddleNowSpots } from "@/components/usePaddleNow";
+import PaddleNowModal from "@/components/PaddleNowModal";
+import { PADDLE_NOW_SEEN_KEY, localDateString } from "@/lib/paddleNow";
 import { recordRecentSpot, getRecentSpotIds } from "@/lib/recentSpots";
 import { useKillSwitch } from "@/lib/experiments";
 import { syncWatchedSpots, reportAlertOpen } from "@/lib/push";
@@ -639,6 +642,41 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     failed: goodTodayFailed,
   } = useGoodTodaySpots(goodTodayCandidates, distanceMap, goodTodayEnabled);
 
+  // Item 137: the first-visit-per-day "Want to paddle now?" modal. Home page
+  // only (never a deep-link arrival), once per local day, and only when >=1 spot
+  // is good in the NEXT 60 min (never opens to say "nothing"). Reuses item 61's
+  // nearest-K anchor + the shared getHourlyPeriods cache (same candidates -> no
+  // extra fetch when good-today already resolved them).
+  const paddleNowEnabled = useKillSwitch("paddle-now");
+  const [paddleNowSeen, setPaddleNowSeen] = useState<boolean | null>(null); // null = not yet checked
+  const [paddleNowClosed, setPaddleNowClosed] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const deepLink = initialSpotId !== undefined || !!Number(params.get("spot") || 0) || !!params.get("from");
+    if (deepLink) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPaddleNowSeen(true); // never on a deep-link arrival
+      return;
+    }
+    setPaddleNowSeen(localStorage.getItem(PADDLE_NOW_SEEN_KEY) === localDateString(new Date()));
+  }, [initialSpotId]);
+  const paddleNowGate = paddleNowEnabled && paddleNowSeen === false && !paddleNowClosed;
+  const paddleNowCandidates = useMemo(() => {
+    if (!paddleNowGate) return [];
+    const exclude = new Set<number>([...favorites, ...recentSpots.map((s) => s.id)]);
+    const anchor = userLocation ?? GOOD_TODAY_ANCHOR;
+    return [...ALL_SPOTS]
+      .filter((s) => !exclude.has(s.id))
+      .sort((a, b) => distanceMiles(anchor, a) - distanceMiles(anchor, b))
+      .slice(0, GOOD_TODAY_K);
+  }, [paddleNowGate, favorites, recentSpots, userLocation]);
+  const { spots: paddleNowSpots, loading: paddleNowLoading } = usePaddleNowSpots(
+    paddleNowCandidates,
+    distanceMap,
+    paddleNowGate
+  );
+  const showPaddleNow = paddleNowGate && !paddleNowLoading && paddleNowSpots.length > 0;
+
   function handleNearMe() {
     if (userLocation) {
       setUserLocation(null);
@@ -1021,6 +1059,18 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       )}
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+
+      {/* Item 137: first-visit-per-day "Want to paddle now?" modal. Mounts only
+          when the gate is open and >=1 spot is good in the next hour; sets the
+          once-per-day flag on render (inside the modal). */}
+      {showPaddleNow && (
+        <PaddleNowModal
+          spots={paddleNowSpots}
+          located={!!userLocation}
+          onSelectSpot={(s) => { setPaddleNowClosed(true); handleSelect(s, "list"); }}
+          onClose={() => setPaddleNowClosed(true)}
+        />
+      )}
 
       {emailConfirmed && (
         <div

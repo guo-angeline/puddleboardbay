@@ -95,6 +95,12 @@ export type IntentEventName =
   // spot; `_clicked` is a tap-through to a suggested alternative.
   | "alt_suggested_shown"
   | "alt_clicked"
+  // Item 137: the first-visit-per-day "Want to paddle now?" modal. `_shown` when
+  // it genuinely renders (there was something good in the next hour); `_spot_clicked`
+  // is a tap into a listed spot; `_dismissed` carries how it was closed.
+  | "paddle_now_shown"
+  | "paddle_now_spot_clicked"
+  | "paddle_now_dismissed"
   | "feedback_opened"
   | "view_switched"
   | "nav_home_clicked"
@@ -214,6 +220,12 @@ export interface EventPropMap {
   // are the ALTERNATIVE tapped; `from_spot_id` is the blown-out spot it rescued.
   alt_suggested_shown: { spot_id: number; region: string; count: number };
   alt_clicked: { spot_id: number; region: string; from_spot_id: number };
+  // Item 137. `_shown` fires only when the modal actually renders (>=1 good-soon
+  // spot); `count`+`located` segment it. `_spot_clicked` carries the 1-based
+  // `rank`. `_dismissed.method` distinguishes the close paths.
+  paddle_now_shown: { count: number; located: boolean };
+  paddle_now_spot_clicked: { spot_id: number; region: string; rank: number };
+  paddle_now_dismissed: { method: "close" | "backdrop" | "escape" | "spot_click" };
   alert_optin_shown: {
     platform: OptInPlatform;
     trigger: OptInTrigger;

@@ -14,6 +14,20 @@ without touching this file.
 
 ---
 
+## 2026-07-23 (item 137): "want to paddle now?" first-visit modal events added (added)
+
+Three INTENT events for the once-per-day first-visit modal that surfaces up to 3 nearest spots good to launch in the next 0-60 minutes.
+
+- **`paddle_now_shown`** (INTENT, fires when the modal ACTUALLY renders, which by design only happens when >=1 spot is good in the next hour, so it is never a "we tried" event). Props: `count` (spots shown), `located` (nearest-to-user vs default-anchored). The impression denominator for the click-through, and the numerator for "how often does a fresh day have something good in the next hour".
+- **`paddle_now_spot_clicked`** (INTENT). Props: `spot_id`, `region`, `rank` (1-based). The tap-through.
+- **`paddle_now_dismissed`** (INTENT). Props: `method` ("close" | "backdrop" | "escape" | "spot_click"). How the modal closed; a high close/backdrop/escape share vs spot_click share is the interruption-cost signal.
+
+**How to read it.** This is the PUSH surface, distinct from item 61's pull list (`good_today_*`) and item 120's map banner (`map_banner_*`): tighter horizon (next 60 min, not rest of today) and interruptive. Do NOT pool with those. The conversion is `paddle_now_spot_clicked / paddle_now_shown`; watch the dismissed-by-close rate as the "is this spam" guardrail. `_shown` gates itself on a real good-soon result, so there is no count:0 impression here (unlike map_banner).
+
+**Comparability:** all three NEW from 2026-07-23, no prior series. Behind the `paddle-now` kill switch (default ON), so a PostHog disable stops emission cleanly. Once-per-user-per-day cap (localStorage), so per-user volume is at most 1 shown/day.
+
+---
+
 ## 2026-07-23 (item 120): mobile map-tab cold-open banner events added (added)
 
 The mobile map tab (the ~82%-of-traffic cold open) gets a slim banner: a value-prop line that swaps to a "Good today: {spot} · {badge}" teaser once item 61's `goodTodaySpots` resolves.
