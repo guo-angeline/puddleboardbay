@@ -792,3 +792,27 @@ Answer: (owner, 2026-07-23, in chat) **(a) COMMIT to native.** Native ships; par
 **Roadmap encoding:** items 80/132/133/135 moved [proposed] -> [blocked(apple-enrollment)] as the single pre-TestFlight native parity sweep. They un-gate together once enrollment is done and the app is TestFlight-bound; then they are built as one batch (re-syncing to whatever web looks like at that moment), not one-per-pass. Until then the studio keeps prioritizing the web pull track (items 61 in-progress, 8 + 104 ready). This loop continues to hold native items out of [ready] until enrollment lands, now for a scheduling reason (batch before TestFlight) rather than an undecided-strategy one.
 
 Tell me when you have done step 5 (or want me to run step 2 after you do step 1), and I will sweep the parity batch.
+
+## D36 [OPEN] 2026-07-23 · Monetization is the one lever never tested, and we are testing the wrong bet first
+
+**Third strategy pass, third independent convergence: the ceo and product-visionary agents both, separately, landed on monetization as the unwatched lever. It is orthogonal to D34 (retention) and D35 (native), both now resolved.**
+
+**The claim.** The load-bearing business assumption, that someone pays, is exactly as unvalidated today as on day one, and the two ways it might get tested are both aimed wrong:
+
+1. **The probes can't return a pay signal.** PaddlePass ($35/yr, ROADMAP line 33) has never shown a price to a single user. Item 93 (the live trip-planner fake door) by its own spec measures "curiosity, not demand, and nowhere near willingness to pay," mandates "no price shown," and its build/kill rule was removed (D33), so it won't even force a curiosity verdict. Zero revenue, ~31 DAU, 83.3% one-and-done (`reports/analytics-2026-07-18.md`).
+
+2. **We are testing the retention-DEPENDENT bet and deferring the retention-INDEPENDENT one.** Item 93 (AI trip planner) is native-gated, unbuilt, safety-laden, and its value accrues to engaged, retained paddlers, the cohort we mostly don't have. Item 116 (rentals/lessons lead-gen) is the opposite: it monetizes a SINGLE visit, from the exact 83% one-and-done cohort a subscription or planner can never reach, and the vision itself says local commerce "may out-earn the subscription" (line 21). Yet item 116 is [proposed], and its own grade couples it to "retention is proven", a gate it does not actually depend on. That coupling is backwards.
+
+3. **The deferral gate is undefined and maybe unreachable.** "Revisit once retention is proven" has no threshold, and the durable retention read is blocked at this DAU (per D34). So the monetization question can be deferred forever by construction. Meanwhile the money-shape is already known to be thin: TAM report puts a Bay-only subscription ceiling at ~$25-50K/yr and says plainly "expansion unlocks TAM, not price." The owner will want that ceiling number before funding another quarter of retention polish, because it decides whether geographic expansion should resequence ahead of deeper retention.
+
+**Not "monetize now."** Selling into an 83%-leak base is premature and the retention-first sequence is right. This is about testing cheaply and bounding the deferral.
+
+**Your call (answer on the line):**
+- **(a) Run the rentals/lessons fake door now, AND bound the deferral.** Stand up a "rentals & lessons nearby" fake door on the spot sheet (decoupled from the retention gate), reusing item 93's proven pattern exactly: dwell-gated impression + click, one fixed placement, kill switch, honest "not built yet" label, no price, no new PII, lawyer gate on the copy. It answers what item 93 cannot: does a one-and-done visitor act on a nearby-commerce prompt, i.e. is there a revenue floor that survives the leaky bucket. Separately, write the single trigger (a concrete return-rate + DAU floor, or a date) that ends the subscription deferral and pre-commit the cheapest willingness-to-pay probe for when it trips. Only measurement moves up; no feature build, so no competition with items 61/8/136.
+- **(b) Run the rentals fake door now; leave the subscription deferral as-is.** The cheap retention-independent signal, without committing to a subscription trigger yet.
+- **(c) Just bound the deferral trigger; do not run the rentals door yet.** Governance only.
+- **(d) Hold. Monetization stays fully deferred, no change.** Defensible if you are content to not know the revenue ceiling for another quarter.
+
+My recommendation: **(a)**, or **(b)** if you want the signal without the governance ceremony. The rentals fake door is the highest-value cheap move on the board right now: it is retention-independent, aimed at the majority cohort, near-free (a fake door, not a build), and it is the one revenue thesis with literally zero signal. If you pick (a) or (b), I will file the fake-door as a build-ready item (with the lawyer-gate + no-PII constraints baked in) and decouple item 116's demand test from the retention gate.
+
+Answer:
