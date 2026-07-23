@@ -14,7 +14,7 @@ import type { Paddleability } from "@/lib/conditions";
  */
 
 /** Where a spot_viewed open originated, for funnel segmentation. */
-export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related" | "share";
+export type SpotViewedSource = "list" | "map" | "deeplink" | "alert" | "related" | "share" | "map_banner";
 
 /**
  * Enrollment-surface platform. Web values are the four web surfaces;
@@ -41,6 +41,10 @@ export type SystemEventName =
   | "conditions_loaded"
   // Saved-spots conditions batch resolved on app load. Availability only.
   | "saved_conditions_loaded"
+  // Item 120: the mobile map-tab cold-open banner settled its content. SYSTEM
+  // (data settling, guaranteed above-the-fold), NOT engagement: a bare "shown"
+  // here would repeat the conditions_viewed fetch-settle mistake.
+  | "map_banner_loaded"
   // The POST persisting a push subscription to /api/alerts/subscribe failed.
   // Without this, a "granted" opt-in that never reached the backend is
   // indistinguishable from a working one. Success is silent; failure is loud.
@@ -82,6 +86,10 @@ export type IntentEventName =
   // whether the visitor was geolocated); `_clicked` is a tap into a surfaced row.
   | "good_today_shown"
   | "good_today_clicked"
+  // Item 120: the mobile map-tab cold-open banner. `_clicked` is a tap-through
+  // to the surfaced good-today spot; `_dismissed` is the session-scoped X.
+  | "map_banner_clicked"
+  | "map_banner_dismissed"
   // Item 8: the in-drawer "go here instead" redirect shown when the OPENED spot
   // is blown out today. `_shown` is a dwell-gated impression on the blown-out
   // spot; `_clicked` is a tap-through to a suggested alternative.
@@ -181,6 +189,12 @@ export interface EventPropMap {
     had_data: boolean;
   };
   saved_conditions_loaded: { count: number; calm_count: number; latency_ms: number };
+  // Item 120. `variant` = which content the mobile map banner settled on; the
+  // good-today variant carries the surfaced spot + whether the set was
+  // nearest-to-user (located) vs default-anchored.
+  map_banner_loaded: { variant: "good_today" | "value_prop"; spot_id?: number; located: boolean };
+  map_banner_clicked: { spot_id: number; region: string; variant: "good_today" };
+  map_banner_dismissed: Record<string, never>;
   location_auto_applied: { source: "permission_granted" };
   alert_subscribe_failed: { status: number | null; watched_count: number };
   saved_conditions_viewed: { count: number; calm_count: number };

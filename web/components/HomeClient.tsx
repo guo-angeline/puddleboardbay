@@ -8,6 +8,7 @@ import { ALL_SPOTS } from "@/lib/spots";
 import FilterBar, { type Filters } from "@/components/FilterBar";
 import SpotList from "@/components/SpotList";
 import SpotDrawer from "@/components/SpotDrawer";
+import MapColdOpenBanner from "@/components/MapColdOpenBanner";
 import AlertInterstitial from "@/components/AlertInterstitial";
 import FeedbackModal from "@/components/FeedbackModal";
 import AccountButton from "@/components/AccountButton";
@@ -932,6 +933,18 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             ${activeTab === "map" ? "flex" : "hidden md:flex"}`}
         >
           <MapView spots={sortedFiltered} selected={selected} onSelect={handleSelect} userLocation={userLocation} fitToSpots={isFiltered} />
+
+          {/* Item 120: mobile map-tab cold-open banner (value prop -> good-today
+              teaser). Map tab only, non-empty result set only (mutually exclusive
+              with the empty-state overlay below); md:hidden keeps it off desktop. */}
+          {activeTab === "map" && sortedFiltered.length > 0 && (
+            <MapColdOpenBanner
+              topSpot={goodTodaySpots[0] ?? null}
+              loading={goodTodayLoading}
+              located={!!userLocation}
+              onSelect={handleSelect}
+            />
+          )}
 
           {/* Empty state: the List has one, but the map is the default mobile tab,
               so an over-filtered user would otherwise just see a blank map. */}
