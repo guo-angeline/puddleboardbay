@@ -529,7 +529,7 @@ SKIPPED  'vercel deploy --prod --cwd web'     <- what actually works, and what w
 
 **Grade:** [proposed]. Real gap, but filing not building: it is a test-infra addition the owner may want scoped alongside the broader native-parity/QA posture.
 
-## 93. [blocked(D33)] Demand test for the AI trip planner: a placeholder button that counts interest
+## 93. [in-progress] 2026-07-22T23:19:45 Demand test for the AI trip planner: a placeholder button that counts interest
 
 **BLOCKED on D33 (2026-07-22).** Ready to build, but two acceptance requirements are owner inputs by design: the PRE-REGISTERED decision rule + expiry (must be set before the test runs, or the number gets rationalised, and the point is the owner commits), and the email-capture-vs-pure-count fork (a new data-collection decision). D33 carries both with recommended defaults for a one-line approval. Nothing built yet, to avoid building the wrong (email vs count) version.
 

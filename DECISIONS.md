@@ -714,7 +714,7 @@ Gates: web/components/ReviewsSection.tsx (byline render), web/app/contributor-te
 
 Answer:
 
-## D33 [OPEN] 2026-07-22 · Item 93: the trip-planner demand test needs your pre-registered rule and two forks
+## D33 [RESOLVED] 2026-07-22 · Item 93: the trip-planner demand test needs your pre-registered rule and two forks
 
 Item 93 (fake-door button that measures interest in the AI trip planner) is ready to build, but its own acceptance requires two things that are yours by design, not mine to invent, so it is blocked until you answer. I built nothing yet; each choice below has a RECOMMENDED default so you can reply "D33: defaults" and I ship to them.
 
@@ -732,4 +732,4 @@ Item 93 (fake-door button that measures interest in the AI trip planner) is read
 
 Not up for grabs (item + house rules): no price shown in v1; honest "not built yet" label before the tap; no fake progress and no implied safety judgement; dwell-gated impression + click + outcome events; kill switch, no A/B; a `lawyer` gate on the copy (and on email capture if you pick it).
 
-Answer:
+Answer: (owner, 2026-07-22, in chat) **Accept the defaults EXCEPT the decision rule.** Pure count (no email capture), spot-sheet placement near conditions, web only, and the expiry (400 impressions or 21 days) all stand. **No pre-registered build/kill/run-longer rule**, the owner will judge the numbers manually. The expiry is retained, so the fake door still self-terminates rather than becoming permanent; the owner reads the result and decides by eye.
