@@ -33,6 +33,10 @@ interface Props {
   goodTodayFailed?: boolean;
   /** Candidate set was nearest-to-user vs anchored to the map default. */
   goodTodayLocated?: boolean;
+  /** Whether there was any candidate to check (all nearest already saved/recent
+   * leaves nothing to check, so the section hides rather than claiming nothing
+   * is calm). */
+  goodTodayHasCandidates?: boolean;
   emptyState?: { title: string; clearLabel: string };
 }
 
@@ -50,7 +54,8 @@ export default function SpotList({
   savedSpots = [], favorites = new Set(), onToggleFavorite, condBySpot = {},
   recentSpots = [], recentCondBySpot = {},
   goodTodayEnabled = false, goodTodaySpots = [], goodTodayLoading = false,
-  goodTodayFailed = false, goodTodayLocated = false, emptyState,
+  goodTodayFailed = false, goodTodayLocated = false, goodTodayHasCandidates = false,
+  emptyState,
 }: Props) {
   // Item 43: one aggregate fetch for the whole list, passed down per card.
   const aggregates = useReviewAggregates();
@@ -213,11 +218,19 @@ export default function SpotList({
           empty Watching/Recently gets an immediate answer to "where's good
           today?". Calm-only, never padded to a row count; honest states when
           nothing is calm or the check failed. Gated by the good-today switch. */}
-      {goodTodayEnabled && (
+      {goodTodayEnabled && goodTodayHasCandidates && (
         <div ref={goodTodaySectionRef}>
           <div className="px-4 pt-3 pb-1.5">
             <span className="text-[11px] font-semibold text-(--muted) uppercase tracking-wider">Good to paddle today</span>
           </div>
+          {/* Safety caveat, co-rendered with the affirmative "good to paddle"
+              claim, exactly as every other surface that uses that phrase does
+              (push, email, conditions panel, install prompt; enforced by
+              lib/alerts/no-inducement.test.ts). The canonical wording verbatim,
+              never a competing second phrasing. */}
+          <p className="px-4 pb-1.5 text-[10px] text-gray-400 leading-snug">
+            Guidance only, not a safety guarantee. Conditions shift fast on the water.
+          </p>
           {/* Announce the resolution once, not every row, to avoid a screen
               reader re-reading full cards on each mutation. */}
           <span className="sr-only" aria-live="polite">

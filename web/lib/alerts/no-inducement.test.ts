@@ -204,6 +204,17 @@ describe("item 34: alert copy cannot read as an instruction to launch", () => {
     expect(panel).toMatch(/readoutOn && !stormy && tip &&/);
   });
 
+  it("the good-today section co-renders the canonical safety line (item 61)", () => {
+    // "Good to paddle today" is the same affirmative "conditions are good"
+    // representation these tests exist to guard, on a NEW surface (the list
+    // panel). Item 61's lawyer gate required the caveat to co-render with it,
+    // verbatim, as it does on every other 'good to paddle' surface. A future edit
+    // that keeps the header but drops the caveat is what fails here.
+    const list = asProse(read("components/SpotList.tsx"));
+    expect(list).toContain("Good to paddle today");
+    expect(list).toContain("Guidance only, not a safety guarantee. Conditions shift fast on the water.");
+  });
+
   it("the tip string itself signals its geometry is generic (item 99 gate)", () => {
     // The public-context rewording the second gate required. Assert the TIP'S
     // OUTPUT, not the source text: the clause name also appears in a code

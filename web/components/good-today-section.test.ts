@@ -36,6 +36,16 @@ describe("Good-to-paddle-today wiring (item 61)", () => {
     expect(spotList).toContain("Couldn&rsquo;t check conditions right now. Browse spots below.");
   });
 
+  it("co-renders the canonical safety caveat with the affirmative header (item 61 lawyer gate)", () => {
+    expect(spotList).toContain("Guidance only, not a safety guarantee. Conditions shift fast on the water.");
+  });
+
+  it("hides the section when there is nothing to check (empty candidate set)", () => {
+    // A heavy repeat user whose K nearest are all saved/recent leaves no
+    // candidate; the section must not claim "nothing calm" for an unchecked set.
+    expect(spotList).toMatch(/goodTodayEnabled && goodTodayHasCandidates/);
+  });
+
   it("surfaces from the shared hourly cache and the calm-window bar, not a new fetch or a second definition", () => {
     expect(hook).toMatch(/getHourlyPeriods/);
     expect(hook).not.toMatch(/api\.weather\.gov/);
@@ -45,7 +55,8 @@ describe("Good-to-paddle-today wiring (item 61)", () => {
   });
 
   it("carries no em dash in any new file", () => {
-    expect(hook).not.toContain("—");
-    expect(read("../lib/goodToday.ts")).not.toContain("—");
+    const emDash = String.fromCharCode(0x2014); // escaped so a repo em-dash grep never false-matches this guard
+    expect(hook).not.toContain(emDash);
+    expect(read("../lib/goodToday.ts")).not.toContain(emDash);
   });
 });

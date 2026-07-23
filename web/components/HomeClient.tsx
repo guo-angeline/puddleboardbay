@@ -922,6 +922,7 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
             goodTodayLoading={goodTodayLoading}
             goodTodayFailed={goodTodayFailed}
             goodTodayLocated={!!userLocation}
+            goodTodayHasCandidates={goodTodayCandidates.length > 0}
           />
         </div>
 
