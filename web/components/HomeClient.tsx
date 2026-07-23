@@ -955,17 +955,18 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
           />
         )}
 
-        {/* Alert deep-link interstitial: repeats the push's calm-window timing
-            and put-in notes over the drawer. Monitored 100% rollout as of
-            2026-07-08 (D2(a)); mount is gated only on the alert context. */}
-        {selected && alertBanner && alertBanner.spotId === selected.id && (
-          <AlertInterstitial
-            spot={selected}
-            windowLabel={alertBanner.windowLabel}
-            onDismiss={() => setAlertBanner(null)}
-          />
-        )}
       </div>
+
+      {/* Alert deep-link interstitial: repeats the push's calm-window timing
+          and put-in notes over the drawer. Monitored 100% rollout as of
+          2026-07-08 (D2(a)); mount is gated only on the alert context. */}
+      {selected && alertBanner && alertBanner.spotId === selected.id && (
+        <AlertInterstitial
+          spot={selected}
+          windowLabel={alertBanner.windowLabel}
+          onDismiss={() => setAlertBanner(null)}
+        />
+      )}
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
 
