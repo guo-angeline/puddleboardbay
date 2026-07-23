@@ -85,6 +85,16 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ---
 
+## Studio review, added 2026-07-22 (high-bar hourly pass; one item cleared the bar, a cross-platform regression on the moat)
+
+## 122. [ready] Native iOS conditions panel is a stale pre-rethink port: iOS paddlers get a worse readout than web on the app's differentiator
+
+**Problem, grounded in code:** `native/src/components/ConditionsPanel.tsx` (last touched Jul 19) is a straight port of the web panel from before the 2026-07-22 conditions-rethink bundle (items 97/98/99). It imports the shared `@/lib/conditions`, which already carries everything the bundle added (`WindInfo.tempF`, `WindInfo.precipPct`, `isStormyForecast()`, `tideDirectionLine()`), but the native component reads none of it. Confirmed: grep for `tempF|precipPct|isStormy|tideDirectionLine|launchDirection` returns zero hits in the native panel and 11 in the web panel. So on iOS there is no air-temp/precip line, no storm badge, tide still renders as a raw high/low list with no "Rising, turns to falling at 4:53pm" direction line, no launch-direction tip in the panel (item 99 wired it into native's AlertInterstitial but not the drawer), and the split wind-failure copy ("No forecast for this spot" vs "Wind data unavailable right now") is missing. The native app shipped pitched as "full web parity" (item 72); on the one differentiating surface it silently regressed to the pre-bundle experience for every iOS user.
+
+**Direction:** port the `readoutOn`-gated rendering from `web/components/ConditionsPanel.tsx` into the native panel (weather line with air temp + precip, storm badge, `tideDirectionLine` as the primary tide sentence with raw events demoted, launch-direction tip under the wind reading, split wind-error copy), reusing the same `conditions-readout` flag key so both platforms flip together. Native already has its own `useKillSwitch` port, so gating is not the blocker; the UI simply was not updated when the bundle shipped.
+
+**Grade:** [ready], high confidence. Not polish and not ambiguous: it is a real dent in the conditions moat across a whole platform, on the exact readout the owner just spent a dedicated strategy pass (item 91) plus three build items proving out. Clears the high bar precisely because it is the differentiator, not a cosmetic gap.
+
 ## Studio review batch, added 2026-07-22 (hourly product + design review vs the north star: "California's best utility AND lifestyle app for SUP paddlers and kayakers"). CEO-graded: [ready] = high confidence, clear problem + direction, aligned, build now; [proposed] = worth doing but needs a decision or sits behind the retention read. Items 108 to 121.
 
 ## 107. [done] Alert engine fails OPEN: missing/malformed NWS wind is read as dead calm, so a "good to paddle" alert can fire on absent data
