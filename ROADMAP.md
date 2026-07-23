@@ -87,7 +87,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Studio review, added 2026-07-22 (high-bar hourly pass; one item cleared the bar, a cross-platform regression on the moat)
 
-## 122. [ready] Native iOS conditions panel is a stale pre-rethink port: iOS paddlers get a worse readout than web on the app's differentiator
+## 122. [in-progress] 2026-07-22T20:43:24 Native iOS conditions panel is a stale pre-rethink port: iOS paddlers get a worse readout than web on the app's differentiator
 
 **Problem, grounded in code:** `native/src/components/ConditionsPanel.tsx` (last touched Jul 19) is a straight port of the web panel from before the 2026-07-22 conditions-rethink bundle (items 97/98/99). It imports the shared `@/lib/conditions`, which already carries everything the bundle added (`WindInfo.tempF`, `WindInfo.precipPct`, `isStormyForecast()`, `tideDirectionLine()`), but the native component reads none of it. Confirmed: grep for `tempF|precipPct|isStormy|tideDirectionLine|launchDirection` returns zero hits in the native panel and 11 in the web panel. So on iOS there is no air-temp/precip line, no storm badge, tide still renders as a raw high/low list with no "Rising, turns to falling at 4:53pm" direction line, no launch-direction tip in the panel (item 99 wired it into native's AlertInterstitial but not the drawer), and the split wind-failure copy ("No forecast for this spot" vs "Wind data unavailable right now") is missing. The native app shipped pitched as "full web parity" (item 72); on the one differentiating surface it silently regressed to the pre-bundle experience for every iOS user.
 
