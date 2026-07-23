@@ -87,7 +87,7 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 ## Studio review, added 2026-07-22 (high-bar hourly pass; one item cleared the bar, a cross-platform regression on the moat)
 
-## 122. [in-progress] 2026-07-22T20:43:24 Native iOS conditions panel is a stale pre-rethink port: iOS paddlers get a worse readout than web on the app's differentiator
+## 122. [done] Native iOS conditions panel reaches web parity (889d772; native-only, ships with next EAS build)
 
 **Problem, grounded in code:** `native/src/components/ConditionsPanel.tsx` (last touched Jul 19) is a straight port of the web panel from before the 2026-07-22 conditions-rethink bundle (items 97/98/99). It imports the shared `@/lib/conditions`, which already carries everything the bundle added (`WindInfo.tempF`, `WindInfo.precipPct`, `isStormyForecast()`, `tideDirectionLine()`), but the native component reads none of it. Confirmed: grep for `tempF|precipPct|isStormy|tideDirectionLine|launchDirection` returns zero hits in the native panel and 11 in the web panel. So on iOS there is no air-temp/precip line, no storm badge, tide still renders as a raw high/low list with no "Rising, turns to falling at 4:53pm" direction line, no launch-direction tip in the panel (item 99 wired it into native's AlertInterstitial but not the drawer), and the split wind-failure copy ("No forecast for this spot" vs "Wind data unavailable right now") is missing. The native app shipped pitched as "full web parity" (item 72); on the one differentiating surface it silently regressed to the pre-bundle experience for every iOS user.
 
@@ -510,6 +510,14 @@ SKIPPED  'vercel deploy --prod --cwd web'     <- what actually works, and what w
 
 **Acceptance:** the protected set covers the alert/push *library* surface, not just the route paths; the trigger matches any real production deploy invocation, not one literal string; `.claude/studio.md`'s documented deploy command matches what the CLI actually accepts; the gate is exercised against a fixture list of BOTH command forms and BOTH path classes, proving each is caught (assert what must be CAUGHT); a deliberate dry run shows a `conditions-window.ts` edit gating under the real command.
 
+
+## 132. [proposed] Native safety copy is outside every no-inducement sweep
+
+**Found while shipping item 122.** `web/lib/alerts/no-inducement.test.ts` sweeps web surfaces (`PROSE_MODULES`, and since item 102 `data/spots.json`) for directives / urgency / outcome-promises, but it reads NOTHING under `native/`. Proof it matters: the native conditions panel carried "Check back before you head out" (the exact `head out` directive item 34/102 removed from web) live and undetected until item 122's parity port happened to replace it. Native `AlertInterstitial` and `NextGoodWindowPanel` render alert-adjacent copy too, and some is native-authored, not shared.
+
+**Direction:** extend the no-inducement sweep to native component/prose files (or add a native-side mirror suite), asserting the same DIRECTIVES / URGENCY / OUTCOME_PROMISES patterns. Grep the native tree first to enumerate the surfaces, per the "tests must grep the tree, not your memory" rule. Low effort, closes a safety-copy hole on a whole platform.
+
+**Grade:** [proposed]. Real gap, but filing not building: it is a test-infra addition the owner may want scoped alongside the broader native-parity/QA posture.
 
 ## 93. [ready] Demand test for the AI trip planner: a placeholder button that counts interest
 
