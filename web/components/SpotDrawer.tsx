@@ -523,15 +523,14 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                 loading="lazy"
                 className="w-full h-40 md:h-44 object-cover rounded-lg bg-gray-100"
               />
-              {/* Attribution is overlaid on the image, not a separate line: most
-                  third-party photos are CC-BY/BY-SA and legally require credit,
-                  but it must not cost sheet space (owner directive 2026-07-18).
-                  Small, legible over a subtle gradient; links to author source +
-                  license. Owner first-party photos carry no author, so the credit
-                  line is omitted entirely for them, as do CC0/public-domain
-                  photos, which record an author for provenance but waive the
-                  credit (`attribution_required: false`). */}
-              {photo.author && photo.attribution_required !== false && (
+              {/* Permission photos use a plain author credit. Licensed photos
+                  link to the author source and license. Owner and waived
+                  public-domain photos omit the credit. */}
+              {photo.source === "permission" && photo.author ? (
+                <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
+                  Photo: {photo.author}
+                </figcaption>
+              ) : photo.author && photo.attribution_required !== false ? (
                 <figcaption className="absolute inset-x-0 bottom-0 px-2 py-0.5 text-[10px] leading-tight text-white/85 bg-gradient-to-t from-black/55 to-transparent rounded-b-lg">
                   <a href={photo.source_page} target="_blank" rel="noopener noreferrer" className="hover:underline">{photo.author}</a>
                   {" / "}
@@ -541,7 +540,7 @@ export default function SpotDrawer({ spot, onClose, isFavorite, onToggleFavorite
                     photo.license
                   )}
                 </figcaption>
-              )}
+              ) : null}
             </figure>
           )}
 

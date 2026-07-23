@@ -13,6 +13,7 @@ const manifest = JSON.parse(
       source?: string;
       author?: string;
       license?: string;
+      license_url?: string | null;
       source_page?: string;
       attribution_required?: boolean;
     }
@@ -38,7 +39,7 @@ describe("item 31 spot photos", () => {
   it("every third-party photo carries the attribution fields CC-BY/BY-SA require", () => {
     for (const [id, p] of Object.entries(manifest.photos)) {
       // Owner first-party photos owe no attribution and render no credit line.
-      if (p.source === "owner") continue;
+      if (p.source === "owner" || p.source === "permission") continue;
       expect(p.author, `spot ${id} author`).toBeTruthy();
       expect(p.license, `spot ${id} license`).toBeTruthy();
       // Multiple free sources now (Commons, Wikidata P18 -> Commons, Openverse/
@@ -55,6 +56,18 @@ describe("item 31 spot photos", () => {
       expect(p.author, `owner spot ${id} must have no author`).toBeFalsy();
       expect(p.license, `owner spot ${id} must have no license`).toBeFalsy();
     }
+  });
+
+  it("permission photos carry a plain author credit without invented license metadata", () => {
+    const photo = manifest.photos["89"];
+    expect(photo).toMatchObject({
+      file: "/spot-photos/89.jpg",
+      source: "permission",
+      author: "Kaety Jensen",
+    });
+    expect(photo.license).toBeUndefined();
+    expect(photo.license_url).toBeUndefined();
+    expect(photo.source_page).toBeUndefined();
   });
 
   it("attribution is only ever waived on CC0 / public-domain photos", () => {
@@ -79,9 +92,14 @@ describe("item 31 spot photos", () => {
     expect(drawer).toContain("photo.author && photo.attribution_required !== false");
   });
 
+  it("permission photos render the exact plain-text credit", () => {
+    expect(drawer).toContain('photo.source === "permission"');
+    expect(drawer).toContain("Photo: {photo.author}");
+  });
+
   it("only free licenses shipped (no fair-use / non-commercial / no-derivatives)", () => {
     for (const [id, p] of Object.entries(manifest.photos)) {
-      if (p.source === "owner") continue; // no license field to screen
+      if (p.source === "owner" || p.source === "permission") continue;
       expect(p.license, `spot ${id} license "${p.license}"`).toMatch(/cc0|cc by|public domain|pdm/i);
       expect(p.license).not.toMatch(/\bNC\b|\bND\b|noncommercial|no derivativ|fair use|all rights/i);
     }
