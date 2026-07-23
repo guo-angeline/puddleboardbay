@@ -2,7 +2,26 @@ import { evaluateGoodWindow, DEFAULT_HORIZON_DAYS, type GoodWindow } from "@/lib
 import { conditionsFetchConfig, precomputedForecastUrl } from "@/lib/conditions";
 import { buildTodaysShape, type RawHourly, type TodayShape } from "@/lib/todaysShape";
 
-export type NextWindowResult = { ok: true; window: GoodWindow | null } | { ok: false };
+export type NextWindowResult = { ok: true; window: GoodWindow | null; rain: RainLabel } | { ok: false };
+
+/** Item 103 soft caveat. A wet window is LABELLED, never suppressed. In-app only:
+ * the push cron + emails evaluate via evaluateGoodWindow, not this. */
+export type RainLabel = "rain likely" | "chance of rain" | null;
+
+/** Max chance-of-precip over a window's daytime hours -> a soft label. Pure. */
+export function windowRainLabel(periods: RawHourly[], window: GoodWindow): RainLabel {
+  let maxPct = -1;
+  for (const p of periods) {
+    if (p.startTime.slice(0, 10) !== window.windowKey) continue;
+    const hour = Number(p.startTime.slice(11, 13));
+    if (hour < window.startHour || hour >= window.endHour) continue;
+    const pct = p.probabilityOfPrecipitation?.value;
+    if (typeof pct === "number" && pct > maxPct) maxPct = pct;
+  }
+  if (maxPct >= 60) return "rain likely";
+  if (maxPct >= 30) return "chance of rain";
+  return null;
+}
 export type TodayShapeResult = { ok: true; shape: TodayShape | null } | { ok: false };
 type HourlyOutcome = { ok: true; periods: RawHourly[] } | { ok: false };
 
@@ -76,9 +95,11 @@ export function getNextWindow(
   lng: number,
   nowMs: number = Date.now()
 ): Promise<NextWindowResult> {
-  return getHourlyPeriods(spotId, lat, lng).then((r) =>
-    r.ok ? { ok: true, window: evaluateGoodWindow(r.periods, nowMs) } : { ok: false }
-  );
+  return getHourlyPeriods(spotId, lat, lng).then((r) => {
+    if (!r.ok) return { ok: false };
+    const window = evaluateGoodWindow(r.periods, nowMs);
+    return { ok: true, window, rain: window ? windowRainLabel(r.periods, window) : null };
+  });
 }
 
 /**

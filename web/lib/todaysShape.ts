@@ -21,6 +21,9 @@ export interface RawHourly {
   windSpeed: string; // "7 mph" or "5 to 10 mph"
   windDirection?: string;
   shortForecast?: string;
+  // Item 103: percent chance of precipitation, in the same payload. Feeds the
+  // SOFT rain caveat (an in-app label only). NWS sometimes sends {value: null}.
+  probabilityOfPrecipitation?: { value: number | null } | null;
 }
 
 export interface HourSample {

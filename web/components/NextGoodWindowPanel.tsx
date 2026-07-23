@@ -85,6 +85,9 @@ export default function NextGoodWindowPanel({ spot }: { spot: Spot }) {
       {result.window ? (
         <p className="text-sm text-(--dark)">
           Next good window: <span className="font-semibold text-(--accent)">{formatNextWindow(result.window)}</span>
+          {/* Item 103 soft caveat: a wet window is LABELLED, never suppressed
+              (rain is a comfort fact the paddler judges). In-app only. */}
+          {result.rain && <span className="text-(--muted)"> &middot; {result.rain}</span>}
         </p>
       ) : (
         <p className="text-sm text-(--muted)">{noWindowLine(DEFAULT_HORIZON_DAYS)}</p>

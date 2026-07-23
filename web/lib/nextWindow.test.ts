@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { getNextWindow, getTodaysShape, formatNextWindow, noWindowLine } from "@/lib/nextWindow";
+import { getNextWindow, getTodaysShape, windowRainLabel, formatNextWindow, noWindowLine } from "@/lib/nextWindow";
 import type { GoodWindow } from "@/lib/alerts/conditions-window";
+import type { RawHourly } from "@/lib/todaysShape";
 
 // 2026-07-01 is a Wednesday.
 const NOW = Date.parse("2026-07-01T08:00:00-07:00");
@@ -37,6 +38,34 @@ describe("formatNextWindow", () => {
   it("formats a window that crosses noon with a meridiem on each end", () => {
     const w: GoodWindow = { windowKey: "2026-07-04", label: "Saturday midday", startHour: 11, endHour: 13, maxWindMph: 6, windDirection: "NW" };
     expect(formatNextWindow(w)).toBe("Sat 11am to 1pm");
+  });
+});
+
+// Item 103 soft rain caveat: label a wet window, never suppress it. In-app only.
+describe("windowRainLabel", () => {
+  const win: GoodWindow = { windowKey: "2026-07-02", label: "", startHour: 7, endHour: 10, maxWindMph: 6, windDirection: "NW" };
+  function p(hour: number, pop: number | null, date = "2026-07-02"): RawHourly {
+    return {
+      startTime: `${date}T${String(hour).padStart(2, "0")}:00:00-07:00`,
+      windSpeed: "6 mph",
+      probabilityOfPrecipitation: { value: pop },
+    };
+  }
+  it("returns 'rain likely' when max chance in the window is >= 60", () => {
+    expect(windowRainLabel([p(7, 20), p(8, 70), p(9, 40)], win)).toBe("rain likely");
+  });
+  it("returns 'chance of rain' when max chance is 30-59", () => {
+    expect(windowRainLabel([p(7, 10), p(8, 45), p(9, 20)], win)).toBe("chance of rain");
+  });
+  it("returns null when the window stays under 30", () => {
+    expect(windowRainLabel([p(7, 0), p(8, 12), p(9, 29)], win)).toBeNull();
+  });
+  it("ignores hours outside the window range and other days", () => {
+    // endHour is exclusive (10), and a different day's 90% must not count.
+    expect(windowRainLabel([p(7, 10), p(10, 90), p(8, 90, "2026-07-03")], win)).toBeNull();
+  });
+  it("ignores null precip values", () => {
+    expect(windowRainLabel([p(7, null), p(8, null)], win)).toBeNull();
   });
 });
 
@@ -82,7 +111,7 @@ describe("getNextWindow", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await getNextWindow(3, 47.6, -122.3, NOW);
-    expect(result).toEqual({ ok: true, window: null });
+    expect(result).toEqual({ ok: true, window: null, rain: null });
   });
 
   it("resolves ok:false when fetch throws", async () => {
