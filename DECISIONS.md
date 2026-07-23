@@ -693,7 +693,7 @@ Answer: (owner, 2026-07-22, in chat) **(a)**. No LLC now. The cost is not justif
 
 Also noted and not acted on: forming in Delaware or Wyoming saves nothing, because California taxes on doing business in California, so a non-CA entity run from SF owes the same $800 FTB minimum *plus* foreign-registration and second-state costs. If this is ever revisited, form in CA, and file in the last two weeks of December so the 15-day rule skips a tax year. Insurance (D25 Q3) was flagged as the better first dollar than the entity for this specific risk, since an LLC caps personal assets but does not pay defence costs, and defence cost is the realistic downside here. Not decided, still deferred.
 
-## D32 [OPEN] 2026-07-22 · Item 89: should an earned mark appear beside a public review byline?
+## D32 [RESOLVED] 2026-07-22 · Item 89: should an earned mark appear beside a public review byline?
 
 Item 89 asked for the mark to show "by your name" in two places. The **header identity** is self-visible only, keeps Contributor Terms s2.5 true as written, and **shipped today** with no terms change and no legal question. This decision is only about the **second** place: beside the byline on every published review, where readers see it. That half is NOT built.
 
@@ -712,7 +712,7 @@ Three things follow from it, and the third is the actual decision.
 
 Gates: web/components/ReviewsSection.tsx (byline render), web/app/contributor-terms/page.tsx, docs/legal/ugc-contributor-terms.md, web/lib/reviews/validation.ts, web/components/ReviewForm.tsx
 
-Answer:
+Answer: (owner, 2026-07-22, on the Answer line) **(a)** header only, defer the byline. The self-visible header mark (item 89) stays; the public-byline mark is NOT built. This keeps Contributor Terms s2.5 true, avoids the retroactive-consent and host-vs-co-author exposure, and matches item 83's staging (public standing waits for a real contributor crowd). Revisit at 25+ reviewing accounts with a fresh gate, per item 89's v2 note.
 
 ## D33 [RESOLVED] 2026-07-22 · Item 93: the trip-planner demand test needs your pre-registered rule and two forks
 
