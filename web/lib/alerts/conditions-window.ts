@@ -1,9 +1,14 @@
-import { paddleabilityFromWind } from "@/lib/conditions";
+import { paddleabilityFromWind, isStormyForecast } from "@/lib/conditions";
 
 export interface HourlyPeriod {
   startTime: string; // ISO with the spot's local UTC offset, as NWS returns it
   windSpeed: string; // "7 mph" or "5 to 10 mph"
   windDirection?: string; // NWS wind-FROM compass direction, e.g. "WNW"
+  // Item 103. NWS sends this in the same hourly payload; it is what the
+  // thunderstorm exclusion below reads. Optional so older callers/fixtures that
+  // never set it simply never match the storm test (isStormyForecast treats a
+  // missing string as not-stormy, matching the in-app storm badge's contract).
+  shortForecast?: string;
 }
 
 export interface GoodWindow {
@@ -91,7 +96,14 @@ export function evaluateGoodWindow(
       // Item 107: null wind (missing/garbage) is NOT calm. It breaks the run,
       // so a data gap can never sit inside a "good window".
       wind !== null &&
-      paddleabilityFromWind(wind) === "calm";
+      paddleabilityFromWind(wind) === "calm" &&
+      // Item 103: a thunderstorm hour is never part of a good window. This is the
+      // HARD exclusion, shared by the in-app panel, the push cron AND the alert
+      // emails (all evaluate windows through here), so the product can no longer
+      // name a window "good" during lightning. It breaks the calm run exactly
+      // like windy/missing wind does. Plain rain is NOT excluded here (it is a
+      // comfort fact the paddler judges); it is a soft in-app label only.
+      !isStormyForecast(period.shortForecast);
 
     if (locked) {
       if (eligible && startMs - prevMs === 3600000) {

@@ -218,3 +218,54 @@ describe("evaluateGoodWindow fails CLOSED on bad wind data (item 107)", () => {
     expect(w!.windDirection).toBe("NW");
   });
 });
+
+// Item 103: the thunderstorm HARD exclusion. A thunderstorm hour is never part
+// of a good window, on every surface (in-app, push, email), because they all
+// evaluate through here. Plain rain is NOT excluded (soft in-app label only).
+describe("evaluateGoodWindow thunderstorm exclusion (item 103)", () => {
+  function hs(day: string, hour: number, windSpeed: string, shortForecast: string): HourlyPeriod {
+    return { startTime: `${day}T${String(hour).padStart(2, "0")}:00:00-07:00`, windSpeed, windDirection: "NW", shortForecast };
+  }
+
+  it("a thunderstorm hour breaks a calm run so no window forms around it", () => {
+    // Wind-calm 9,10,11 would be a 3-hour window (all future vs the 8am NOW), but
+    // hour 10 is a thunderstorm, so the run splits into two 1-hour fragments
+    // (neither reaches minHours=2).
+    const periods = [
+      hs("2026-07-01", 9, "5 mph", "Sunny"),
+      hs("2026-07-01", 10, "5 mph", "Thunderstorms"),
+      hs("2026-07-01", 11, "5 mph", "Sunny"),
+    ];
+    expect(evaluateGoodWindow(periods, NOW, 3)).toBeNull();
+  });
+
+  it("locks the window start AFTER a leading thunderstorm hour", () => {
+    const periods = [
+      hs("2026-07-01", 9, "5 mph", "Scattered Thunderstorms"),
+      hs("2026-07-01", 10, "5 mph", "Sunny"),
+      hs("2026-07-01", 11, "5 mph", "Sunny"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    expect(w!.startHour).toBe(10); // 9 is excluded (storm), the calm run is 10-11
+  });
+
+  it("does NOT exclude plain rain, only storms (rain is a comfort fact, soft label)", () => {
+    const periods = [
+      hs("2026-07-01", 9, "6 mph", "Rain Likely"),
+      hs("2026-07-01", 10, "6 mph", "Chance Light Rain"),
+    ];
+    const w = evaluateGoodWindow(periods, NOW, 3);
+    expect(w).not.toBeNull();
+    expect(w!.startHour).toBe(9);
+  });
+
+  it("a missing shortForecast reads as not-stormy (matches the storm-badge contract)", () => {
+    // h() sets no shortForecast; the run must still form.
+    const periods = [
+      h("2026-07-01", 9, "6 mph"),
+      h("2026-07-01", 10, "6 mph"),
+    ];
+    expect(evaluateGoodWindow(periods, NOW, 3)).not.toBeNull();
+  });
+});
