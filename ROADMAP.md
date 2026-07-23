@@ -1579,7 +1579,7 @@ Then: merge `studio/item-44-google-auth` to main, set `LAST_UPDATED` to the real
 - Legal gate (marketing claims): the lawyer reviews the framing before deploy.
 - New user-facing surface: flag or staged tranche per the major-update directive.
 
-## 8. [ready] "Go here instead": nearby calmer alternative when your spot is blown out
+## 8. [in-progress] 2026-07-23T18:08:50Z "Go here instead": nearby calmer alternative when your spot is blown out
 
 *(Proposed by the studio 2026-07-05. Sequenced AFTER the ~2026-07-15 retention read, not before.)*
 
