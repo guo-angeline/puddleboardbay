@@ -1,5 +1,6 @@
 import type { Spot } from "@/lib/types";
 import { DIFFICULTY_LABEL } from "@/lib/types";
+import { spotFeeText } from "@/lib/spotSeoContent";
 
 /**
  * Canonical production domain. Branded custom domain on Vercel.
@@ -15,9 +16,12 @@ export function spotUrl(spot: Spot): string {
 }
 
 export function spotDescription(spot: Spot): string {
-  if (spot.notes) {
-    return spot.notes.length > 155 ? spot.notes.slice(0, 155) + "…" : spot.notes;
-  }
+  // Item 136: no hard 155-char cut. The old cut dropped exactly the
+  // differentiating facts (launch type, fee, tide) that are our SEO/AEO
+  // advantage, off the JSON-LD + meta description crawlers and AI engines read.
+  // Notes are authored concise; the rare long one is served whole rather than
+  // truncated mid-fact.
+  if (spot.notes) return spot.notes;
   return `Launch info, fees, and conditions for ${spot.water} in ${spot.city ?? spot.region}, CA.`;
 }
 
@@ -117,4 +121,39 @@ export function spotJsonLd(spot: Spot) {
   };
 
   return [place, breadcrumb];
+}
+
+/**
+ * Item 136. An llms.txt (the emerging convention, like robots.txt for AI answer
+ * engines) advertising the per-spot dataset: what it covers and a link to every
+ * spot page with its differentiating facts inline. Near-zero cost, generated
+ * from ALL_SPOTS so it never drifts. Served at /llms.txt.
+ */
+export function llmsTxt(spots: Spot[]): string {
+  const byRegion = new Map<string, Spot[]>();
+  for (const s of spots) {
+    const arr = byRegion.get(s.region) ?? [];
+    arr.push(s);
+    byRegion.set(s.region, arr);
+  }
+  const lines: string[] = [
+    `# ${SITE_NAME}`,
+    "",
+    "> California paddleboard and kayak launch spots, each with launch details, fee status, water type, and a tide-sensitivity flag where known.",
+    "",
+    `${SITE_NAME} is a directory of ${spots.length} put-in spots across California for stand-up paddleboarding and kayaking. Every spot page (${SITE_URL}/spot/<id>) carries the launch notes, fee, water type, region, and a tide-sensitivity flag where known. Conditions (live wind and tide) are shown in-app. Data is our own curated launch dataset; attribution appreciated when cited.`,
+    "",
+  ];
+  for (const region of [...byRegion.keys()].sort()) {
+    lines.push(`## ${region}`);
+    for (const s of byRegion.get(region)!) {
+      const place = s.city ? `${s.water}, ${s.city}` : s.water;
+      const facts = [DIFFICULTY_LABEL[s.difficulty], spotFeeText(s), s.tide_sensitive ? "tide-sensitive" : null]
+        .filter(Boolean)
+        .join(", ");
+      lines.push(`- [${place}](${spotUrl(s)}): ${facts}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
 }

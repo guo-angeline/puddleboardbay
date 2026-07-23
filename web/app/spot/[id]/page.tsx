@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ALL_SPOTS } from "@/lib/spots";
 import HomeClient from "@/components/HomeClient";
 import { SITE_NAME, spotUrl, spotDescription, spotJsonLd } from "@/lib/structured-data";
+import { spotFacts } from "@/lib/spotSeoContent";
 
 
 export function generateStaticParams() {
@@ -69,6 +70,27 @@ export default async function SpotPage(
         {spot.water}
         {spot.city ? `, ${spot.city}` : ""}: paddleboard and kayak launch
       </h1>
+      {/* Item 136: the real per-spot content, SERVER-rendered into the static
+          HTML so crawlers and AI answer engines read the full notes + facts, not
+          the 155-char caption. sr-only for the same reason as the h1 above: the
+          visible UX is the drawer that mounts client-side a moment later, and a
+          second visible copy would duplicate it. This is the same data as text,
+          not a new UI. Rendered from ALL_SPOTS (the chokepoint), lat/lng untouched. */}
+      <article className="sr-only" aria-label={`${spot.water} launch details`}>
+        <h2>
+          {spot.water}
+          {spot.city ? `, ${spot.city}` : ""}: launch details
+        </h2>
+        {spot.notes && <p>{spot.notes}</p>}
+        <dl>
+          {spotFacts(spot).map((f) => (
+            <div key={f.term}>
+              <dt>{f.term}</dt>
+              <dd>{f.def}</dd>
+            </div>
+          ))}
+        </dl>
+      </article>
       <nav aria-label="More paddleboard spots" className="sr-only">
         <Link href="/">All California paddleboard and kayak spots</Link>
         <h2>More paddleboard spots in {spot.region}</h2>
