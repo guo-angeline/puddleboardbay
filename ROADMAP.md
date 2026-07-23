@@ -102,6 +102,35 @@ From the Jun 7 to 27, 2026 analytics (`reports/analytics-2026-06-27.md`, PostHog
 
 **Files:** `web/app/spot/[id]/page.tsx` (thin-shell render), `web/lib/structured-data.ts` (155-char truncation + JSON-LD), `web/components/HomeClient.tsx` (where the full content is trapped client-side).
 
+## Owner item, added 2026-07-23 (first-visit "paddle now?" prompt; owner-directed [ready])
+
+## 137. [ready] First-visit-per-day "Want to paddle now?" modal: 3 nearest spots good in the next 0-60 minutes
+
+**What the owner asked for.** A closable dialog, roughly half the screen, that opens on a user's **first home-page visit each day** (once per user per day). Title: **"Want to paddle now?"**. Body lead: **"Spots near you are good to go."** Then a list of **up to 3 spots that have good conditions to get on the water in the next 0-60 minutes, ranked by distance**, each tappable and opening that spot's sheet/drawer. Clean, appealing UI.
+
+**How this differs from what already shipped (do NOT re-implement item 61).** Item 61 (deployed 2026-07-23) shipped a *pull* surface: a passive "Good to paddle today" section pinned in the list panel, ranking spots that still have a calm window left **today**. Item 120 shipped a mobile map-tab cold-open banner. This item is the *push* variant the owner now wants: an **interruptive first-visit modal** with a **tighter, more urgent window (now to +60 min, not the rest of today)**. It is a new presentation layer on top of existing conditions logic, not new conditions math.
+
+**Architecture (reuse, do not fork the calm-window definition).**
+- Ranking/eligibility must reuse the existing shared plumbing: `evaluateGoodWindow` / `lib/goodToday.ts` (`evaluateGoodToday`, `selectGoodToday`) and the shared `getHourlyPeriods` cached fetch, so the modal never contradicts the drawer it opens into or the alert cron. The ONLY new selection constraint is the horizon: a spot qualifies only if its calm window overlaps **[now, now+60min]** (filter on remaining hours the way `evaluateGoodWindow` already filters `startMs >= now`, see the "count only remaining hours" learning, do not chase a phantom bug when an afternoon spot legitimately shows nothing).
+- Candidate set + distance ranking: nearest-first, reuse item 61's K-nearest candidate fan-out and the `GOOD_TODAY_ANCHOR` fallback when geolocation is not granted. Dedupe against Watching / Recently-checked is optional here (this is a separate surface), owner-agnostic, design-lead's call.
+- Once-per-user-per-day gate: localStorage key (e.g. `ptw-paddle-now-seen`) storing the spot-local date string, checked/set on home mount. First home visit of a new local day shows it; subsequent visits that day do not. No account/server state needed.
+- Honest empty/degraded states, same discipline as item 61: if fewer than 3 qualify, show what qualifies; if **nothing** is good in the next hour, either suppress the modal entirely or show a short honest "Nothing's calm enough to launch in the next hour" line (design-lead's call, but never pad to 3 rows and never imply a spot is good when it isn't).
+
+**Guardrails / gates.**
+- **Legal gate required.** This is a new affirmative "conditions are good, go now" representation on a new, more insistent surface, so it MUST co-render the canonical caveat verbatim ("Guidance only, not a safety guarantee. Conditions shift fast on the water.") and be guarded by a test, exactly as item 61, the push, email, panel, and install surfaces do. Run the `lawyer` gate.
+- **Interruption cost is the real risk.** A daily interstitial that fires on nothing-good, or on every visit, will read as spam and hurt the retention it is meant to help. The once-per-day cap, the suppress-when-empty option, and an obvious close control (44px, focus-trapped dialog per the item-70 pattern) are load-bearing, not polish.
+- Ships at 100% behind a **kill switch** (`useKillSwitch`, default ON), NOT an A/B (DAU < 100, per the no-A/B-until-100 rule).
+- **Analytics (required, same change):** dwell/impression INTENT event when the modal actually renders (`paddle_now_shown` with `count`, `located`), `paddle_now_spot_clicked` (`spot_id`, `region`, rank), and `paddle_now_dismissed` (`method`: close button vs backdrop vs spot-click). Add to the `IntentEventName` union + `EventPropMap`, and add an `INSTRUMENTATION_CHANGELOG.md` entry.
+
+**Acceptance:**
+- On the first home visit of each local day, a closable ~half-screen dialog opens titled "Want to paddle now?" with the lead "Spots near you are good to go." and up to 3 nearest spots whose calm window overlaps the next 60 minutes, ranked by distance, each opening the spot sheet on tap.
+- It does NOT reopen on later visits the same day; it reopens the next day.
+- The canonical safety caveat renders in the dialog, guarded by a test.
+- When nothing qualifies in the next hour, the modal does not falsely present a spot as good (suppressed or honest empty state).
+- Verified live desktop + mobile with real NWS data; window math matches the drawer's Right-Now verdict for the same spot.
+
+**Open question for the owner (proceed with the default if unanswered):** should the modal appear on mobile, where the app cold-opens on the Map tab and item 120 already shows a map-tab banner? Default: show it on both, since it is the first-visit gate and item 120's banner is a persistent teaser, not a once-a-day prompt. Design-lead to confirm the two don't stack awkwardly on a mobile first-visit.
+
 ## Studio review, added 2026-07-22 (high-bar hourly pass; one native-parity gap surfaced, filed [proposed] pending an owner call on native release scope)
 
 ## 133. [blocked(apple-enrollment)] Native app has no reviews surface at all, not a display bug, an entire UGC feature is absent
