@@ -110,7 +110,7 @@ Verified at the SERVED-HTML level (the acceptance's own method), live on prod: s
 
 ## Owner item, added 2026-07-23 (first-visit "paddle now?" prompt; owner-directed [ready])
 
-## 137. [done] First-visit-per-day "Want to paddle today?" modal: asks for location, then calm spots near you (deployed 2026-07-23, 4edc143; redesigned same day, 546b2f6)
+## 137. [done] First-visit-per-day "Want to paddle today?" modal: asks for location, then calm spots near you (deployed 2026-07-23, 4edc143; redesigned same day, 546b2f6; safety note restyled, b2d42d2)
 
 Redesigned the same day on owner feedback. The first cut ranked spots against a fixed central-CA anchor when location was unknown and framed them as "nearest" (a random spot to the user), and "good to go" never said it was about wind/water. Now it is a two-step, location-first modal: it asks ("Want to paddle today? We'll find spots near you where the wind and water are calm." + "Find calm spots near me"), requests geolocation only on that tap, and ranks by REAL distance (no anchor fallback) with condition-explicit copy ("Calm spots near you"). Horizon moved from next-60-min to calm-window-left-today (item 61's evaluateGoodToday). Denied/unsupported closes and marks the day seen. Full canonical caveat kept verbatim (lawyer CLEAR); verifier PASS; privacy page broadened to cover the new location entry point. Analytics: `paddle_now_shown` drops `count`, new `paddle_now_located(outcome)` (changelog has the comparability break).
 

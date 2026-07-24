@@ -1,3 +1,11 @@
+## 2026-07-23 · Item 137 safety-note hierarchy · SHIPPED
+
+What: Reduced the Paddle Now modal's canonical safety note from 14px primary ink to 11px muted secondary copy. The exact wording, placement, reading order, 20px line height, and both modal states are unchanged.
+Legal and accessibility: The owner's first mockup choice used 10px text at 3.88:1 contrast. The required gate returned needs-changes. The owner approved the smallest compliant adjustment, 11px using `--muted` (`#556A7E`, 5.60:1 on white). Final legal requirement satisfied.
+Evidence: TDD red-green completed twice, including the compliance adjustment and preserved line height. 82 test files and 754 tests passed. Production build generated 381 pages. Adversarial review passed with no findings. Local and live Playwright checks at 1280px and 390px reported 11px, 20px line height, `rgb(85, 106, 126)`, full text visible without clipping, and zero live page errors.
+Deployed: Production deployment `dpl_AEjUrBFXcBC3RDMgYSm7bvPVACeb`, source commit `b2d42d2`, verified live at paddletowater.com.
+README: No change. The README documents product capabilities, not modal typography, and adding this visual-only tweak would make it noisier without adding product information.
+
 ## 2026-07-23 · Item 139 localStorage blank-app regression · SHIPPED
 What: Added a recursive TypeScript guard and browser chaos checks to prevent localStorage failures from blanking the home or spot experience. No production UI, copy, or analytics changed.
 Evidence: Final verifier PASS after closing deferred callback, computed access, globalThis, destructuring, and function-boundary bypasses. 82 test files, 753 tests, build passed with 381 pages.
