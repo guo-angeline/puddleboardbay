@@ -99,6 +99,7 @@ export type IntentEventName =
   // it genuinely renders (there was something good in the next hour); `_spot_clicked`
   // is a tap into a listed spot; `_dismissed` carries how it was closed.
   | "paddle_now_shown"
+  | "paddle_now_located"
   | "paddle_now_spot_clicked"
   | "paddle_now_dismissed"
   | "feedback_opened"
@@ -220,10 +221,12 @@ export interface EventPropMap {
   // are the ALTERNATIVE tapped; `from_spot_id` is the blown-out spot it rescued.
   alt_suggested_shown: { spot_id: number; region: string; count: number };
   alt_clicked: { spot_id: number; region: string; from_spot_id: number };
-  // Item 137. `_shown` fires only when the modal actually renders (>=1 good-soon
-  // spot); `count`+`located` segment it. `_spot_clicked` carries the 1-based
-  // `rank`. `_dismissed.method` distinguishes the close paths.
-  paddle_now_shown: { count: number; located: boolean };
+  // Item 137 (location-first redesign). `_shown` fires once per day when the modal
+  // (its ask primer) renders; `located` = we already had location and skipped the
+  // ask. `_located.outcome` records the location-ask result. `_spot_clicked`
+  // carries the 1-based `rank`. `_dismissed.method` distinguishes the close paths.
+  paddle_now_shown: { located: boolean };
+  paddle_now_located: { outcome: "granted" | "denied" | "unsupported" };
   paddle_now_spot_clicked: { spot_id: number; region: string; rank: number };
   paddle_now_dismissed: { method: "close" | "backdrop" | "escape" | "spot_click" };
   alert_optin_shown: {

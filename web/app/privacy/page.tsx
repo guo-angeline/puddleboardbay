@@ -179,9 +179,10 @@ export default function PrivacyPage() {
             </div>
 
             <p style={{ marginTop: "1rem" }}>
-              <strong>Your location stays on your device.</strong> If you use &quot;Near me&quot; and allow
-              location access, your coordinates are used inside your browser to sort spots by distance. They
-              are never sent to us, never stored, and never attached to an analytics event.
+              <strong>Your location stays on your device.</strong> When you ask us to find spots near you (for
+              example &quot;Near me&quot; or &quot;Find calm spots near me&quot;) and allow location access, your
+              coordinates are used inside your browser to sort spots by distance. They are never sent to us,
+              never stored, and never attached to an analytics event.
             </p>
             <p style={{ marginTop: "0.75rem" }}>
               <strong>What your browser remembers about your reading.</strong> Your browser keeps a list of the

@@ -19,7 +19,6 @@ import { emptyStateCopy } from "@/lib/emptyStateCopy";
 import { trackIntent, trackSystem, setPersona, type SpotViewedSource } from "@/lib/analytics";
 import { useSpotConditions } from "@/components/useSavedConditions";
 import { useGoodTodaySpots } from "@/components/useGoodToday";
-import { usePaddleNowSpots } from "@/components/usePaddleNow";
 import PaddleNowModal from "@/components/PaddleNowModal";
 import { PADDLE_NOW_SEEN_KEY, localDateString } from "@/lib/paddleNow";
 import { recordRecentSpot, getRecentSpotIds } from "@/lib/recentSpots";
@@ -642,14 +641,17 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     failed: goodTodayFailed,
   } = useGoodTodaySpots(goodTodayCandidates, distanceMap, goodTodayEnabled);
 
-  // Item 137: the first-visit-per-day "Want to paddle now?" modal. Home page
-  // only (never a deep-link arrival), once per local day, and only when >=1 spot
-  // is good in the NEXT 60 min (never opens to say "nothing"). Reuses item 61's
-  // nearest-K anchor + the shared getHourlyPeriods cache (same candidates -> no
-  // extra fetch when good-today already resolved them).
+  // Item 137 (redesigned 2026-07-23 on owner feedback): the first-visit-per-day
+  // "Want to paddle today?" modal. Home page only (never a deep-link arrival),
+  // once per local day. It ranks spots by REAL distance, so it never guesses
+  // location from a statewide anchor: the modal asks first, and only surfaces
+  // spots once we actually know where the user is (an already-granted location,
+  // or a grant from the in-modal button). Uses item 61's good-today bar + the
+  // shared getHourlyPeriods cache.
   const paddleNowEnabled = useKillSwitch("paddle-now");
   const [paddleNowSeen, setPaddleNowSeen] = useState<boolean | null>(null); // null = not yet checked
   const [paddleNowClosed, setPaddleNowClosed] = useState(false);
+  const [paddleNowLocating, setPaddleNowLocating] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const deepLink = initialSpotId !== undefined || !!Number(params.get("spot") || 0) || !!params.get("from");
@@ -661,21 +663,49 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
     setPaddleNowSeen(localStorage.getItem(PADDLE_NOW_SEEN_KEY) === localDateString(new Date()));
   }, [initialSpotId]);
   const paddleNowGate = paddleNowEnabled && paddleNowSeen === false && !paddleNowClosed;
+  // Candidates only exist once located: nearest-K to the REAL user position,
+  // excluding watched/recently-checked. No anchor fallback (that was the "random
+  // spot called nearest" bug).
   const paddleNowCandidates = useMemo(() => {
-    if (!paddleNowGate) return [];
+    if (!paddleNowGate || !userLocation) return [];
     const exclude = new Set<number>([...favorites, ...recentSpots.map((s) => s.id)]);
-    const anchor = userLocation ?? GOOD_TODAY_ANCHOR;
     return [...ALL_SPOTS]
       .filter((s) => !exclude.has(s.id))
-      .sort((a, b) => distanceMiles(anchor, a) - distanceMiles(anchor, b))
+      .sort((a, b) => distanceMiles(userLocation, a) - distanceMiles(userLocation, b))
       .slice(0, GOOD_TODAY_K);
   }, [paddleNowGate, favorites, recentSpots, userLocation]);
-  const { spots: paddleNowSpots, loading: paddleNowLoading } = usePaddleNowSpots(
-    paddleNowCandidates,
-    distanceMap,
-    paddleNowGate
-  );
-  const showPaddleNow = paddleNowGate && !paddleNowLoading && paddleNowSpots.length > 0;
+  const {
+    spots: paddleNowSpots,
+    loading: paddleNowLoading,
+    failed: paddleNowFailed,
+  } = useGoodTodaySpots(paddleNowCandidates, distanceMap, paddleNowGate && !!userLocation);
+
+  // The button in the ask step: request the browser location. On grant, the
+  // candidates + good-today fetch above light up and the modal flips to results.
+  // On denial/unsupported, close and mark seen so we do not re-prompt today.
+  function requestPaddleNowLocation() {
+    if (!navigator.geolocation) {
+      trackIntent("paddle_now_located", { outcome: "unsupported" });
+      setPaddleNowClosed(true);
+      return;
+    }
+    setPaddleNowLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setPaddleNowLocating(false);
+        setPersona({ uses_geolocation: true });
+        trackIntent("paddle_now_located", { outcome: "granted" });
+      },
+      () => {
+        setPaddleNowLocating(false);
+        trackIntent("paddle_now_located", { outcome: "denied" });
+        setPaddleNowClosed(true);
+      },
+      { timeout: 8000 }
+    );
+  }
+  const showPaddleNow = paddleNowGate;
 
   function handleNearMe() {
     if (userLocation) {
@@ -1060,13 +1090,17 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
 
-      {/* Item 137: first-visit-per-day "Want to paddle now?" modal. Mounts only
-          when the gate is open and >=1 spot is good in the next hour; sets the
-          once-per-day flag on render (inside the modal). */}
+      {/* Item 137: first-visit-per-day "Want to paddle today?" modal. Mounts on
+          the once-per-day gate; asks for location first, then shows calm spots
+          near the user. Sets the once-per-day flag on render (inside the modal). */}
       {showPaddleNow && (
         <PaddleNowModal
           spots={paddleNowSpots}
           located={!!userLocation}
+          locating={paddleNowLocating}
+          loading={paddleNowLoading}
+          failed={paddleNowFailed}
+          onFindSpots={requestPaddleNowLocation}
           onSelectSpot={(s) => { setPaddleNowClosed(true); handleSelect(s, "list"); }}
           onClose={() => setPaddleNowClosed(true)}
         />

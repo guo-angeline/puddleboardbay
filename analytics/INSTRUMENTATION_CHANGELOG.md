@@ -14,6 +14,18 @@ without touching this file.
 
 ---
 
+## 2026-07-23 (item 137 redesign): paddle-now modal is now location-gated; `paddle_now_shown` props change + `paddle_now_located` added (props-changed / added)
+
+Owner feedback: the modal ranked spots against a fixed central-CA anchor when location was unknown and called them "nearest", and the copy ("good to go") never said it was about conditions. Redesigned into two steps: ASK for location, then show calm spots near the user (ranked with item 61's `evaluateGoodToday`, today horizon, not the old 60-minute cutoff). The modal now mounts on the once-per-day gate itself (the primer), not only when spots resolve.
+
+- **`paddle_now_shown`** (INTENT): **props-changed.** Dropped `count` (the primer renders before we have location or a spot count). Kept `located` (true = we already had location and skipped the ask; false = the ask was shown). It is still the once-per-day impression, but now counts the ASK impression, not a "we have >=1 good spot" impression.
+- **`paddle_now_located`** (INTENT, NEW). Props: `outcome` ("granted" | "denied" | "unsupported"). Fires when the user taps "Find calm spots near me". `granted / shown(located:false)` is the opt-in rate for the location ask; `denied` share is the friction cost of asking.
+- **`paddle_now_spot_clicked`** / **`paddle_now_dismissed`**: unchanged.
+
+**How to read it.** The funnel is now `paddle_now_shown` -> (`paddle_now_located` granted) -> `paddle_now_spot_clicked`, with the located=true branch skipping straight to spots. `paddle_now_shown` is NOT comparable across the redesign boundary (see below), so compute conversion within each regime, not across it.
+
+**Comparability:** `paddle_now_shown` is **discontinuous from 2026-07-23 (redesign)**: before, it fired only when >=1 spot was good in the next 60 min (a filtered impression); after, it fires on the ask/primer for every eligible first-visit day, so its volume rises and its `count` prop is gone. `paddle_now_located` is NEW from the same date, no prior series. Both still behind the `paddle-now` kill switch, once-per-day cap unchanged. The pre-redesign `paddle_now_shown` series (2026-07-23 morning only, near-zero volume) should be treated as a separate, retired series.
+
 ## 2026-07-23 (item 137): "want to paddle now?" first-visit modal events added (added)
 
 Three INTENT events for the once-per-day first-visit modal that surfaces up to 3 nearest spots good to launch in the next 0-60 minutes.

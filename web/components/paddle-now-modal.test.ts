@@ -6,16 +6,25 @@ const read = (p: string) => fs.readFileSync(path.resolve(__dirname, p), "utf-8")
 const modal = read("PaddleNowModal.tsx");
 const home = read("HomeClient.tsx");
 
-describe("PaddleNowModal (item 137)", () => {
-  it("uses the owner-specified title and both lead variants verbatim", () => {
-    expect(modal).toContain("Want to paddle now?");
-    expect(modal).toContain("Spots near you are good to go.");
-    expect(modal).toContain("These spots are good to go right now.");
+describe("PaddleNowModal (item 137, location-first redesign)", () => {
+  it("asks first with the owner's copy, then labels the results step", () => {
+    expect(modal).toContain("Want to paddle today?");
+    expect(modal).toContain("find spots near you where the wind and water are calm");
+    expect(modal).toContain("Calm spots near you");
   });
 
-  it("co-renders the canonical safety caveat verbatim", () => {
+  it("names the actual thing (calm conditions), never the old vague 'good to go'", () => {
+    expect(modal).not.toContain("good to go");
+  });
+
+  it("co-renders the canonical safety caveat verbatim, in full", () => {
     expect(modal).toContain("Guidance only, not a safety guarantee. Conditions shift fast on the water.");
     expect(modal).not.toContain("—");
+  });
+
+  it("the ask step has a location button wired to onFindSpots", () => {
+    expect(modal).toContain("Find calm spots near me");
+    expect(modal).toMatch(/onClick=\{onFindSpots\}/);
   });
 
   it("is an accessible dialog: role=dialog, aria-modal, 44px close, Escape, focus trap", () => {
@@ -34,12 +43,11 @@ describe("PaddleNowModal (item 137)", () => {
   it("fires the click + dismiss events with method", () => {
     expect(modal).toMatch(/trackIntent\(["']paddle_now_spot_clicked["']/);
     expect(modal).toMatch(/trackIntent\(["']paddle_now_dismissed["'], \{ method/);
-    // spot tap opens the spot
     expect(modal).toMatch(/onSelectSpot\(entry\.spot\)/);
   });
 });
 
-describe("HomeClient paddle-now gating (item 137)", () => {
+describe("HomeClient paddle-now gating (item 137, location-first redesign)", () => {
   it("is behind the paddle-now kill switch", () => {
     expect(home).toMatch(/useKillSwitch\(["']paddle-now["']\)/);
   });
@@ -49,7 +57,20 @@ describe("HomeClient paddle-now gating (item 137)", () => {
     expect(home).toMatch(/params\.get\("from"\)/);
   });
 
-  it("SUPPRESSES the modal unless resolved with >=1 good-soon spot (never opens empty/loading)", () => {
-    expect(home).toMatch(/const showPaddleNow = paddleNowGate && !paddleNowLoading && paddleNowSpots\.length > 0/);
+  it("ranks ONLY by real location, never a statewide anchor (the 'random nearest' bug)", () => {
+    // candidates bail out entirely without a real userLocation, and rank by it.
+    expect(home).toMatch(/if \(!paddleNowGate \|\| !userLocation\) return \[\];/);
+    expect(home).toMatch(/distanceMiles\(userLocation, a\)/);
+  });
+
+  it("requests location on demand and records the outcome", () => {
+    expect(home).toMatch(/function requestPaddleNowLocation\(\)/);
+    expect(home).toMatch(/navigator\.geolocation\.getCurrentPosition/);
+    expect(home).toMatch(/trackIntent\(["']paddle_now_located["'], \{ outcome: "granted" \}\)/);
+    expect(home).toMatch(/trackIntent\(["']paddle_now_located["'], \{ outcome: "denied" \}\)/);
+  });
+
+  it("shows the modal on the once-per-day gate itself (primer), not gated on resolved spots", () => {
+    expect(home).toMatch(/const showPaddleNow = paddleNowGate;/);
   });
 });
