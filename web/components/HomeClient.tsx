@@ -660,7 +660,16 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
       setPaddleNowSeen(true); // never on a deep-link arrival
       return;
     }
-    setPaddleNowSeen(localStorage.getItem(PADDLE_NOW_SEEN_KEY) === localDateString(new Date()));
+    // Guard the read: localStorage throws in Safari Private Browsing, on quota,
+    // or when storage is disabled. Unguarded, a throw here is uncaught inside the
+    // effect and React tears down the whole tree (blank page). Treat unreadable
+    // storage as "seen" so the modal simply stays hidden. (Item 139 P0 pattern;
+    // every sibling storage read in this file is wrapped the same way.)
+    try {
+      setPaddleNowSeen(localStorage.getItem(PADDLE_NOW_SEEN_KEY) === localDateString(new Date()));
+    } catch {
+      setPaddleNowSeen(true);
+    }
   }, [initialSpotId]);
   const paddleNowGate = paddleNowEnabled && paddleNowSeen === false && !paddleNowClosed;
   // Candidates only exist once located: nearest-K to the REAL user position,
