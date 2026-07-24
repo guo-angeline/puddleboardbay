@@ -1,3 +1,12 @@
+## 2026-07-24 · Item 140 search regression · SHIPPED
+
+What: Search was confirmed working in committed production code. Added a desktop and mobile regression check for empty results, pinned Watching retention, clearing search, region persistence, and restoration of 9 ordinary cards.
+Evidence: Independent verifier PASS with no findings. 757 tests pass, build passes, targeted lint clean.
+Measure: n/a, bug report traced to a stale or wrong-checkout local process and a pinned-card misread.
+Deployed: Not deployed. Commit 6d22a8c changes verification tooling only. Vercel preview built 381 pages, then failed on a pre-existing root `.next` versus `web/.next` configuration mismatch.
+Decisions raised: none. Parked: full lint remains blocked by the pre-existing TripPlannerFakeDoor setState error.
+Next up: Continue with the next ready roadmap item.
+
 ## 2026-07-23 · Item 137 safety-note hierarchy · SHIPPED
 
 What: Reduced the Paddle Now modal's canonical safety note from 14px primary ink to 11px muted secondary copy. The exact wording, placement, reading order, 20px line height, and both modal states are unchanged.

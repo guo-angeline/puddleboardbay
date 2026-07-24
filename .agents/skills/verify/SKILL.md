@@ -5,7 +5,7 @@ description: Drive paddletowater.com locally to verify UI changes at the rendere
 
 # Verify: Paddle to Water
 
-Build/launch: `npm run dev` (background, http://localhost:3000, ~8s to ready; `curl -s -o /dev/null -w "%{http_code}"` to confirm). The Next.js app lives in `web/` since 2026-07-19 (root `npm run dev` proxies into it). Playwright is a devDependency; scripts outside the repo must import `/Users/qg/Paddle-to-water/web/node_modules/playwright/index.mjs` (bare `@playwright/test` fails to resolve from a scratchpad path).
+Build/launch: `npm run dev` (background, ~8s to ready; `curl -s -o /dev/null -w "%{http_code}"` to confirm). The Next.js app lives in `web/` since 2026-07-19 (root `npm run dev` proxies into it). Never assume an existing localhost server belongs to the checkout under test: in a worktree, start that worktree on a dedicated unused port and print the target URL before driving it. A stale root server can make working code look broken. Playwright is a devDependency; scripts outside the repo must import `/Users/qg/Paddle-to-water/web/node_modules/playwright/index.mjs` (bare `@playwright/test` fails to resolve from a scratchpad path).
 
 Flows worth driving:
 - Desktop list panel: rows render name, city/region, difficulty badge, heart toggle. 142 spots at default filters.
