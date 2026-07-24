@@ -33,11 +33,8 @@ import { useBackGesture } from "@/lib/useBackGesture";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
-// Item 61 "Good to paddle today": the candidate set is the K spots nearest an
-// anchor. GOOD_TODAY_ANCHOR is MapView's CA_CENTER (the map's own cold-open
-// view), used only when geolocation has not been granted, so the fallback set is
-// what the map already shows. K bounds the NWS fan-out on cold load.
-const GOOD_TODAY_ANCHOR = { lat: 37.0, lng: -120.5 } as const;
+// Item 61 "Good to paddle today": location is required so every candidate is
+// genuinely near the user. K bounds the NWS fan-out once location is known.
 const GOOD_TODAY_K = 8;
 
 
@@ -618,28 +615,26 @@ export default function HomeClient({ initialSpotId }: Props = {}) {
   }, [userLocation]);
 
   // Cold-open "Good to paddle today" ranked surface (item 61): a pull-based
-  // discovery answer for a first-time / one-and-done visitor, needing zero
-  // enrollment, install or permission grant. Candidate set is BOUNDED to the K
-  // spots nearest the user, or, without geolocation, nearest the map's default
-  // center (GOOD_TODAY_ANCHOR == MapView's CA_CENTER), so there is never an
-  // unbounded NWS fan-out. Deduped against Watching + Recently checked. Each
-  // candidate rides the shared hourly cache; the surfaced set uses the SAME
+  // discovery answer for a first-time / one-and-done visitor. Candidate set is
+  // BOUNDED to the K spots nearest the user's real location, so the section
+  // stays hidden until location is known and never calls an arbitrary statewide
+  // anchor "nearby." Deduped against Watching + Recently checked. Each candidate
+  // rides the shared hourly cache; the surfaced set uses the SAME
   // evaluateGoodWindow bar as the drawer and the cron. Kill switch, default ON.
   const goodTodayEnabled = useKillSwitch("good-today");
   const goodTodayCandidates = useMemo(() => {
-    if (!goodTodayEnabled) return [];
+    if (!goodTodayEnabled || !userLocation) return [];
     const exclude = new Set<number>([...favorites, ...recentSpots.map((s) => s.id)]);
-    const anchor = userLocation ?? GOOD_TODAY_ANCHOR;
     return [...ALL_SPOTS]
       .filter((s) => !exclude.has(s.id))
-      .sort((a, b) => distanceMiles(anchor, a) - distanceMiles(anchor, b))
+      .sort((a, b) => distanceMiles(userLocation, a) - distanceMiles(userLocation, b))
       .slice(0, GOOD_TODAY_K);
   }, [goodTodayEnabled, favorites, recentSpots, userLocation]);
   const {
     spots: goodTodaySpots,
     loading: goodTodayLoading,
     failed: goodTodayFailed,
-  } = useGoodTodaySpots(goodTodayCandidates, distanceMap, goodTodayEnabled);
+  } = useGoodTodaySpots(goodTodayCandidates, distanceMap, goodTodayEnabled && !!userLocation);
 
   // Item 137 (redesigned 2026-07-23 on owner feedback): the first-visit-per-day
   // "Want to paddle today?" modal. Home page only (never a deep-link arrival),

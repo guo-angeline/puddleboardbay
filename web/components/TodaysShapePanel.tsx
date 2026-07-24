@@ -7,6 +7,7 @@ import { formatShapeHour, type HourSample, type TodayShape } from "@/lib/todaysS
 import { trackIntent } from "@/lib/analytics";
 import { useKillSwitch } from "@/lib/experiments";
 import { useGenuineView } from "@/lib/useGenuineView";
+import { CALM_WIND_MAX_MPH } from "@/lib/conditions";
 
 /**
  * Item 100. The intra-day "today's shape": a one-line read of how the rest of
@@ -36,10 +37,10 @@ interface Loaded {
 function Curve({ shape }: { shape: TodayShape }) {
   const winds = shape.samples.map((s) => s.windMph ?? 0);
   // Normalise to the day's own peak, with a floor so a flat-calm day shows a low
-  // flat strip rather than full-height bars. Calm threshold (8 mph) marks where
+  // flat strip rather than full-height bars. The shared calm threshold marks where
   // "calm" ends, so the eye can see the crossover.
-  const cap = Math.max(12, ...winds);
-  const calmLinePct = Math.min(100, (8 / cap) * 100);
+  const cap = Math.max(CALM_WIND_MAX_MPH, ...winds);
+  const calmLinePct = Math.min(100, (CALM_WIND_MAX_MPH / cap) * 100);
   return (
     <div className="mt-1.5">
       <div className="relative flex items-end gap-[3px] h-9">

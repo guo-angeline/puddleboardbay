@@ -12,11 +12,11 @@ describe("Good-to-paddle-today wiring (item 61)", () => {
     expect(home).toMatch(/useKillSwitch\(["']good-today["']\)/);
   });
 
-  it("bounds the candidate fan-out (nearest-K), never the whole set", () => {
+  it("requires real location and bounds the candidate fan-out (nearest-K)", () => {
     expect(home).toMatch(/GOOD_TODAY_K\s*=\s*\d+/);
     expect(home).toMatch(/\.slice\(0, GOOD_TODAY_K\)/);
-    // Falls back to the map's default center when not geolocated.
-    expect(home).toMatch(/userLocation \?\? GOOD_TODAY_ANCHOR/);
+    expect(home).toMatch(/if \(!goodTodayEnabled \|\| !userLocation\) return \[\]/);
+    expect(home).not.toMatch(/GOOD_TODAY_ANCHOR/);
   });
 
   it("dedups good-today spots out of the main list", () => {

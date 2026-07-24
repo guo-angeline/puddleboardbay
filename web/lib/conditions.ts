@@ -334,9 +334,12 @@ export function isStormyForecast(shortForecast: string | null | undefined): bool
   return /thunderstorm|t-storm|tstorm|lightning/i.test(shortForecast ?? "");
 }
 
+export const CALM_WIND_MAX_MPH = 12;
+export const BREEZY_WIND_MAX_MPH = 20;
+
 export function paddleabilityFromWind(maxMph: number): Paddleability {
-  if (maxMph <= 8) return "calm";
-  if (maxMph <= 15) return "breezy";
+  if (maxMph <= CALM_WIND_MAX_MPH) return "calm";
+  if (maxMph <= BREEZY_WIND_MAX_MPH) return "breezy";
   return "windy";
 }
 

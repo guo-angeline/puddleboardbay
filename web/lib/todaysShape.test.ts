@@ -9,7 +9,7 @@ const DAY = "2026-07-23";
 // "Now" is 11:00 local, so the rest of today's daytime is hours 11..17.
 const NOW = Date.parse(`${DAY}T11:00:00${OFF}`);
 
-/** windSpeed for a paddleability tier: calm <=8, breezy <=15, else windy. */
+/** windSpeed for a paddleability tier: calm <=12, breezy <=20, else windy. */
 function period(hour: number, windSpeed: string, shortForecast = "Sunny", date = DAY): RawHourly {
   const hh = String(hour).padStart(2, "0");
   return { startTime: `${date}T${hh}:00:00${OFF}`, windSpeed, windDirection: "NW", shortForecast };

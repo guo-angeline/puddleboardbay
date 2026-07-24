@@ -106,6 +106,21 @@ describe("storm gating (item 97)", () => {
   });
 });
 
+describe("wind paddleability bands", () => {
+  it("classifies wind through 12 mph as calm", () => {
+    expect(paddleabilityFromWind(12)).toBe("calm");
+  });
+
+  it("classifies wind over 12 through 20 mph as breezy", () => {
+    expect(paddleabilityFromWind(13)).toBe("breezy");
+    expect(paddleabilityFromWind(20)).toBe("breezy");
+  });
+
+  it("classifies wind over 20 mph as windy", () => {
+    expect(paddleabilityFromWind(21)).toBe("windy");
+  });
+});
+
 describe("tide direction line (item 98)", () => {
   const evt = (type: "H" | "L", time: string, heightFt = 3) => ({ type, time, heightFt });
 

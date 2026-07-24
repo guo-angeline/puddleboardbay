@@ -11,7 +11,7 @@ function p(hour: number, windSpeed: string, date = DAY): RawHourly {
   return { startTime: `${date}T${hh}:00:00${OFF}`, windSpeed, windDirection: "NW", shortForecast: "Sunny" };
 }
 const CALM = "6 mph";
-const WINDY = "20 mph";
+const WINDY = "21 mph";
 
 describe("evaluateGoodToday", () => {
   it("flags a spot good today when a calm daytime window still lies ahead today", () => {

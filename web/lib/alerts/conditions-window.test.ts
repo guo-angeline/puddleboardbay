@@ -10,8 +10,8 @@ function h(day: string, hour: number, windSpeed: string, windDirection = ""): Ho
 describe("evaluateGoodWindow (hourly)", () => {
   it("returns the soonest run of >=2 consecutive calm daytime hours", () => {
     const periods = [
-      h("2026-07-01", 9, "12 mph"),
-      h("2026-07-01", 10, "12 mph"),
+      h("2026-07-01", 9, "13 mph"),
+      h("2026-07-01", 10, "13 mph"),
       h("2026-07-02", 6, "7 mph"),
       h("2026-07-02", 7, "8 mph"),
       h("2026-07-02", 8, "11 mph"),
@@ -73,7 +73,7 @@ describe("evaluateGoodWindow (hourly)", () => {
   });
 
   it("treats a wind range by its max", () => {
-    const periods = [h("2026-07-02", 9, "5 to 10 mph"), h("2026-07-02", 10, "5 to 10 mph")];
+    const periods = [h("2026-07-02", 9, "5 to 13 mph"), h("2026-07-02", 10, "5 to 13 mph")];
     expect(evaluateGoodWindow(periods, NOW, 3)).toBeNull();
   });
 
