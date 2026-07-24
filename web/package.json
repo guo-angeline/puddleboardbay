@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "verify:storage-chaos": "node scripts/verify-storage-chaos.mjs"
+    "verify:storage-chaos": "node scripts/verify-storage-chaos.mjs",
+    "verify:search": "node scripts/verify-search.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
